@@ -1,0 +1,101 @@
+.auth-container {
+    padding: 30px;
+    font-family: 'Arial', sans-serif;
+    max-width: 400px;
+    margin: 50px auto;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background-color: #f9f9f9;
+}
+
+.auth-container h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+.auth-container label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #555;
+}
+
+.auth-container select,
+.auth-container input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.auth-container button {
+    padding: 12px 20px;
+    margin: 5px 5px 0 0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+}
+
+.auth-container button:first-of-type {
+    background-color: #4CAF50;
+}
+
+.auth-container button:first-of-type:hover {
+    background-color: #45a049;
+}
+
+.auth-container button:last-of-type {
+    background-color: #2196F3;
+}
+
+.auth-container button:last-of-type:hover {
+    background-color: #1976D2;
+}
+
+.auth-message {
+    margin-top: 15px;
+    text-align: center;
+    color: red;
+    font-weight: bold;
+}
+
+/* Password field with eye icon */
+.password-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+.password-input {
+    flex: 1;
+    padding: 12px;
+    font-size: 14px;
+    border: none;
+    outline: none;
+    margin-top: 20px;
+}
+
+.show-password-btn {
+    padding: 0 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #555;
+    display: flex;
+    margin-bottom: 1000px;
+}
+
+.show-password-btn:hover {
+    color: #000;
+}

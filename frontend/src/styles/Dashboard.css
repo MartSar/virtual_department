@@ -1,0 +1,72 @@
+.dashboard-container {
+    padding: 30px;
+    font-family: 'Arial', sans-serif;
+    max-width: 900px;
+    margin: 20px auto;
+}
+
+.dashboard-container h1 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.dashboard-container h2 {
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.publications-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.publication-item {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    width: calc(33% - 10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.publication-item span {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.publication-item button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    background-color: #2196F3;
+    transition: background-color 0.2s;
+}
+
+.publication-item button:hover {
+    background-color: #1976D2;
+}
+
+.add-publication-btn {
+    margin-top: 25px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-publication-btn:hover {
+    background-color: #45a049;
+}
