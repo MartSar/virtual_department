@@ -41,6 +41,7 @@ app.get('/postgraduates', getAllFromTable('postgraduates'));
 app.get('/authors', getAllFromTable('authors'));
 app.get('/publications', getAllFromTable('publications'));
 app.get('/publication_authors', getAllFromTable('publication_authors'));
+app.get('/students', getAllFromTable('students'));
 
 // --------------------------
 // Регистрация
