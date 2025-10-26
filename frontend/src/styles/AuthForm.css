@@ -16,13 +16,36 @@
 }
 
 .auth-container label {
-    display: block;
-    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
     font-weight: bold;
-    color: #555;
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 10px;
 }
 
-.auth-container select,
+.auth-container select{
+    margin-top: 6px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: 0.3s;
+    margin-bottom: 15px;
+}
+
+select:hover {
+    border-color: #666;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+}
+
 .auth-container input {
     width: 100%;
     padding: 12px;
@@ -33,8 +56,25 @@
     font-size: 14px;
 }
 
+.first-name-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.last-name-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
 .auth-container button {
-    padding: 12px 20px;
     margin: 5px 5px 0 0;
     border: none;
     border-radius: 6px;
@@ -43,20 +83,34 @@
     color: white;
 }
 
-.auth-container button:first-of-type {
+.sign-up-btn {
     background-color: #4CAF50;
+    transition: 0.3s ease;
+    padding: 12px 20px;
 }
 
-.auth-container button:first-of-type:hover {
+.sign-up-btn:hover {
     background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.3);
 }
 
-.auth-container button:last-of-type {
+.sign-in-btn {
     background-color: #2196F3;
+    transition: 0.3s ease;
+    padding: 12px 20px;
 }
 
-.auth-container button:last-of-type:hover {
+.sign-in-btn:hover {
     background-color: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.3);
+}
+
+.auth-btns-container{
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
 }
 
 .auth-message {
@@ -69,33 +123,42 @@
 /* Password field with eye icon */
 .password-wrapper {
     display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: #fff;
-    overflow: hidden;
+    align-items: center;  /* Выровняет кнопку и input по вертикали */
+    gap: 6px;             /* Небольшое расстояние между ними */
 }
 
-.password-input {
-    flex: 1;
-    padding: 12px;
-    font-size: 14px;
-    border: none;
+.password-wrapper input {
+    flex: 1;              /* Чтобы поле занимало всё оставшееся место */
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
     outline: none;
+    transition: border-color 0.2s;
     margin-top: 20px;
 }
 
+.password-wrapper input:focus {
+    border-color: #1e88e5;
+}
+
+/* Кнопка */
 .show-password-btn {
-    padding: 0 12px;
-    background: none;
+    background: #1e88e5;
+    color: white;
     border: none;
     cursor: pointer;
+    border-radius: 8px;
+    padding: 8px 12px;
     font-size: 18px;
-    color: #555;
     display: flex;
-    margin-bottom: 1000px;
+    align-items: center;
+    justify-content: center;
+    transition: 0.25s ease;
+    line-height: 1; /* важно для выравнивания */
+    height: 100%;   /* чтобы совпадала по высоте с инпутом */
 }
 
 .show-password-btn:hover {
-    color: #000;
+    background-color: #1565c0;
+    transform: translateY(-2px);
 }

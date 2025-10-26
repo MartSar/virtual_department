@@ -63,6 +63,7 @@ function AuthForm() {
             </label>
 
             <input
+                className="first-name-input"
                 type="text"
                 placeholder="First Name"
                 value={name}
@@ -70,6 +71,7 @@ function AuthForm() {
             />
 
             <input
+                className="last-name-input"
                 type="text"
                 placeholder="Last Name"
                 value={lastname}
@@ -93,9 +95,9 @@ function AuthForm() {
                 </button>
             </div>
 
-            <div>
-                <button onClick={handleSignUp}>Sign Up</button>
-                <button onClick={handleSignIn}>Sign In</button>
+            <div className="auth-btns-container">
+                <button className="sign-up-btn" onClick={handleSignUp}>Sign Up</button>
+                <button className="sign-in-btn" onClick={handleSignIn}>Sign In</button>
             </div>
 
             {message && <p className="auth-message">{message}</p>}

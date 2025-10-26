@@ -21,7 +21,7 @@ function Dashboard() {
         <div className="dashboard-wrapper">
             <div className="dashboard-header">
                 <h1>Welcome, {name} {lastname}!</h1>
-                <button className="logout-btn" onClick={handleLogout}>Odhlásiť sa</button>
+                <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
             </div>
 
             {role === 'professor' || role === 'postgraduate' ? (
