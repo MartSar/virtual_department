@@ -44,32 +44,45 @@ app.get('/publication_authors', getAllFromTable('publication_authors'));
 app.get('/students', getAllFromTable('students'));
 
 // --------------------------
-// Регистрация
+// Registration
 // --------------------------
 app.post('/register', async (req, res) => {
-  try {
-    const { role, name, lastname, password } = req.body;
+    try {
+        const { role, name, lastname, password } = req.body;
 
-    if (!['student', 'professor', 'postgraduate'].includes(role)) {
-      return res.status(400).json({ error: 'Invalid role' });
+        if (!['student', 'professor', 'postgraduate'].includes(role)) {
+            return res.status(400).json({ error: 'Invalid role' });
+        }
+
+        // Определяем таблицу
+        let table;
+        if (role === 'student') table = 'students';
+        else if (role === 'professor') table = 'professors';
+        else table = 'postgraduates';
+
+        // Проверяем, существует ли уже такой пароль (по хэшу)
+        const existingUsers = await pool.query(`SELECT password FROM ${table}`);
+
+        for (let user of existingUsers.rows) {
+            const match = await bcrypt.compare(password, user.password);
+            if (match) {
+                return res.status(400).json({ error: 'This password is already in use!' });
+            }
+        }
+
+        // Хэшируем пароль и добавляем пользователя
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const query = `INSERT INTO ${table} (name, lastname, password) VALUES ($1, $2, $3) RETURNING *`;
+        const result = await pool.query(query, [name, lastname, hashedPassword]);
+
+        res.json({ success: true, user: result.rows[0] });
+
+    } catch (err) {
+        console.error('❌ Registration error:', err);
+        res.status(500).json({ error: 'Registration failed' });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    let table;
-    if (role === 'student') table = 'students';
-    else if (role === 'professor') table = 'professors';
-    else table = 'postgraduates';
-
-    const query = `INSERT INTO ${table} (name, lastname, password) VALUES ($1, $2, $3) RETURNING *`;
-    const result = await pool.query(query, [name, lastname, hashedPassword]);
-
-    res.json({ success: true, user: result.rows[0] });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Registration failed' });
-  }
 });
+
 
 // --------------------------
 // Логин
