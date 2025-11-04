@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Dashboard.css';
-import { useNavigate } from 'react-router-dom';
 
 function AuthorDashboard({ name, lastname, userId, role }) {
     const [publications, setPublications] = useState([]);
-    const [searchTerm, setSearchTerm] = useState(''); // 🔍 Поисковая строка
-    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchPublications = async () => {
-        const res = await fetch('http://localhost:3000/publications');
-        const data = await res.json();
-        setPublications(data);
+        try {
+            const res = await fetch('http://localhost:3000/publications');
+            const data = await res.json();
+            setPublications(data);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     useEffect(() => {
@@ -18,7 +20,7 @@ function AuthorDashboard({ name, lastname, userId, role }) {
     }, []);
 
     const handleAdd = async () => {
-        const title = prompt('Enter the title of the publication:');
+        const title = prompt('Enter the publication title:');
         if (!title) return;
         await fetch('http://localhost:3000/add-publication', {
             method: 'POST',
@@ -29,7 +31,7 @@ function AuthorDashboard({ name, lastname, userId, role }) {
     };
 
     const handleEdit = async (id) => {
-        const newTitle = prompt('Enter a new publication name:');
+        const newTitle = prompt('Enter new publication title:');
         if (!newTitle) return;
         await fetch(`http://localhost:3000/edit-publication/${id}`, {
             method: 'PUT',
@@ -46,41 +48,55 @@ function AuthorDashboard({ name, lastname, userId, role }) {
         }
     };
 
-    const handleLogout = () => {
-        navigate('/');
-    };
-
-    // 🔍 Фильтруем публикации по названию или автору
+    // Фильтрация по поисковику
     const filteredPublications = publications.filter(pub =>
-        pub.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (pub.author_name && pub.author_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        pub.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
-        <div className="dashboard-container">
-            <div className="dashboard-header">
-                <button className="profile-btn" onClick={() => alert('Tu môže byť osobný kabinet')}>
-                    Go to personal account
-                </button>
-                <button className="logout-btn" onClick={handleLogout}>
-                    Log out
-                </button>
+        <div className="dashboard-layout">
+            <div className="filters-panel">
+                <h3>Filters</h3>
+                <label>Topic:</label>
+                <select>
+                    <option value="">All topics</option>
+                    <option value="AI">AI</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Networks">Networks</option>
+                </select>
+
+                <label>Country:</label>
+                <select>
+                    <option value="">All countries</option>
+                    <option value="Slovakia">Slovakia</option>
+                    <option value="Czech Republic">Czech Republic</option>
+                    <option value="Germany">Germany</option>
+                </select>
+
+                <label>Faculty:</label>
+                <select>
+                    <option value="">All faculties</option>
+                    <option value="Informatics">Informatics</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Mathematics">Mathematics</option>
+                </select>
             </div>
 
-            <h2>Your publications</h2>
+            <div className="dashboard-container centered">
+                <h1>Welcome, {role} {name} {lastname}!</h1>
 
-            {/* 🔍 Поисковик */}
-            <input
-                type="text"
-                placeholder="Search for a publication by title or author..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="filter-input"
-            />
+                {/* Поисковая строка */}
+                <input
+                    type="text"
+                    placeholder="Search publications..."
+                    className="search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
 
-            <ul className="publications-list">
-                {filteredPublications.length > 0 ? (
-                    filteredPublications.map(pub => (
+                <h2>Your publications</h2>
+                <ul className="publications-list">
+                    {filteredPublications.map(pub => (
                         <li key={pub.id} className="publication-item">
                             <span>{pub.title}</span>
                             <div>
@@ -88,15 +104,12 @@ function AuthorDashboard({ name, lastname, userId, role }) {
                                 <button onClick={() => handleDelete(pub.id)}>Delete</button>
                             </div>
                         </li>
-                    ))
-                ) : (
-                    <p style={{ textAlign: 'center', color: '#777' }}>No publications were found</p>
-                )}
-            </ul>
-
-            <button className="add-publication-btn" onClick={handleAdd}>
-                Add publication
-            </button>
+                    ))}
+                </ul>
+                <button className="add-publication-btn" onClick={handleAdd}>
+                    Add publication
+                </button>
+            </div>
         </div>
     );
 }

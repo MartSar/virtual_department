@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Dashboard.css';
-import { useNavigate } from 'react-router-dom';
 
 function StudentDashboard({ name, lastname, userId }) {
     const [publications, setPublications] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetch('http://localhost:3000/publications')
@@ -23,7 +21,7 @@ function StudentDashboard({ name, lastname, userId }) {
             });
             const data = await res.json();
             if (data.success) {
-                alert('The publication has been successfully borrowed!');
+                alert('The publication was borrowed successfully!');
             } else {
                 alert(data.error);
             }
@@ -32,40 +30,62 @@ function StudentDashboard({ name, lastname, userId }) {
         }
     };
 
-    const handleLogout = () => {
-        navigate('/');
-    };
-
+    // Фильтрация по названию
     const filteredPublications = publications.filter(pub =>
-        pub.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (pub.author_name && pub.author_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        pub.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-layout">
+            <div className="filters-panel">
+                <h3>Filters</h3>
+                <label>Topic:</label>
+                <select>
+                    <option value="">All topics</option>
+                    <option value="AI">AI</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Networks">Networks</option>
+                </select>
 
-            <h2>List of Publications</h2>
+                <label>Country:</label>
+                <select>
+                    <option value="">All countries</option>
+                    <option value="Slovakia">Slovakia</option>
+                    <option value="Czech Republic">Czech Republic</option>
+                    <option value="Germany">Germany</option>
+                </select>
 
-            <input
-                type="text"
-                placeholder="Search for a publication by title or author..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="filter-input"
-            />
+                <label>Faculty:</label>
+                <select>
+                    <option value="">All faculties</option>
+                    <option value="Informatics">Informatics</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Mathematics">Mathematics</option>
+                </select>
+            </div>
 
-            <ul className="publications-list">
-                {filteredPublications.length > 0 ? (
-                    filteredPublications.map(pub => (
+            <div className="dashboard-container centered">
+                <h1>Welcome, student {name} {lastname}!</h1>
+
+                {/* Поисковая строка */}
+                <input
+                    type="text"
+                    placeholder="Search publications..."
+                    className="search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+
+                <h2>Publications</h2>
+                <ul className="publications-list">
+                    {filteredPublications.map(pub => (
                         <li key={pub.id} className="publication-item">
-                            <span>{pub.title} — {pub.author_name}</span>
+                            <span>{pub.title}</span>
                             <button onClick={() => handleBorrow(pub.id)}>Borrow</button>
                         </li>
-                    ))
-                ) : (
-                    <p style={{ textAlign: 'center', color: '#777' }}>No publications were found</p>
-                )}
-            </ul>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 }
