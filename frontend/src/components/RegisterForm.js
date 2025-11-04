@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import '../styles/AuthForm.css';
+import '../styles/RegisterForm.css';
 
-function AuthForm() {
+function RegisterForm() {
     const [role, setRole] = useState('student');
     const [name, setName] = useState('');
     const [lastname, setLastname] = useState('');
@@ -13,8 +13,7 @@ function AuthForm() {
 
     const navigate = useNavigate();
 
-    // Регистрация
-    const handleSignUp = async () => {
+    const handleRegister = async () => {
         try {
             const res = await fetch('http://localhost:3000/register', {
                 method: 'POST',
@@ -22,36 +21,21 @@ function AuthForm() {
                 body: JSON.stringify({ role, name, lastname, password }),
             });
             const data = await res.json();
-            setMessage(data.success ? 'Signed up successfully!' : data.error);
-        } catch (err) {
-            console.error(err);
-            setMessage('Server error');
-        }
-    };
-
-    // Вход
-    const handleSignIn = async () => {
-        try {
-            const res = await fetch('http://localhost:3000/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role, name, lastname, password }),
-            });
-            const data = await res.json();
             if (data.success) {
-                navigate('/dashboard', { state: { role, name, lastname, userId: data.userId } });
+                setMessage('Registration was successful!');
+                setTimeout(() => navigate('/'), 1500);
             } else {
                 setMessage(data.error);
             }
         } catch (err) {
             console.error(err);
-            setMessage('Server error');
+            setMessage('Chyba servera');
         }
     };
 
     return (
         <div className="auth-container">
-            <h1>Virtual Department</h1>
+            <h1>Registration</h1>
 
             <label>
                 Role:
@@ -63,15 +47,13 @@ function AuthForm() {
             </label>
 
             <input
-                className="first-name-input"
                 type="text"
-                placeholder="First Name"
+                placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
             />
 
             <input
-                className="last-name-input"
                 type="text"
                 placeholder="Last Name"
                 value={lastname}
@@ -95,14 +77,13 @@ function AuthForm() {
                 </button>
             </div>
 
-            <div className="auth-btns-container">
-                <button className="sign-up-btn" onClick={() => navigate('/register')}>Sign Up</button>
-                <button className="sign-in-btn" onClick={handleSignIn}>Sign In</button>
+            <div className="register-btns-container">
+                <button className="set-acc-btn" onClick={handleRegister}>Set an Account</button>
+                <button className="back-to-sign-in-btn" onClick={() => navigate('/')}>Back to Sign In</button>
             </div>
-
             {message && <p className="auth-message">{message}</p>}
         </div>
     );
 }
 
-export default AuthForm;
+export default RegisterForm;

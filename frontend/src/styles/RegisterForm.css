@@ -1,0 +1,164 @@
+.auth-container {
+    padding: 30px;
+    font-family: 'Arial', sans-serif;
+    max-width: 400px;
+    margin: 50px auto;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background-color: #f9f9f9;
+}
+
+.auth-container h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+.auth-container label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.auth-container select{
+    margin-top: 6px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: 0.3s;
+    margin-bottom: 15px;
+}
+
+select:hover {
+    border-color: #666;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+}
+
+.auth-container input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.first-name-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.last-name-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.auth-container button {
+    margin: 5px 5px 0 0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+}
+
+.set-acc-btn {
+    background-color: #4CAF50;
+    transition: 0.3s ease;
+    padding: 12px 20px;
+}
+
+.set-acc-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.3);
+}
+
+.back-to-sign-in-btn {
+    background-color: #2196F3;
+    transition: 0.3s ease;
+    padding: 12px 20px;
+}
+
+.back-to-sign-in-btn:hover {
+    background-color: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.3);
+}
+
+.register-btns-container{
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.auth-message {
+    margin-top: 15px;
+    text-align: center;
+    color: red;
+    font-weight: bold;
+}
+
+/* Password field with eye icon */
+.password-wrapper {
+    display: flex;
+    align-items: center;  /* Выровняет кнопку и input по вертикали */
+    gap: 6px;             /* Небольшое расстояние между ними */
+}
+
+.password-wrapper input {
+    flex: 1;              /* Чтобы поле занимало всё оставшееся место */
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-top: 20px;
+}
+
+.password-wrapper input:focus {
+    border-color: #1e88e5;
+}
+
+/* Кнопка */
+.show-password-btn {
+    background: #1e88e5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.25s ease;
+    line-height: 1; /* важно для выравнивания */
+    height: 100%;   /* чтобы совпадала по высоте с инпутом */
+}
+
+.show-password-btn:hover {
+    background-color: #1565c0;
+    transform: translateY(-2px);
+}
