@@ -20,6 +20,7 @@ function Dashboard() {
     return (
         <div className="dashboard-wrapper">
             <div className="dashboard-header">
+                <button className="profile-btn" onClick={() => alert('Personal Profile')}>Go to Profile</button>
                 <h1>Welcome, {name} {lastname}!</h1>
                 <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
             </div>

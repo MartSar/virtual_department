@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Dashboard.css';
+import { useNavigate } from 'react-router-dom';
 
 function StudentDashboard({ name, lastname, userId }) {
     const [publications, setPublications] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch('http://localhost:3000/publications')
@@ -20,7 +23,7 @@ function StudentDashboard({ name, lastname, userId }) {
             });
             const data = await res.json();
             if (data.success) {
-                alert('Publikácia bola úspešne požičaná!');
+                alert('The publication has been successfully borrowed!');
             } else {
                 alert(data.error);
             }
@@ -29,17 +32,39 @@ function StudentDashboard({ name, lastname, userId }) {
         }
     };
 
+    const handleLogout = () => {
+        navigate('/');
+    };
+
+    const filteredPublications = publications.filter(pub =>
+        pub.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (pub.author_name && pub.author_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
     return (
         <div className="dashboard-container">
-            <h1>Welcome, student {name} {lastname}!</h1>
-            <h2>List of Available Publications</h2>
+
+            <h2>List of Publications</h2>
+
+            <input
+                type="text"
+                placeholder="Search for a publication by title or author..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="filter-input"
+            />
+
             <ul className="publications-list">
-                {publications.map(pub => (
-                    <li key={pub.id} className="publication-item">
-                        <span>{pub.title} — {pub.author_name}</span>
-                        <button onClick={() => handleBorrow(pub.id)}>Borrow</button>
-                    </li>
-                ))}
+                {filteredPublications.length > 0 ? (
+                    filteredPublications.map(pub => (
+                        <li key={pub.id} className="publication-item">
+                            <span>{pub.title} — {pub.author_name}</span>
+                            <button onClick={() => handleBorrow(pub.id)}>Borrow</button>
+                        </li>
+                    ))
+                ) : (
+                    <p style={{ textAlign: 'center', color: '#777' }}>No publications were found</p>
+                )}
             </ul>
         </div>
     );
