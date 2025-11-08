@@ -21,14 +21,14 @@ function Dashboard() {
         <div className="dashboard-wrapper">
             <div className="dashboard-header">
                 <button className="profile-btn" onClick={() => navigate('/profile')}>My Profile</button>
-                <h1>Welcome, {name} {lastname}!</h1>
+                <h1>Welcome, {role} {name} {lastname}!</h1>
                 <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
             </div>
 
             {role === 'professor' || role === 'postgraduate' ? (
                 <AuthorDashboard name={name} lastname={lastname} userId={userId} role={role} />
             ) : (
-                <StudentDashboard name={name} lastname={lastname} userId={userId} />
+                <StudentDashboard name={name} lastname={lastname} userId={userId} role={role}/>
             )}
         </div>
     );

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Dashboard.css';
+import FiltersPanel from "./inner_components/FiltersPanel";
+import SearchBar from "./inner_components/SearchBar";
 
 function AuthorDashboard({ name, lastname, userId, role }) {
     const [publications, setPublications] = useState([]);
@@ -48,51 +50,15 @@ function AuthorDashboard({ name, lastname, userId, role }) {
         }
     };
 
-    // Фильтрация по поисковику
     const filteredPublications = publications.filter(pub =>
         pub.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
         <div className="dashboard-layout">
-            <div className="filters-panel">
-                <h3>Filters</h3>
-                <label>Topic:</label>
-                <select>
-                    <option value="">All topics</option>
-                    <option value="AI">AI</option>
-                    <option value="Data Science">Data Science</option>
-                    <option value="Networks">Networks</option>
-                </select>
-
-                <label>Country:</label>
-                <select>
-                    <option value="">All countries</option>
-                    <option value="Slovakia">Slovakia</option>
-                    <option value="Czech Republic">Czech Republic</option>
-                    <option value="Germany">Germany</option>
-                </select>
-
-                <label>Faculty:</label>
-                <select>
-                    <option value="">All faculties</option>
-                    <option value="Informatics">Informatics</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Mathematics">Mathematics</option>
-                </select>
-            </div>
-
+            <FiltersPanel />
             <div className="dashboard-container centered">
-                <h1>Welcome, {role} {name} {lastname}!</h1>
-
-                {/* Поисковая строка */}
-                <input
-                    type="text"
-                    placeholder="Search publications..."
-                    className="search-input"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
 
                 <h2>Your publications</h2>
                 <ul className="publications-list">
