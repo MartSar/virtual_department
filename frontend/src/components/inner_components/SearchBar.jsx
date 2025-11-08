@@ -1,6 +1,5 @@
-// src/components/SearchBar.jsx
-import React from 'react';
 import '../../styles/SearchBar.css';
+import React from 'react';
 
 const SearchBar = ({ searchQuery, setSearchQuery, placeholder = "Search publications..." }) => {
     return (

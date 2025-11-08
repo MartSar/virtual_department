@@ -1,8 +1,9 @@
+import '../styles/Dashboard.css';
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import StudentDashboard from './StudentDashboard';
 import AuthorDashboard from './AuthorDashboard';
-import '../styles/Dashboard.css';
+import {handleLogout} from "../handlers";
 
 function Dashboard() {
     const location = useLocation();
@@ -13,16 +14,12 @@ function Dashboard() {
         return <h2 style={{ textAlign: 'center' }}>Access denied</h2>;
     }
 
-    const handleLogout = () => {
-        navigate('/');
-    };
-
     return (
         <div className="dashboard-wrapper">
             <div className="dashboard-header">
                 <button className="profile-btn" onClick={() => navigate('/profile')}>My Profile</button>
                 <h1>Welcome, {role} {name} {lastname}!</h1>
-                <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
+                <button className="logout-btn" onClick={() => handleLogout({ navigate })}>Sign Out</button>
             </div>
 
             {role === 'professor' || role === 'postgraduate' ? (

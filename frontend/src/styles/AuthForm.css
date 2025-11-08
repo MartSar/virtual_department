@@ -9,7 +9,7 @@
     background-color: #f9f9f9;
 }
 
-.auth-container h1 {
+.auth-container h1, .auth-container h2 {
     text-align: center;
     margin-bottom: 25px;
     color: #333;
@@ -32,7 +32,7 @@
     background-color: #fff;
     font-size: 15px;
     outline: none;
-    transition: 0.3s;
+    transition: 0.2s;
     margin-bottom: 15px;
 }
 
@@ -85,7 +85,7 @@ select:focus {
 
 .sign-up-btn {
     background-color: #4CAF50;
-    transition: 0.3s ease;
+    transition: 0.2s ease;
     padding: 12px 20px;
 }
 
@@ -97,7 +97,7 @@ select:focus {
 
 .sign-in-btn {
     background-color: #2196F3;
-    transition: 0.3s ease;
+    transition: 0.2s ease;
     padding: 12px 20px;
 }
 
@@ -153,7 +153,7 @@ select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: 0.25s ease;
+    transition: 0.2s ease;
     line-height: 1; /* важно для выравнивания */
     height: 100%;   /* чтобы совпадала по высоте с инпутом */
 }

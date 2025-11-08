@@ -1,7 +1,9 @@
+import '../styles/RegisterForm.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import '../styles/RegisterForm.css';
+import FormFields from "./inner_components/FormFields";
+import { handleRegister } from "../handlers";
+
 
 function RegisterForm() {
     const [role, setRole] = useState('student');
@@ -13,73 +15,22 @@ function RegisterForm() {
 
     const navigate = useNavigate();
 
-    const handleRegister = async () => {
-        try {
-            const res = await fetch('http://localhost:3000/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ role, name, lastname, password }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                setMessage('Registration was successful!');
-                setTimeout(() => navigate('/'), 1500);
-            } else {
-                setMessage(data.error);
-            }
-        } catch (err) {
-            console.error(err);
-            setMessage('Chyba servera');
-        }
-    };
-
     return (
         <div className="auth-container">
-            <h1>Registration</h1>
-
-            <label>
-                Role:
-                <select value={role} onChange={(e) => setRole(e.target.value)}>
-                    <option value="student">Student</option>
-                    <option value="professor">Professor</option>
-                    <option value="postgraduate">Postgraduate</option>
-                </select>
-            </label>
-
-            <input
-                type="text"
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+            <h1>Virtual Department</h1>
+            <h2>Registration</h2>
+            <FormFields
+                role={role} setRole={setRole}
+                name={name} setName={setName}
+                lastname={lastname} setLastname={setLastname}
+                password={password} setPassword={setPassword}
+                showPassword={showPassword} setShowPassword={setShowPassword}
             />
-
-            <input
-                type="text"
-                placeholder="Last Name"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-            />
-
-            <div className="password-wrapper">
-                <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="password-input"
-                />
-                <button
-                    type="button"
-                    className="show-password-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-            </div>
-
             <div className="register-btns-container">
-                <button className="set-acc-btn" onClick={handleRegister}>Set an Account</button>
                 <button className="back-to-sign-in-btn" onClick={() => navigate('/')}>Back to Sign In</button>
+                <button className="set-acc-btn" onClick={() => handleRegister(
+                    { role, name, lastname, password, setMessage, navigate }
+                )}>Set an Account</button>
             </div>
             {message && <p className="auth-message">{message}</p>}
         </div>

@@ -6,7 +6,7 @@ const FiltersPanel = ({ filters, setFilters }) => {
 
     return (
         <div className="filters-panel">
-            <h3>Filters</h3>
+            <h3>Filters:</h3>
 
             <label>Topic:</label>
             <select name="topic" value={filters.topic} onChange={handleChange}>
