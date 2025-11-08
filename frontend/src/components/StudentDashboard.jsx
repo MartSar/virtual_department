@@ -2,6 +2,7 @@ import '../styles/Dashboard.css';
 import React, { useEffect, useState } from 'react';
 import FiltersPanel from "./inner_components/FiltersPanel";
 import SearchBar from "./inner_components/SearchBar";
+import PublicationModal from './PublicationModal';
 
 function StudentDashboard({ name, lastname, userId, role }) {
     const [publications, setPublications] = useState([]);
@@ -11,6 +12,7 @@ function StudentDashboard({ name, lastname, userId, role }) {
         country: '',
         faculty: ''
     });
+    const [selectedPublication, setSelectedPublication] = useState(null);
 
     useEffect(() => {
         fetch('http://localhost:3000/publications')
@@ -42,7 +44,6 @@ function StudentDashboard({ name, lastname, userId, role }) {
         const matchesTopic = filters.topic === '' || pub.topic === filters.topic;
         const matchesCountry = filters.country === '' || pub.country === filters.country;
         const matchesFaculty = filters.faculty === '' || pub.faculty === filters.faculty;
-
         return matchesSearch && matchesTopic && matchesCountry && matchesFaculty;
     });
 
@@ -55,13 +56,26 @@ function StudentDashboard({ name, lastname, userId, role }) {
                 <h2>Publications</h2>
                 <ul className="publications-list">
                     {filteredPublications.map(pub => (
-                        <li key={pub.id} className="publication-item">
+                        <li
+                            key={pub.id}
+                            className="publication-item"
+                            onClick={() => setSelectedPublication(pub)}
+                        >
                             <span>{pub.title}</span>
-                            <button onClick={() => handleBorrow(pub.id)}>Borrow</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleBorrow(pub.id); }}>
+                                Borrow
+                            </button>
                         </li>
                     ))}
                 </ul>
             </div>
+
+            {selectedPublication && (
+                <PublicationModal
+                    publication={selectedPublication}
+                    onClose={() => setSelectedPublication(null)}
+                />
+            )}
         </div>
     );
 }
