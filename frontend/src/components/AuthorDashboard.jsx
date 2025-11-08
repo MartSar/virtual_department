@@ -6,6 +6,11 @@ import SearchBar from "./inner_components/SearchBar";
 function AuthorDashboard({ name, lastname, userId, role }) {
     const [publications, setPublications] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [filters, setFilters] = useState({
+        topic: '',
+        country: '',
+        faculty: ''
+    });
 
     const fetchPublications = async () => {
         try {
@@ -50,13 +55,18 @@ function AuthorDashboard({ name, lastname, userId, role }) {
         }
     };
 
-    const filteredPublications = publications.filter(pub =>
-        pub.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPublications = publications.filter(pub => {
+        const matchesSearch = pub.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesTopic = filters.topic === '' || pub.topic === filters.topic;
+        const matchesCountry = filters.country === '' || pub.country === filters.country;
+        const matchesFaculty = filters.faculty === '' || pub.faculty === filters.faculty;
+
+        return matchesSearch && matchesTopic && matchesCountry && matchesFaculty;
+    });
 
     return (
         <div className="dashboard-layout">
-            <FiltersPanel />
+            <FiltersPanel filters={filters} setFilters={setFilters} />
             <div className="dashboard-container centered">
                 <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
 
