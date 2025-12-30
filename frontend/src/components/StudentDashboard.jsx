@@ -15,6 +15,7 @@ function StudentDashboard({ name, lastname, userId, role }) {
         faculty: ''
     });
     const [selectedPublication, setSelectedPublication] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         fetch('http://localhost:3000/publications')
@@ -68,6 +69,17 @@ function StudentDashboard({ name, lastname, userId, role }) {
         return matchesSearch && matchesTopic && matchesCountry && matchesCity && matchesUniversity && matchesFaculty;
     });
 
+    const openPublication = (pub) => {
+        setSelectedPublication(pub);
+        setIsModalOpen(true);
+    };
+
+    const closePublication = () => {
+        setIsModalOpen(false);
+        setSelectedPublication(null);
+    };
+
+
     return (
         <div className="dashboard-layout">
             <FiltersPanel
@@ -83,22 +95,19 @@ function StudentDashboard({ name, lastname, userId, role }) {
                     {filteredPublications.map(pub => (
                         <li
                             key={pub.id}
-                            className="publication-item"
-                            onClick={() => setSelectedPublication(pub)}
+                            className="publication-item clickable"
+                            onClick={() => openPublication(pub)}
                         >
                             <span>{pub.title}</span>
-                            <button onClick={(e) => { e.stopPropagation(); handleBorrow(pub.id); }}>
-                                Borrow
-                            </button>
                         </li>
                     ))}
                 </ul>
             </div>
 
-            {selectedPublication && (
+            {isModalOpen && (
                 <PublicationModal
                     publication={selectedPublication}
-                    onClose={() => setSelectedPublication(null)}
+                    onClose={closePublication}
                 />
             )}
         </div>
