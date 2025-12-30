@@ -10,6 +10,8 @@ function StudentDashboard({ name, lastname, userId, role }) {
     const [filters, setFilters] = useState({
         topic: '',
         country: '',
+        city: '',
+        university: '',
         faculty: ''
     });
     const [selectedPublication, setSelectedPublication] = useState(null);
@@ -20,6 +22,22 @@ function StudentDashboard({ name, lastname, userId, role }) {
             .then(data => setPublications(data))
             .catch(err => console.error(err));
     }, []);
+
+    const [filterOptions, setFilterOptions] = useState({
+        topics: [],
+        countries: [],
+        cities: [],
+        universities: [],
+        faculties: []
+    });
+
+    useEffect(() => {
+        fetch('http://localhost:3000/filters')
+            .then(res => res.json())
+            .then(data => setFilterOptions(data))
+            .catch(err => console.error(err));
+    }, []);
+
 
     const handleBorrow = async (pubId) => {
         try {
@@ -43,13 +61,20 @@ function StudentDashboard({ name, lastname, userId, role }) {
         const matchesSearch = pub.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesTopic = filters.topic === '' || pub.topic === filters.topic;
         const matchesCountry = filters.country === '' || pub.country === filters.country;
+        const matchesCity = filters.city === '' || pub.city === filters.city;
+        const matchesUniversity = filters.university === '' || pub.university === filters.city;
         const matchesFaculty = filters.faculty === '' || pub.faculty === filters.faculty;
-        return matchesSearch && matchesTopic && matchesCountry && matchesFaculty;
+
+        return matchesSearch && matchesTopic && matchesCountry && matchesCity && matchesUniversity && matchesFaculty;
     });
 
     return (
         <div className="dashboard-layout">
-            <FiltersPanel filters={filters} setFilters={setFilters} />
+            <FiltersPanel
+                filters={filters}
+                setFilters={setFilters}
+                options={filterOptions}
+            />
             <div className="dashboard-container centered">
                 <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 

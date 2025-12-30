@@ -60,15 +60,15 @@ app.post('/register', async (req, res) => {
         else if (role === 'professor') table = 'professors';
         else table = 'postgraduates';
 
-        // Проверяем, существует ли уже такой пароль (по хэшу)
-        const existingUsers = await pool.query(`SELECT password FROM ${table}`);
-
-        for (let user of existingUsers.rows) {
-            const match = await bcrypt.compare(password, user.password);
-            if (match) {
-                return res.status(400).json({ error: 'This password is already in use!' });
-            }
-        }
+        // // Проверяем, существует ли уже такой пароль (по хэшу)
+        // const existingUsers = await pool.query(`SELECT password FROM ${table}`);
+        //
+        // for (let user of existingUsers.rows) {
+        //     const match = await bcrypt.compare(password, user.password);
+        //     if (match) {
+        //         return res.status(400).json({ error: 'This password is already in use!' });
+        //     }
+        // }
 
         // Хэшируем пароль и добавляем пользователя
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -85,7 +85,7 @@ app.post('/register', async (req, res) => {
 
 
 // --------------------------
-// Логин
+// Login
 // --------------------------
 app.post('/login', async (req, res) => {
   try {
@@ -120,14 +120,12 @@ app.listen(port, () => {
 });
 
 
-// server.js или app.js
-
 // Borrow publication (для студентов)
 app.post('/borrow', async (req, res) => {
     try {
         const { student_id, publication_id } = req.body;
 
-        // Проверяем, что публикация ещё не взята
+        // Publication availability
         const [existing] = await pool.query(
             `SELECT * FROM loans WHERE publication_id = $1 AND status = 'active'`,
             [publication_id]
@@ -137,7 +135,7 @@ app.post('/borrow', async (req, res) => {
             return res.status(400).json({ error: 'Publication already borrowed' });
         }
 
-        // Вставляем запись в loans
+        // record addition to loans
         const result = await pool.query(
             `INSERT INTO loans (publication_id, borrower_student_id) VALUES ($1, $2) RETURNING *`,
             [publication_id, student_id]
@@ -150,7 +148,7 @@ app.post('/borrow', async (req, res) => {
     }
 });
 
-// Add new publication (для преподавателей и аспирантов)
+// Add new publication (professors and postgraduates)
 app.post('/add-publication', async (req, res) => {
     try {
         const { title, author_id } = req.body;
@@ -164,5 +162,38 @@ app.post('/add-publication', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to add publication' });
+    }
+});
+
+// Publication filter getting from DB
+
+app.get('/filters', async (req, res) => {
+    try {
+        const topicsRes = await pool.query(
+            'SELECT id, name FROM central_topics ORDER BY name'
+        );
+        const countriesRes = await pool.query(
+            'SELECT id, name FROM countries ORDER BY name'
+        );
+        const citiesRes = await pool.query(
+            'SELECT id, name FROM cities ORDER BY name'
+        );
+        const universitiesRes = await pool.query(
+            'SELECT id, name FROM universities ORDER BY name'
+        );
+        const facultiesRes = await pool.query(
+            'SELECT id, name FROM faculties ORDER BY name'
+        );
+
+        res.json({
+            topics: topicsRes.rows,
+            countries: countriesRes.rows,
+            cities: citiesRes.rows,
+            universities: universitiesRes.rows,
+            faculties: facultiesRes.rows
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to load filters' });
     }
 });
