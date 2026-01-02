@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/registration_components/AuthForm';
 import RegisterForm from "./components/registration_components/RegisterForm";
-import Dashboard from './components/dashboard/Dashboard';
+import Dashboard from './components/dashboard_components/Dashboard';
 
 function App() {
     return (
