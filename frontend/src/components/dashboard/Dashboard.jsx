@@ -17,7 +17,23 @@ function Dashboard() {
     return (
         <div className="dashboard-wrapper">
             <div className="dashboard-header">
-                <button className="profile-btn" onClick={() => navigate('/profile')}>My Profile</button>
+                <button
+                    className="profile-btn"
+                    onClick={() =>
+                        navigate(`/profile/${userId}`, {
+                            state: {
+                                loggedUser: {
+                                    id: userId,
+                                    role,
+                                    name,
+                                    lastname
+                                }
+                            }
+                        })
+                    }
+                >
+                    My Profile
+                </button>
                 <h1>Welcome, {role} {name} {lastname}!</h1>
                 <button className="logout-btn" onClick={() => handleLogout({ navigate })}>Sign Out</button>
             </div>

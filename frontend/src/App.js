@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/registration/AuthForm';
 import RegisterForm from "./components/registration/RegisterForm";
 import Dashboard from './components/dashboard/Dashboard';
+import UserProfile from "./components/profile/UserProfile";
+
 
 function App() {
     return (
@@ -11,6 +13,7 @@ function App() {
                 <Route path="/" element={<AuthForm />} />
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile/:id" element={<UserProfile />} />
             </Routes>
         </Router>
     );
