@@ -1,8 +1,8 @@
-import '../styles/RegisterForm.css';
+import '../../styles/RegisterForm.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FormFields from "./inner_components/FormFields";
-import { handleRegister } from "../handlers";
+import FormFields from "../inner_components/FormFields";
+import { handleRegister } from "../../handlers";
 
 
 function RegisterForm() {

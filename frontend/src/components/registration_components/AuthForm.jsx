@@ -1,9 +1,9 @@
-import '../styles/AuthForm.css';
+import '../../styles/AuthForm.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import  FormFields from "./inner_components/FormFields"
-import { handleSignIn } from "../handlers";
+import  FormFields from "../inner_components/FormFields"
+import { handleSignIn } from "../../handlers";
 
 
 function AuthForm() {

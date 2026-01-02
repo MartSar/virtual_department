@@ -1,7 +1,7 @@
-import '../styles/Dashboard.css';
+import '../../styles/Dashboard.css';
 import React, { useEffect, useState } from 'react';
-import FiltersPanel from "./inner_components/FiltersPanel";
-import SearchBar from "./inner_components/SearchBar";
+import FiltersPanel from "../inner_components/FiltersPanel";
+import SearchBar from "../inner_components/SearchBar";
 
 function AuthorDashboard({ name, lastname, userId, role }) {
     const [publications, setPublications] = useState([]);

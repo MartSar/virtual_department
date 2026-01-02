@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/PublicationModal.css';
+import '../../styles/PublicationModal.css';
 
 const PublicationModal = ({ publication, onClose }) => {
     if (!publication) return null;

@@ -1,9 +1,9 @@
-import '../styles/Dashboard.css';
+import '../../styles/Dashboard.css';
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import StudentDashboard from './StudentDashboard';
 import AuthorDashboard from './AuthorDashboard';
-import {handleLogout} from "../handlers";
+import {handleLogout} from "../../handlers";
 
 function Dashboard() {
     const location = useLocation();
