@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AuthForm from './components/registration_components/AuthForm';
-import RegisterForm from "./components/registration_components/RegisterForm";
-import Dashboard from './components/dashboard_components/Dashboard';
+import AuthForm from './components/registration/AuthForm';
+import RegisterForm from "./components/registration/RegisterForm";
+import Dashboard from './components/dashboard/Dashboard';
 
 function App() {
     return (
