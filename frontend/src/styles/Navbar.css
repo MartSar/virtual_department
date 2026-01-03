@@ -1,0 +1,52 @@
+.navbar {
+    height: 60px;
+    background-color: #1e1e2f;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 25px;
+}
+
+.navbar-left,
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.navbar-center {
+    font-weight: bold;
+    font-size: 16px;
+    opacity: 0.9;
+    cursor: default;
+}
+
+.navbar-profile,
+.navbar-dashboard,
+.navbar-logout {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.35s ease;
+}
+
+.navbar-profile {
+    font-size: 20px;
+}
+
+.navbar-dashboard:hover{
+    color: lightblue;
+    font-size: 15px;
+}
+.navbar-logout:hover {
+    color: #fd2828;
+    font-size: 15px;
+}
+.navbar-profile:hover {
+    font-size: 25px;
+}

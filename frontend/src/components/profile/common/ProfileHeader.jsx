@@ -6,22 +6,6 @@ function ProfileHeader({ user, isOwner }) {
 
     return (
         <div className="profile-header">
-            <button
-                onClick={() =>
-                    navigate("/dashboard", {
-                        state: {
-                            role: user.role,
-                            name: user.name,
-                            lastname: user.lastname,
-                            userId: user.id
-                        }
-                    })
-                }
-            >
-                Back to Dashboard
-            </button>
-
-
             <h2>
                 {user.role} {user.name} {user.lastname}
             </h2>

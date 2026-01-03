@@ -3,17 +3,33 @@ export const handleSignIn = async ({ role, name, lastname, password, setMessage,
         const res = await fetch('http://localhost:3000/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role, name, lastname, password }),
+            body: JSON.stringify({
+                role,
+                name,
+                lastname,
+                password
+            }),
         });
+
         const data = await res.json();
+
         if (data.success) {
-            navigate('/dashboard', { state: { role, name, lastname, userId: data.userId } });
+            const { id, name: serverName, lastname: serverLastname, role: serverRole, details } = data.user;
+
+            navigate('/dashboard', {
+                state: {
+                    user_id: id,
+                    name: serverName,
+                    lastname: serverLastname,
+                    role: serverRole,
+                }
+            });
         } else {
-            setMessage(data.error);
+            setMessage(data.error || 'Ошибка входа');
         }
     } catch (err) {
-        console.error(err);
-        setMessage('Server error');
+        console.error('Login error:', err);
+        setMessage('Ошибка сервера. Попробуйте позже.');
     }
 };
 

@@ -29,9 +29,19 @@ function AuthForm() {
             />
             <div className="auth-btns-container">
                 <button className="sign-up-btn" onClick={() => navigate('/register')}>Sign Up</button>
-                <button className="sign-in-btn" onClick={() => handleSignIn(
-                    { role, name, lastname, password, setMessage, navigate }
-                )}>Sign In</button>
+                <button
+                    className="sign-in-btn"
+                    onClick={() => handleSignIn({
+                        role,
+                        name,
+                        lastname,
+                        password,
+                        setMessage,
+                        navigate
+                    })}
+                >
+                    Sign In
+                </button>
             </div>
             {message && <p className="auth-message">{message}</p>}
         </div>
