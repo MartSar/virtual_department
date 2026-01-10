@@ -1,4 +1,4 @@
-export const handleSignIn = async ({ role, name, lastname, password, setMessage, navigate }) => {
+export const handleSignIn = async ({ role, name, lastname, password, university_id, setMessage, navigate }) => {
     try {
         const res = await fetch('http://localhost:3000/login', {
             method: 'POST',
@@ -7,7 +7,8 @@ export const handleSignIn = async ({ role, name, lastname, password, setMessage,
                 role,
                 name,
                 lastname,
-                password
+                password,
+                university_id
             }),
         });
 
@@ -33,12 +34,12 @@ export const handleSignIn = async ({ role, name, lastname, password, setMessage,
     }
 };
 
-export const handleRegister = async ({ role, name, lastname, password, setMessage, navigate }) => {
+export const handleRegister = async ({ role, name, lastname, password, university_id, setMessage, navigate }) => {
     try {
         const res = await fetch('http://localhost:3000/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role, name, lastname, password }),
+            body: JSON.stringify({ role, name, lastname, password, university_id }),
         });
         const data = await res.json();
         if (data.success) {

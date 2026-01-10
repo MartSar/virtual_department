@@ -54,36 +54,15 @@ app.get('/users', getAllFromTable('users'));
 app.get('/borrowings', getAllFromTable('borrowings'));
 
 // --------------------------
-// Get single user by ID
-// --------------------------
-app.get('/users/:id', async (req, res) => {
-    const userId = req.params.id;
-    try {
-        const result = await pool.query(
-            'SELECT id, name, lastname, role FROM users WHERE id = $1',
-            [userId]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// --------------------------
 // Registration
 // --------------------------
 app.post('/register', async (req, res) => {
     let client;
-    try {
-        const { role, name, lastname, password } = req.body;
 
-        if (!name || !lastname || !password || !role) {
+    try {
+        const { role, name, lastname, password, university_id } = req.body;
+
+        if (!role || !name || !lastname || !password || !university_id) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
@@ -91,7 +70,13 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Invalid role' });
         }
 
+        // university_id required ONLY for students
+        if (role === 'student' && !university_id) {
+            return res.status(400).json({ error: 'University is required for students' });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 12);
+
         const roleTable =
             role === 'student' ? 'students' :
                 role === 'professor' ? 'professors' :
@@ -100,19 +85,34 @@ app.post('/register', async (req, res) => {
         client = await pool.connect();
         await client.query('BEGIN');
 
+        // create user
         const userResult = await client.query(
             `INSERT INTO users (name, lastname, password, role)
-       VALUES ($1, $2, $3, $4) RETURNING id, name, lastname, role`,
+             VALUES ($1, $2, $3, $4)
+             RETURNING id, name, lastname, role`,
             [name, lastname, hashedPassword, role]
         );
 
         const user = userResult.rows[0];
 
-        const roleResult = await client.query(
-            `INSERT INTO ${roleTable} (name, lastname, user_id)
-       VALUES ($1, $2, $3) RETURNING *`,
-            [name, lastname, user.id]
-        );
+        // create role-specific record
+        let roleResult;
+
+        if (role === 'student') {
+            roleResult = await client.query(
+                `INSERT INTO students (name, lastname, user_id, university_id)
+                 VALUES ($1, $2, $3, $4)
+                 RETURNING *`,
+                [name, lastname, user.id, university_id]
+            );
+        } else {
+            roleResult = await client.query(
+                `INSERT INTO ${roleTable} (name, lastname, user_id)
+                 VALUES ($1, $2, $3)
+                 RETURNING *`,
+                [name, lastname, user.id]
+            );
+        }
 
         await client.query('COMMIT');
 
@@ -127,6 +127,7 @@ app.post('/register', async (req, res) => {
                 roleData: roleResult.rows[0],
             }
         });
+
     } catch (err) {
         if (client) await client.query('ROLLBACK');
         console.error('❌ Registration error:', err);
@@ -146,21 +147,41 @@ app.post('/register', async (req, res) => {
 // --------------------------
 app.post('/login', async (req, res) => {
     try {
-        const { role, name, lastname, password } = req.body;
+        const { role, name, lastname, password, university_id } = req.body;
 
         if (!role || !name || !lastname || !password) {
             return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        if (role === 'student' && !university_id) {
+            return res.status(400).json({ error: 'University is required for students' });
         }
 
         if (!['student', 'professor', 'postgraduate'].includes(role)) {
             return res.status(400).json({ error: 'Invalid role' });
         }
 
-        const userResult = await pool.query(
-            `SELECT id, name, lastname, password, role
-       FROM users WHERE name=$1 AND lastname=$2 AND role=$3`,
-            [name, lastname, role]
-        );
+        let userResult;
+
+        if (role === 'student') {
+            userResult = await pool.query(
+                `SELECT u.id, u.name, u.lastname, u.password, u.role
+         FROM users u
+         JOIN students s ON s.user_id = u.id
+         WHERE u.name=$1
+           AND u.lastname=$2
+           AND u.role=$3
+           AND s.university_id=$4`,
+                [name, lastname, role, university_id]
+            );
+        } else {
+            userResult = await pool.query(
+                `SELECT id, name, lastname, password, role
+         FROM users
+         WHERE name=$1 AND lastname=$2 AND role=$3`,
+                [name, lastname, role]
+            );
+        }
 
         if (userResult.rows.length === 0) {
             return res.status(404).json({ error: 'User not found' });
@@ -178,12 +199,22 @@ app.post('/login', async (req, res) => {
                 role === 'professor' ? 'professors' :
                     'postgraduates';
 
-        const roleDataResult = await pool.query(
-            `SELECT * FROM ${roleTable} WHERE user_id = $1`,
-            [user.id]
-        );
+        let roleDataResult;
 
-        const roleData = roleDataResult.rows[0] || {};
+        if (role === 'student') {
+            roleDataResult = await pool.query(
+                `SELECT s.*, u.name AS university_name
+                 FROM students s
+                 LEFT JOIN universities u ON u.id = s.university_id
+                 WHERE s.user_id = $1`,
+                [user.id]
+            );
+        } else {
+            roleDataResult = await pool.query(
+                `SELECT * FROM ${roleTable} WHERE user_id = $1`,
+                [user.id]
+            );
+        }
 
         res.json({
             success: true,
@@ -193,7 +224,7 @@ app.post('/login', async (req, res) => {
                 name: user.name,
                 lastname: user.lastname,
                 role: user.role,
-                details: roleData,
+                details: roleDataResult.rows[0] || {},
             }
         });
 
@@ -202,6 +233,7 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Login failed' });
     }
 });
+
 
 // --------------------------
 // Borrow publication (students only)
@@ -341,12 +373,37 @@ app.get('/students/user/:userId', async (req, res) => {
     }
 });
 
+// --------------------------
+// Get Student
+// --------------------------
+app.get('/users/:id', async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const result = await pool.query(
+            `SELECT id, name, lastname, role
+             FROM users
+             WHERE id = $1`,
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 
 // --------------------------
 // Get Borrowings of current student
 // --------------------------
-app.get('/api/borrowings/student/:id', async (req, res) => {
-    const { id } = req.params;
+app.get(`borrowings/:id`, async (req, res) => {
+    const { studentId } = req.params;
     try {
         const result = await pool.query(
             `SELECT b.id, b.start_date, b.end_date, 
@@ -356,7 +413,7 @@ app.get('/api/borrowings/student/:id', async (req, res) => {
              JOIN publications p ON b.publication_id = p.id
              WHERE b.borrower_id = $1
              ORDER BY b.start_date DESC`,
-            [id]
+            [studentId]
         );
 
         res.json(result.rows);

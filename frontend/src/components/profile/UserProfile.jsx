@@ -12,12 +12,10 @@ function UserProfile() {
     const [profileUser, setProfileUser] = useState(null);
     const [student, setStudent] = useState(null);
 
-    // Текущий залогиненный пользователь
     const loggedUser =
         location.state?.loggedUser ||
         JSON.parse(localStorage.getItem("loggedUser"));
 
-    // Получаем пользователя
     useEffect(() => {
         fetch(`http://localhost:3000/users/${id}`)
             .then(res => res.json())
@@ -25,7 +23,6 @@ function UserProfile() {
             .catch(err => console.error('Failed to fetch user:', err));
     }, [id]);
 
-    // Если это студент, получаем его student объект
     useEffect(() => {
         if (profileUser?.role === 'student' && profileUser.id) {
             fetch(`http://localhost:3000/students/user/${profileUser.id}`)
@@ -39,7 +36,6 @@ function UserProfile() {
         return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
     }
 
-    const isOwner = loggedUser.user_id === profileUser.id;
     const isStudent = profileUser.role === "student";
 
     return (
@@ -47,11 +43,10 @@ function UserProfile() {
             <Navbar user={loggedUser} />
 
             <div className="user-profile">
-                <ProfileHeader user={profileUser} isOwner={isOwner} />
+                <ProfileHeader user={profileUser} />
                 <ProfileInfo user={profileUser} />
 
-                {/* Студенты видят свои borrowings только на своём профиле */}
-                {isStudent && isOwner && student && (
+                {isStudent && student && (
                     <BorrowedPublications studentId={student.id} />
                 )}
             </div>

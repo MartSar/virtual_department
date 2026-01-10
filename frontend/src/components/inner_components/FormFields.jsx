@@ -2,12 +2,15 @@ import React from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function FormFields({
-                  role, setRole,
-                  name, setName,
-                  lastname, setLastname,
-                  password, setPassword,
-                  showPassword, setShowPassword
-              }){
+                                       role, setRole,
+                                       name, setName,
+                                       lastname, setLastname,
+                                       password, setPassword,
+                                       showPassword, setShowPassword,
+                                       universities,
+                                       universityId,
+                                       setUniversityId
+                                   }) {
     return (
         <div className="form">
             <label>
@@ -18,6 +21,25 @@ export default function FormFields({
                     <option value="postgraduate">Postgraduate</option>
                 </select>
             </label>
+
+            {role === 'student' && (
+                <label>
+                    University:
+                    <select
+                        value={universityId}
+                        onChange={(e) => setUniversityId(e.target.value)}
+                        required
+                    >
+                        <option value="">Select university</option>
+                        {universities.map(u => (
+                            <option key={u.id} value={u.id}>
+                                {u.name}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            )}
+
 
             <input
                 className="first-name-input"
@@ -53,5 +75,4 @@ export default function FormFields({
             </div>
         </div>
     );
-};
-
+}

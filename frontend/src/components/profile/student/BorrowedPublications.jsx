@@ -16,17 +16,28 @@ const BorrowedPublications = ({ studentId }) => {
             .then(async (res) => {
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
+
+                    if (res.status === 404 && errData.error === 'No borrowings found for this student') {
+                        return [];
+                    }
+
+                    // 🔴 реальная ошибка
                     throw new Error(errData.error || 'Failed to fetch borrowings');
                 }
+
                 return res.json();
             })
-            .then(data => setBorrowings(data))
-            .catch(err => setError(err.message))
+            .then(data => {
+                setBorrowings(Array.isArray(data) ? data : []);
+            })
+            .catch(err => {
+                setError(err.message);
+            })
             .finally(() => setLoading(false));
     }, [studentId]);
 
     if (loading) {
-        return <p>Loading borrowed publications...</p>;
+        return <p>Loading...</p>;
     }
 
     if (error) {

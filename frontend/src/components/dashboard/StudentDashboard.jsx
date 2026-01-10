@@ -39,24 +39,6 @@ function StudentDashboard({ student }) {
             .catch(err => console.error(err));
     }, []);
 
-    const handleBorrow = async (publication_id) => {
-        try {
-            const res = await fetch('http://localhost:3000/api/borrowings/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ student_id: student.id, publication_id: publication_id }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('The publication was borrowed successfully!');
-            } else {
-                alert(data.error);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
     const filteredPublications = publications.filter(pub => {
         const matchesSearch = pub.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesTopic = filters.topic === '' || pub.topic === filters.topic;
@@ -107,7 +89,6 @@ function StudentDashboard({ student }) {
                     publication={selectedPublication}
                     onClose={closePublication}
                     student={student}
-                    onBorrowed={handleBorrow}
                 />
             )}
         </div>

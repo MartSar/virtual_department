@@ -3,7 +3,7 @@ import "../../styles/PublicationModal.css";
 
 const borrowOptions = [7, 30, 90, 365];
 
-const PublicationModal = ({ publication, onClose, student, onBorrowed }) => {
+const PublicationModal = ({ publication, onClose, student }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -55,7 +55,6 @@ const PublicationModal = ({ publication, onClose, student, onBorrowed }) => {
             setSuccess(true);
             setSelectedDays(null);
             setShowDuration(false);
-            if (onBorrowed) onBorrowed(publication.id);
 
         } catch (err) {
             setError(err.message);
