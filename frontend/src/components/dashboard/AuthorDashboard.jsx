@@ -2,8 +2,9 @@ import '../../styles/Dashboard.css';
 import React, { useEffect, useState } from 'react';
 import FiltersPanel from "../inner_components/FiltersPanel";
 import SearchBar from "../inner_components/SearchBar";
+import PublicationModal from "./PublicationModal";
 
-function AuthorDashboard({ name, lastname, userId, role }) {
+function AuthorDashboard({ author }) {
     const [publications, setPublications] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({
@@ -21,6 +22,9 @@ function AuthorDashboard({ name, lastname, userId, role }) {
         universities: [],
         faculties: []
     });
+
+    const [selectedPublication, setSelectedPublication] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         fetch('http://localhost:3000/filters')
@@ -43,34 +47,34 @@ function AuthorDashboard({ name, lastname, userId, role }) {
         fetchPublications();
     }, []);
 
-    const handleAdd = async () => {
-        const title = prompt('Enter the publication title:');
-        if (!title) return;
-        await fetch('http://localhost:3000/add-publication', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, author_id: userId }),
-        });
-        fetchPublications();
-    };
-
-    const handleEdit = async (id) => {
-        const newTitle = prompt('Enter new publication title:');
-        if (!newTitle) return;
-        await fetch(`http://localhost:3000/edit-publication/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: newTitle }),
-        });
-        fetchPublications();
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this publication?')) {
-            await fetch(`http://localhost:3000/delete-publication/${id}`, { method: 'DELETE' });
-            fetchPublications();
-        }
-    };
+    // const handleAdd = async () => {
+    //     const title = prompt('Enter the publication title:');
+    //     if (!title) return;
+    //     await fetch('http://localhost:3000/add-publication', {
+    //         method: 'POST',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({ title, author_id: userId }),
+    //     });
+    //     fetchPublications();
+    // };
+    //
+    // const handleEdit = async (id) => {
+    //     const newTitle = prompt('Enter new publication title:');
+    //     if (!newTitle) return;
+    //     await fetch(`http://localhost:3000/edit-publication/${id}`, {
+    //         method: 'PUT',
+    //         headers: { 'Content-Type': 'application/json' },
+    //         body: JSON.stringify({ title: newTitle }),
+    //     });
+    //     fetchPublications();
+    // };
+    //
+    // const handleDelete = async (id) => {
+    //     if (window.confirm('Are you sure you want to delete this publication?')) {
+    //         await fetch(`http://localhost:3000/delete-publication/${id}`, { method: 'DELETE' });
+    //         fetchPublications();
+    //     }
+    // };
 
     const filteredPublications = publications.filter(pub => {
         const matchesSearch = pub.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -83,6 +87,16 @@ function AuthorDashboard({ name, lastname, userId, role }) {
         return matchesSearch && matchesTopic && matchesCountry && matchesCity && matchesUniversity && matchesFaculty;
     });
 
+    const openPublication = (pub) => {
+        setSelectedPublication(pub);
+        setIsModalOpen(true);
+    };
+
+    const closePublication = () => {
+        setIsModalOpen(false);
+        setSelectedPublication(null);
+    };
+
     return (
         <div className="dashboard-layout">
             <FiltersPanel
@@ -91,26 +105,33 @@ function AuthorDashboard({ name, lastname, userId, role }) {
                 options={filterOptions}
             />
             <div className="dashboard-container centered">
-                <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
+                <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-                <h2>Your publications</h2>
+                <h2>Publications</h2>
                 <ul className="publications-list">
                     {filteredPublications.map(pub => (
-                        <li key={pub.id} className="publication-item">
+                        <li
+                            key={pub.id}
+                            className="publication-item clickable"
+                            onClick={() => openPublication(pub)}
+                        >
                             <span>{pub.title}</span>
-                            <div>
-                                <button onClick={() => handleEdit(pub.id)}>Edit</button>
-                                <button onClick={() => handleDelete(pub.id)}>Delete</button>
-                            </div>
                         </li>
                     ))}
                 </ul>
-                <button className="add-publication-btn" onClick={handleAdd}>
-                    Add publication
-                </button>
             </div>
+
+            {isModalOpen && (
+                <PublicationModal
+                    publication={selectedPublication}
+                    onClose={closePublication}
+                    student={null}
+                    user={author}
+                />
+            )}
         </div>
     );
+
 }
 
 export default AuthorDashboard;

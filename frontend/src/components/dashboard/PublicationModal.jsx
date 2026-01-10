@@ -3,7 +3,7 @@ import "../../styles/PublicationModal.css";
 
 const borrowOptions = [7, 30, 90, 365];
 
-const PublicationModal = ({ publication, onClose, student }) => {
+const PublicationModal = ({ publication, onClose, student, user }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -12,13 +12,11 @@ const PublicationModal = ({ publication, onClose, student }) => {
 
     if (!publication) return null;
 
-    const studentId = student.id;
+    const studentId = student?.id; // только студент может одалживать
+    const canBorrow = !!studentId;
 
     const handleBorrowClick = () => {
-        if (!studentId) {
-            setError("Student ID not found. Please login again.");
-            return;
-        }
+        if (!canBorrow) return;
         setShowDuration(true);
         setError(null);
     };
@@ -88,43 +86,45 @@ const PublicationModal = ({ publication, onClose, student }) => {
                 {error && <p className="modal-error">{error}</p>}
                 {success && <p className="modal-hint">Successfully borrowed!</p>}
 
-                <div className="modal-actions">
-                    {!showDuration && !success && (
-                        <button
-                            className="borrow-btn big-center"
-                            onClick={handleBorrowClick}
-                            disabled={loading || success || !studentId}
-                        >
-                            Borrow
-                        </button>
-                    )}
+                {canBorrow && (
+                    <div className="modal-actions">
+                        {!showDuration && !success && (
+                            <button
+                                className="borrow-btn big-center"
+                                onClick={handleBorrowClick}
+                                disabled={loading}
+                            >
+                                Borrow
+                            </button>
+                        )}
 
-                    {showDuration && !success && (
-                        <>
-                            <div className="duration-buttons-row">
-                                {borrowOptions.map((days) => (
+                        {showDuration && !success && (
+                            <>
+                                <div className="duration-buttons-row">
+                                    {borrowOptions.map((days) => (
+                                        <button
+                                            key={days}
+                                            className={`duration-btn ${selectedDays === days ? "selected" : ""}`}
+                                            onClick={() => setSelectedDays(days)}
+                                        >
+                                            {days} days
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="confirm-row-right">
                                     <button
-                                        key={days}
-                                        className={`duration-btn ${selectedDays === days ? "selected" : ""}`}
-                                        onClick={() => setSelectedDays(days)}
+                                        className="confirm-btn"
+                                        onClick={handleConfirm}
+                                        disabled={!selectedDays || loading}
                                     >
-                                        {days} days
+                                        {loading ? "Processing..." : "Confirm"}
                                     </button>
-                                ))}
-                            </div>
-
-                            <div className="confirm-row-right">
-                                <button
-                                    className="confirm-btn"
-                                    onClick={handleConfirm}
-                                    disabled={!selectedDays || loading}
-                                >
-                                    {loading ? "Processing..." : "Confirm"}
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

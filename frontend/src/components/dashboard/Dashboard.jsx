@@ -9,6 +9,7 @@ function Dashboard() {
     const location = useLocation();
     const { role, name, lastname, user_id } = location.state || {};
     const [student, setStudent] = useState(null);
+    const [author, setAuthor] = useState(null);
 
     useEffect(() => {
         if (role === 'student' && user_id) {
@@ -17,6 +18,19 @@ function Dashboard() {
                 .then(data => setStudent(data))
                 .catch(err => console.error('Failed to fetch student:', err));
         }
+        if (role === 'postgraduate' && user_id) {
+            fetch(`http://localhost:3000/postgraduates/user/${user_id}`)
+                .then(res => res.json())
+                .then(data => setAuthor(data))
+                .catch(err => console.error('Failed to fetch postgraduate:', err));
+        }
+        if (role === 'professor' && user_id) {
+            fetch(`http://localhost:3000/professors/user/${user_id}`)
+                .then(res => res.json())
+                .then(data => setAuthor(data))
+                .catch(err => console.error('Failed to fetch professor:', err));
+        }
+
     }, [role, user_id]);
 
     if (!role) {
@@ -28,12 +42,7 @@ function Dashboard() {
             <Navbar user={{ role, name, lastname, user_id }} />
 
             {role === 'professor' || role === 'postgraduate' ? (
-                <AuthorDashboard
-                    name={name}
-                    lastname={lastname}
-                    user={{ role, name, lastname, user_id }}
-                    role={role}
-                />
+                author && <AuthorDashboard author={author} />
             ) : (
                 student && <StudentDashboard student={student} />
             )}

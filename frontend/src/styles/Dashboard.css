@@ -231,4 +231,14 @@
     box-shadow: 0 1px 4px rgba(198, 40, 40, 0.3);
 }
 
+.publication-item.clickable {
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
 
+.publication-item.clickable:hover {
+    background-color: rgba(30, 144, 255, 0.1);
+    transform: translateY(-2px);
+    color: #1e90ff;
+}

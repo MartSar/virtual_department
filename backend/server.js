@@ -399,7 +399,48 @@ app.get('/students/user/:userId', async (req, res) => {
 });
 
 // --------------------------
-// Get Student
+// Get Postgraduate
+// --------------------------
+app.get('/postgraduates/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const result = await pool.query(
+            `SELECT * FROM postgraduates WHERE user_id = $1`,
+            [userId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Postgraduate not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// --------------------------
+// Get Professor
+// --------------------------
+app.get('/professors/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const result = await pool.query(
+            `SELECT * FROM professors WHERE user_id = $1`,
+            [userId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Professor not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+
+// --------------------------
+// Get User
 // --------------------------
 app.get('/users/:id', async (req, res) => {
     const userId = req.params.id;
