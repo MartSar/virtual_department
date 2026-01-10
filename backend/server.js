@@ -65,7 +65,7 @@ app.post('/register', async (req, res) => {
     try {
         const { role, name, lastname, password, university_id } = req.body;
 
-        if (!role || !name || !lastname || !password || !university_id) {
+        if (!role || !name || !lastname || !password) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
