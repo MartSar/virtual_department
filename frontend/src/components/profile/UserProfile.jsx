@@ -4,6 +4,7 @@ import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
 import BorrowedPublications from "./student/BorrowedPublications";
+import "../../styles/UserProfile.css"
 
 function UserProfile() {
     const { id } = useParams();
@@ -43,7 +44,12 @@ function UserProfile() {
             <Navbar user={loggedUser} />
 
             <div className="user-profile">
-                <ProfileHeader user={profileUser} />
+                <ProfileHeader
+                    user={profileUser}
+                    onAvatarChange={(newAvatar) =>
+                        setProfileUser(prev => ({ ...prev, avatar: newAvatar }))
+                    }
+                />
                 <ProfileInfo user={profileUser} />
 
                 {isStudent && student && (

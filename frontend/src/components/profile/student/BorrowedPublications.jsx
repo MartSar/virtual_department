@@ -46,7 +46,7 @@ const BorrowedPublications = ({ studentId }) => {
 
     return (
         <section className="borrowed-publications">
-            <h2>My Borrowed Publications</h2>
+            <h2>Borrowed Publications</h2>
 
             {borrowings.length === 0 ? (
                 <p>You have no borrowed publications</p>

@@ -10,6 +10,7 @@
     padding: 0 25px;
 }
 
+/* Контейнеры слева и справа */
 .navbar-left,
 .navbar-right {
     display: flex;
@@ -17,6 +18,7 @@
     gap: 15px;
 }
 
+/* Центр с приветствием */
 .navbar-center {
     font-weight: bold;
     font-size: 16px;
@@ -24,6 +26,7 @@
     cursor: default;
 }
 
+/* Общие стили для кнопок */
 .navbar-profile,
 .navbar-dashboard,
 .navbar-logout {
@@ -32,21 +35,29 @@
     color: white;
     cursor: pointer;
     font-weight: bold;
-    transition: 0.35s ease;
+    transition: all 0.35s ease;
 }
 
+/* Аватар пользователя */
 .navbar-profile {
     font-size: 20px;
 }
 
-.navbar-dashboard:hover{
+/* Hover эффекты с дерганием */
+.navbar-profile:hover {
+    font-size: 25px;
+}
+
+.navbar-dashboard:hover {
     color: lightblue;
     font-size: 15px;
 }
+
 .navbar-logout:hover {
     color: #fd2828;
     font-size: 15px;
 }
-.navbar-profile:hover {
-    font-size: 25px;
+
+.navbar.avatar {
+    font-size: 10px;
 }

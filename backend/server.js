@@ -4,6 +4,9 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 
 const app = express();
+// const multer = require('multer');
+// const storage = multer.memoryStorage();
+// const upload = multer({ storage });
 const port = 3000;
 
 // --------------------------
@@ -234,6 +237,28 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// --------------------------
+// Upload user avatar
+// --------------------------
+// app.post('/api/users/:userId/avatar', upload.single('avatar'), async (req, res) => {
+//     const { userId } = req.params;
+//     const file = req.file;
+//
+//     if (!file) return res.status(400).json({ error: 'No file uploaded' });
+//
+//     try {
+//         const result = await pool.query(
+//             `UPDATE users SET avatar = $1 WHERE id = $2 RETURNING id, name, lastname`,
+//             [file.buffer, userId]
+//         );
+//
+//         res.json({ success: true, user: result.rows[0] });
+//     } catch (err) {
+//         console.error('Avatar upload error:', err);
+//         res.status(500).json({ error: 'Failed to upload avatar' });
+//     }
+// });
+
 
 // --------------------------
 // Borrow publication (students only)
@@ -397,6 +422,27 @@ app.get('/users/:id', async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
+
+// --------------------------
+// Get user avatar
+// --------------------------
+// app.get('/api/users/:userId/avatar', async (req, res) => {
+//     const { userId } = req.params;
+//
+//     try {
+//         const result = await pool.query(`SELECT avatar FROM users WHERE id = $1`, [userId]);
+//
+//         if (result.rows.length === 0 || !result.rows[0].avatar) {
+//             return res.status(404).send('No avatar');
+//         }
+//
+//         res.setHeader('Content-Type', 'image/png'); // можно менять по типу файла
+//         res.send(result.rows[0].avatar);
+//     } catch (err) {
+//         console.error('Fetch avatar error:', err);
+//         res.status(500).json({ error: 'Failed to fetch avatar' });
+//     }
+// });
 
 
 // --------------------------

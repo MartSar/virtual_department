@@ -1,32 +1,44 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Navbar.css";
+import Avatar from "../avatar/Avatar";
 
 function Navbar({ user }) {
     const navigate = useNavigate();
 
     if (!user) return null;
 
-    const { role, name, lastname, user_id } = user;
+    const { name, lastname, user_id } = user;
+
+    const goToProfile = () => {
+        navigate(`/profile/${user_id}`, {
+            state: { loggedUser: user }
+        });
+    };
+
+    const goToDashboard = () => {
+        navigate("/dashboard", { state: user });
+    };
+
+    const logout = () => {
+        localStorage.removeItem("loggedUser");
+        navigate("/");
+    };
 
     return (
         <div className="navbar">
-            {/* LEFT */}
             <div className="navbar-left">
-                <button
-                    className="navbar-profile"
-                    onClick={() =>
-                        navigate(`/profile/${user_id}`, { state: { loggedUser: user } })
-                    }
-                >
-                    👤
-                </button>
+                <div className="navbar-avatar" onClick={goToProfile}>
+                    <Avatar
+                        name={name}
+                        lastname={lastname}
+                        size={38}
+                    />
+                </div>
 
                 <button
                     className="navbar-dashboard"
-                    onClick={() =>
-                        navigate("/dashboard", { state: user })
-                    }
+                    onClick={goToDashboard}
                 >
                     Dashboard
                 </button>
@@ -41,7 +53,7 @@ function Navbar({ user }) {
             <div className="navbar-right">
                 <button
                     className="navbar-logout"
-                    onClick={() => navigate("/")}
+                    onClick={logout}
                 >
                     Sign Out
                 </button>
