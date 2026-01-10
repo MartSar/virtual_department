@@ -204,6 +204,50 @@ app.post('/login', async (req, res) => {
 });
 
 // --------------------------
+// Borrow publication (students only)
+// --------------------------
+app.post('/api/borrowings/create', async (req, res) => {
+    try {
+        const { student_id, publication_id, duration_days } = req.body;
+
+        if (!student_id || !publication_id || !duration_days) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // prevent duplicate active borrowings
+        const check = await pool.query(
+            `SELECT 1 FROM borrowings
+             WHERE borrower_id = $1
+               AND publication_id = $2
+               AND end_date > NOW()`,
+            [student_id, publication_id]
+        );
+
+        if (check.rows.length > 0) {
+            return res.status(400).json({
+                error: 'You already borrowed this publication'
+            });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO borrowings (borrower_id, publication_id, start_date, end_date)
+             VALUES ($1, $2, NOW(), NOW() + ($3 || ' days')::INTERVAL)
+                 RETURNING *`,
+            [student_id, publication_id, duration_days]
+        );
+
+        res.json({
+            success: true,
+            borrowing: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error('❌ Borrowing error:', err);
+        res.status(500).json({ error: 'Borrowing failed' });
+    }
+});
+
+// --------------------------
 // Get Borrowings of a student by borrower_id
 // --------------------------
 app.get('/borrowings/:borrowerId', async (req, res) => {

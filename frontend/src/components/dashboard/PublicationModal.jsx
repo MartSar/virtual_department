@@ -90,7 +90,6 @@ const PublicationModal = ({ publication, onClose, student, onBorrowed }) => {
                 {success && <p className="modal-hint">Successfully borrowed!</p>}
 
                 <div className="modal-actions">
-                    {/* Большая Borrow кнопка по центру */}
                     {!showDuration && !success && (
                         <button
                             className="borrow-btn big-center"
@@ -101,7 +100,6 @@ const PublicationModal = ({ publication, onClose, student, onBorrowed }) => {
                         </button>
                     )}
 
-                    {/* Выбор дней + Confirm справа */}
                     {showDuration && !success && (
                         <>
                             <div className="duration-buttons-row">
