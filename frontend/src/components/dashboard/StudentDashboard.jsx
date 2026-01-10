@@ -4,7 +4,7 @@ import FiltersPanel from "../inner_components/FiltersPanel";
 import SearchBar from "../inner_components/SearchBar";
 import PublicationModal from './PublicationModal';
 
-function StudentDashboard({ name, lastname, userId, role }) {
+function StudentDashboard({ student }) {
     const [publications, setPublications] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({
@@ -40,12 +40,12 @@ function StudentDashboard({ name, lastname, userId, role }) {
     }, []);
 
 
-    const handleBorrow = async (pubId) => {
+    const handleBorrow = async (publication_id) => {
         try {
-            const res = await fetch('http://localhost:3000/borrow', {
+            const res = await fetch('http://localhost:3000/api/borrowings/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ student_id: userId, publication_id: pubId }),
+                body: JSON.stringify({ student_id: student.id, publication_id: publication_id }),
             });
             const data = await res.json();
             if (data.success) {
@@ -79,7 +79,6 @@ function StudentDashboard({ name, lastname, userId, role }) {
         setSelectedPublication(null);
     };
 
-
     return (
         <div className="dashboard-layout">
             <FiltersPanel
@@ -108,6 +107,8 @@ function StudentDashboard({ name, lastname, userId, role }) {
                 <PublicationModal
                     publication={selectedPublication}
                     onClose={closePublication}
+                    student={student}
+                    onBorrowed={handleBorrow}
                 />
             )}
         </div>

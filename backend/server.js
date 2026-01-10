@@ -6,31 +6,39 @@ const bcrypt = require('bcrypt');
 const app = express();
 const port = 3000;
 
+// --------------------------
 // Middleware
+// --------------------------
 app.use(cors());
 app.use(express.json());
 
-// Подключение к PostgreSQL
+// --------------------------
+// PostgreSQL Pool
+// --------------------------
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'virtual_department_v1',
-  password: 'M2005v2003',
-  port: 5432,
+    user: 'postgres',
+    host: 'localhost',
+    database: 'virtual_department_v1',
+    password: 'M2005v2003',
+    port: 5432,
 });
 
-// Универсальная функция для получения всех данных из таблицы
+// --------------------------
+// Generic GET all from table
+// --------------------------
 const getAllFromTable = (tableName) => async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT * FROM ${tableName}`);
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error receiving data' });
-  }
+    try {
+        const result = await pool.query(`SELECT * FROM ${tableName}`);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error retrieving data' });
+    }
 };
 
-// Routes для обычного получения данных
+// --------------------------
+// Table GET routes
+// --------------------------
 app.get('/central_topics', getAllFromTable('central_topics'));
 app.get('/countries', getAllFromTable('countries'));
 app.get('/cities', getAllFromTable('cities'));
@@ -43,21 +51,24 @@ app.get('/publications', getAllFromTable('publications'));
 app.get('/publication_authors', getAllFromTable('publication_authors'));
 app.get('/students', getAllFromTable('students'));
 app.get('/users', getAllFromTable('users'));
+app.get('/borrowings', getAllFromTable('borrowings'));
 
-// Маршрут для получения одного пользователя по ID из базы данных
+// --------------------------
+// Get single user by ID
+// --------------------------
 app.get('/users/:id', async (req, res) => {
     const userId = req.params.id;
     try {
-        // Делаем запрос к PostgreSQL
-        const result = await pool.query('SELECT id, name, lastname, role FROM users WHERE id = $1', [userId]);
+        const result = await pool.query(
+            'SELECT id, name, lastname, role FROM users WHERE id = $1',
+            [userId]
+        );
 
-        if (result.rows.length > 0) {
-            // Если пользователь найден, отправляем его
-            res.json(result.rows[0]);
-        } else {
-            // Если массив пустой, значит пользователя с таким ID нет
-            res.status(404).json({ error: 'User not found' });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
         }
+
+        res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Database error' });
@@ -72,80 +83,63 @@ app.post('/register', async (req, res) => {
     try {
         const { role, name, lastname, password } = req.body;
 
-        // Валидация входных данных
         if (!name || !lastname || !password || !role) {
-            return res.status(400).json({ error: 'Все поля обязательны' });
+            return res.status(400).json({ error: 'All fields are required' });
         }
 
         if (!['student', 'professor', 'postgraduate'].includes(role)) {
-            return res.status(400).json({ error: 'Неверная роль' });
+            return res.status(400).json({ error: 'Invalid role' });
         }
 
-        // Хэшируем пароль один раз
         const hashedPassword = await bcrypt.hash(password, 12);
+        const roleTable =
+            role === 'student' ? 'students' :
+                role === 'professor' ? 'professors' :
+                    'postgraduates';
 
-        // Таблица в зависимости от роли
-        const roleTable = role === 'student' ? 'students' :
-            role === 'professor' ? 'professors' :
-                'postgraduates';
-
-        // Получаем клиент для транзакции
         client = await pool.connect();
+        await client.query('BEGIN');
 
-        try {
-            await client.query('BEGIN');
+        const userResult = await client.query(
+            `INSERT INTO users (name, lastname, password, role)
+       VALUES ($1, $2, $3, $4) RETURNING id, name, lastname, role`,
+            [name, lastname, hashedPassword, role]
+        );
 
-            // 1. Вставка в таблицу users
-            const usersQuery = `
-                INSERT INTO users (name, lastname, password, role)
-                VALUES ($1, $2, $3, $4)
-                RETURNING id, name, lastname, role;
-            `;
-            const usersResult = await client.query(usersQuery, [name, lastname, hashedPassword, role]);
-            const user = usersResult.rows[0]; // здесь есть id
+        const user = userResult.rows[0];
 
-            // 2. Вставка в таблицу роли с user_id
-            const roleQuery = `
-                INSERT INTO ${roleTable} (name, lastname, user_id)
-                VALUES ($1, $2, $3)
-                RETURNING *;
-            `;
-            const roleResult = await client.query(roleQuery, [name, lastname, user.id]);
+        const roleResult = await client.query(
+            `INSERT INTO ${roleTable} (name, lastname, user_id)
+       VALUES ($1, $2, $3) RETURNING *`,
+            [name, lastname, user.id]
+        );
 
-            await client.query('COMMIT');
+        await client.query('COMMIT');
 
-            // Ответ клиенту
-            res.status(201).json({
-                success: true,
-                message: 'Регистрация прошла успешно',
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    lastname: user.lastname,
-                    role: user.role,
-                    roleData: roleResult.rows[0] // данные из таблицы роли
-                }
-            });
-
-        } catch (innerErr) {
-            await client.query('ROLLBACK');
-            throw innerErr;
-        } finally {
-            client.release();
-        }
-
+        res.status(201).json({
+            success: true,
+            message: 'Registration successful',
+            user: {
+                id: user.id,
+                name: user.name,
+                lastname: user.lastname,
+                role: user.role,
+                roleData: roleResult.rows[0],
+            }
+        });
     } catch (err) {
-        console.error('❌ Ошибка регистрации:', err);
+        if (client) await client.query('ROLLBACK');
+        console.error('❌ Registration error:', err);
 
-        // Обработка уникального нарушения (например, если user_id или другие уникальные поля дублируются)
         if (err.code === '23505') {
-            return res.status(400).json({ error: 'Пользователь с такими данными уже существует' });
+            return res.status(400).json({ error: 'User already exists' });
         }
 
-        res.status(500).json({ error: 'Ошибка регистрации' });
+        res.status(500).json({ error: 'Registration failed' });
+    } finally {
+        if (client) client.release();
     }
 });
-
 
 // --------------------------
 // Login
@@ -154,56 +148,43 @@ app.post('/login', async (req, res) => {
     try {
         const { role, name, lastname, password } = req.body;
 
-        // Базовая валидация
         if (!role || !name || !lastname || !password) {
-            return res.status(400).json({ error: 'Все поля обязательны' });
+            return res.status(400).json({ error: 'All fields are required' });
         }
 
         if (!['student', 'professor', 'postgraduate'].includes(role)) {
-            return res.status(400).json({ error: 'Неверная роль' });
+            return res.status(400).json({ error: 'Invalid role' });
         }
 
-        // 1. Ищем пользователя в таблице users по имени, фамилии и роли
-        const usersQuery = `
-            SELECT id, name, lastname, password, role 
-            FROM users 
-            WHERE name = $1 
-              AND lastname = $2 
-              AND role = $3
-        `;
-        const usersResult = await pool.query(usersQuery, [name, lastname, role]);
+        const userResult = await pool.query(
+            `SELECT id, name, lastname, password, role
+       FROM users WHERE name=$1 AND lastname=$2 AND role=$3`,
+            [name, lastname, role]
+        );
 
-        if (usersResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Пользователь не найден' });
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        const user = usersResult.rows[0];
-
-        // 2. Проверяем пароль
+        const user = userResult.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
+
         if (!passwordMatch) {
-            return res.status(401).json({ error: 'Неверный пароль' });
+            return res.status(401).json({ error: 'Incorrect password' });
         }
 
-        // 3. Определяем таблицу роли и подтягиваем дополнительные данные (если нужны)
         const roleTable =
             role === 'student' ? 'students' :
                 role === 'professor' ? 'professors' :
                     'postgraduates';
 
-        const roleQuery = `
-            SELECT * FROM ${roleTable} 
-            WHERE user_id = $1
-        `;
-        const roleResult = await pool.query(roleQuery, [user.id]);
+        const roleDataResult = await pool.query(
+            `SELECT * FROM ${roleTable} WHERE user_id = $1`,
+            [user.id]
+        );
 
-        // Если по какой-то причине записи в таблице роли нет (данные повреждены) — можно обработать
-        const roleData = roleResult.rows[0] || {};
+        const roleData = roleDataResult.rows[0] || {};
 
-        // 4. (Опционально) Генерируем JWT токен для авторизации в будущем
-        // const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-        // Ответ
         res.json({
             success: true,
             message: `Welcome, ${name} ${lastname}!`,
@@ -212,97 +193,139 @@ app.post('/login', async (req, res) => {
                 name: user.name,
                 lastname: user.lastname,
                 role: user.role,
-                // token: token, // <-- раскомментировать, если используешь JWT
-                details: roleData // дополнительные поля из таблицы роли (группа, кафедра и т.д.)
+                details: roleData,
             }
         });
 
     } catch (err) {
-        console.error('❌ Error login:', err);
-        res.status(500).json({ error: 'Error login' });
+        console.error('❌ Login error:', err);
+        res.status(500).json({ error: 'Login failed' });
     }
 });
 
-// Server Start
-app.listen(port, () => {
-  console.log(`The server is running on http://localhost:${port}`);
-});
+// --------------------------
+// Get Borrowings of a student by borrower_id
+// --------------------------
+app.get('/borrowings/:borrowerId', async (req, res) => {
+    const { borrowerId } = req.params;
 
-
-// Borrow publication (для студентов)
-app.post('/borrow', async (req, res) => {
     try {
-        const { student_id, publication_id } = req.body;
-
-        // Publication availability
-        const [existing] = await pool.query(
-            `SELECT * FROM loans WHERE publication_id = $1 AND status = 'active'`,
-            [publication_id]
+        const result = await pool.query(
+            `SELECT b.id, b.start_date, b.end_date, 
+                    b.publication_id, p.title AS publication_title,
+                    (b.end_date > NOW()) AS is_active
+             FROM borrowings b
+             JOIN publications p ON b.publication_id = p.id
+             WHERE b.borrower_id = $1
+             ORDER BY b.start_date DESC`,
+            [borrowerId]
         );
 
-        if (existing.length > 0) {
-            return res.status(400).json({ error: 'Publication already borrowed' });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'No borrowings found for this student' });
         }
 
-        // record addition to loans
-        const result = await pool.query(
-            `INSERT INTO loans (publication_id, borrower_student_id) VALUES ($1, $2) RETURNING *`,
-            [publication_id, student_id]
-        );
-
-        res.json({ success: true, loan: result.rows[0] });
+        res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to borrow publication' });
+        console.error('Failed to fetch borrowings:', err);
+        res.status(500).json({ error: 'Database error' });
     }
 });
 
-// Add new publication (professors and postgraduates)
+
+// --------------------------
+// Add publication (professors/postgraduates)
+// --------------------------
 app.post('/add-publication', async (req, res) => {
     try {
         const { title, author_id } = req.body;
 
         const result = await pool.query(
-            `INSERT INTO publications (title, author_id) VALUES ($1, $2) RETURNING *`,
+            `INSERT INTO publications (title, author_id)
+       VALUES ($1, $2) RETURNING *`,
             [title, author_id]
         );
 
         res.json({ success: true, publication: result.rows[0] });
     } catch (err) {
-        console.error(err);
+        console.error('❌ Add publication error:', err);
         res.status(500).json({ error: 'Failed to add publication' });
     }
 });
 
-// Publication filter getting from DB
-
+// --------------------------
+// Filters
+// --------------------------
 app.get('/filters', async (req, res) => {
     try {
-        const topicsRes = await pool.query(
-            'SELECT id, name FROM central_topics ORDER BY name'
-        );
-        const countriesRes = await pool.query(
-            'SELECT id, name FROM countries ORDER BY name'
-        );
-        const citiesRes = await pool.query(
-            'SELECT id, name FROM cities ORDER BY name'
-        );
-        const universitiesRes = await pool.query(
-            'SELECT id, name FROM universities ORDER BY name'
-        );
-        const facultiesRes = await pool.query(
-            'SELECT id, name FROM faculties ORDER BY name'
-        );
+        const topicsRes = await pool.query('SELECT id, name FROM central_topics ORDER BY name');
+        const countriesRes = await pool.query('SELECT id, name FROM countries ORDER BY name');
+        const citiesRes = await pool.query('SELECT id, name FROM cities ORDER BY name');
+        const universitiesRes = await pool.query('SELECT id, name FROM universities ORDER BY name');
+        const facultiesRes = await pool.query('SELECT id, name FROM faculties ORDER BY name');
 
         res.json({
             topics: topicsRes.rows,
             countries: countriesRes.rows,
             cities: citiesRes.rows,
             universities: universitiesRes.rows,
-            faculties: facultiesRes.rows
+            faculties: facultiesRes.rows,
         });
     } catch (err) {
-        console.error(err);
+        console.error('❌ Filters error:', err);
         res.status(500).json({ error: 'Failed to load filters' });
     }
+});
+
+// --------------------------
+// Get Student
+// --------------------------
+app.get('/students/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const result = await pool.query(
+            `SELECT * FROM students WHERE user_id = $1`,
+            [userId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+
+// --------------------------
+// Get Borrowings of current student
+// --------------------------
+app.get('/api/borrowings/student/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT b.id, b.start_date, b.end_date, 
+                    b.publication_id, p.title AS publication_title,
+                    (b.end_date > NOW()) AS is_active
+             FROM borrowings b
+             JOIN publications p ON b.publication_id = p.id
+             WHERE b.borrower_id = $1
+             ORDER BY b.start_date DESC`,
+            [id]
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch borrowings" });
+    }
+});
+
+
+// --------------------------
+// Server start
+// --------------------------
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });

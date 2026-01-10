@@ -1,0 +1,121 @@
+/* Borrowed Publications Container */
+.borrowed-publications {
+    background: #fff;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    max-width: 900px;
+    margin: 30px auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.borrowed-publications h2 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #333;
+}
+
+/* Table Styles */
+.borrowed-publications table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.borrowed-publications th,
+.borrowed-publications td {
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 15px;
+}
+
+.borrowed-publications th {
+    background-color: #f1f1f1;
+    color: #555;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0;
+}
+
+.borrowed-publications tbody tr {
+    background-color: #f9f9f9;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+}
+
+.borrowed-publications tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* Status Indicators */
+.status-active {
+    color: #43a047; /* green */
+    font-weight: 600;
+}
+
+.status-expired {
+    color: #d32f2f; /* red */
+    font-weight: 600;
+}
+
+/* Empty state message */
+.borrowed-publications p {
+    text-align: center;
+    font-size: 15px;
+    color: #777;
+    margin-top: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .borrowed-publications {
+        padding: 20px;
+    }
+
+    .borrowed-publications th,
+    .borrowed-publications td {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .borrowed-publications h2 {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .borrowed-publications table,
+    .borrowed-publications thead,
+    .borrowed-publications tbody,
+    .borrowed-publications th,
+    .borrowed-publications td,
+    .borrowed-publications tr {
+        display: block;
+    }
+
+    .borrowed-publications thead {
+        display: none;
+    }
+
+    .borrowed-publications tbody tr {
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border-radius: 12px;
+    }
+
+    .borrowed-publications td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .borrowed-publications td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+    }
+}
