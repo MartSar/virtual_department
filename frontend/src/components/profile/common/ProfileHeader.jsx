@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Avatar from "../../../components/avatar/Avatar";
+import Avatar from "../../inner_components/avatar/Avatar";
 
 function ProfileHeader({ user, isOwner }) {
     const navigate = useNavigate();

@@ -333,27 +333,6 @@ app.get('/borrowings/:borrowerId', async (req, res) => {
     }
 });
 
-
-// --------------------------
-// Add publication (professors/postgraduates)
-// --------------------------
-app.post('/add-publication', async (req, res) => {
-    try {
-        const { title, author_id } = req.body;
-
-        const result = await pool.query(
-            `INSERT INTO publications (title, author_id)
-       VALUES ($1, $2) RETURNING *`,
-            [title, author_id]
-        );
-
-        res.json({ success: true, publication: result.rows[0] });
-    } catch (err) {
-        console.error('❌ Add publication error:', err);
-        res.status(500).json({ error: 'Failed to add publication' });
-    }
-});
-
 // --------------------------
 // Filters
 // --------------------------
@@ -510,6 +489,42 @@ app.get(`borrowings/:id`, async (req, res) => {
     }
 });
 
+
+app.post('/api/publications/create', async (req, res) => {
+    const { title, file_type, content, description, author_id, author_type } = req.body;
+
+    // Проверяем обязательные поля
+    if (!title || !file_type || !content || !author_id || !author_type) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        // Генерация имени файла
+        const file_name = `${title.toLowerCase().replace(/\s+/g, "_")}.${file_type}`;
+
+        const pubResult = await pool.query(
+            `INSERT INTO publications (title, content, file_name, file_type, description)
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [title, content, file_name, file_type, description]
+        );
+
+        const publication_id = pubResult.rows[0].id;
+
+        // 2️⃣ Добавляем запись в таблицу publication_authors
+        await pool.query(
+            `INSERT INTO publication_authors (publication_id, author_id, author_type)
+             VALUES ($1, $2, $3)`,
+            [publication_id, author_id, author_type]
+        );
+
+        // Возвращаем успех
+        res.status(201).json({ success: true, publication_id });
+
+    } catch (err) {
+        console.error('Error creating publication:', err);
+        res.status(500).json({ error: 'Failed to create publication' });
+    }
+});
 
 // --------------------------
 // Server start

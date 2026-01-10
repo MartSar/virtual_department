@@ -29,7 +29,8 @@
 /* Общие стили для кнопок */
 .navbar-profile,
 .navbar-dashboard,
-.navbar-logout {
+.navbar-logout,
+.navbar-add-publication{
     background: none;
     border: none;
     color: white;
@@ -58,6 +59,7 @@
     font-size: 15px;
 }
 
-.navbar.avatar {
-    font-size: 10px;
+.navbar-add-publication:hover {
+    color: #0cf16c;
+    font-size: 15px;
 }

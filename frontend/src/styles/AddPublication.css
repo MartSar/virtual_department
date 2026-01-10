@@ -1,0 +1,169 @@
+/* ---------------- Overlay ---------------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* ---------------- Modal Content ---------------- */
+.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 25px;
+    width: 400px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: fadeIn 0.3s ease-out;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.modal-content h2{
+    color: #1e1e2f;
+    text-align: center;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------- Form ---------------- */
+.add-publication-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.add-publication-form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+    color: #555;
+    font-size: 14px;
+}
+
+.add-publication-form input,
+.add-publication-form textarea {
+    margin-top: 5px;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.add-publication-form textarea {
+    min-height: 80px;
+}
+
+/* ---------------- Drag & Drop ---------------- */
+.file-drop-area {
+    border: 2px dashed #1890ff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 50px;
+}
+
+.file-drop-area:hover {
+    background-color: #f0f8ff;
+    border-color: #40a9ff;
+    color: #333;
+}
+
+.file-drop-area.drag-over {
+    background-color: #e6f7ff;
+    border-color: #1890ff;
+    color: #333;
+}
+
+/* Название выбранного файла */
+.file-drop-area span {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    color: #333;
+    word-break: break-all;
+}
+
+/* Кнопка выбора файла */
+.select-file-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #2196F3;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.select-file-btn:hover {
+    background-color: #1976d2;
+}
+
+/* ---------------- Buttons ---------------- */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.create-btn {
+    background-color: #2196F3;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 12px;
+    padding: 10px 0;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    width: 45%;
+    transition: all 0.3s ease;
+}
+
+.create-btn:hover:not(:disabled) {
+    background-color: #1976d2;
+}
+
+.cancel-btn {
+    background-color: #9e9e9e;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 10px 0;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    width: 45%;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+    background-color: #757575;
+}
+
+/* ---------------- Errors ---------------- */
+.error {
+    color: #d32f2f;
+    font-weight: 500;
+    font-size: 13px;
+    margin-top: 5px;
+    text-align: center;
+}
