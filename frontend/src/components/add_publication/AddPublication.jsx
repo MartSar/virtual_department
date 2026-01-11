@@ -9,7 +9,6 @@ function AddPublication({ user, onClose }) {
     const [fileName, setFileName] = useState("");
     const [authorName, setAuthorName] = useState(`${user.name} ${user.lastname}`);
 
-    // central topic
     const [topicId, setTopicId] = useState("");
     const [topics, setTopics] = useState([]);
     const [selectedTopic, setSelectedTopic] = useState(null);
@@ -18,7 +17,7 @@ function AddPublication({ user, onClose }) {
     const [error, setError] = useState(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
-    // ------------------- Fetch central topics -------------------
+    // Fetch central topics
     useEffect(() => {
         const fetchTopics = async () => {
             try {
@@ -32,19 +31,19 @@ function AddPublication({ user, onClose }) {
         fetchTopics();
     }, []);
 
-    // ------------------- Update selected topic -------------------
+    // Update selected topic
     useEffect(() => {
         setSelectedTopic(topics.find(t => t.id === Number(topicId)) || null);
     }, [topicId, topics]);
 
-    // ------------------- Generate file name -------------------
+    // Generate file name
     useEffect(() => {
         if (!title) return;
         const ext = fileType || "txt";
         setFileName(`${title.toLowerCase().replace(/\s+/g, "_")}.${ext}`);
     }, [title, fileType]);
 
-    // ------------------- Fetch author -------------------
+    // Fetch author
     const fetchAuthor = async () => {
         const res = await fetch(`http://localhost:3000/authors/user/${user.user_id}`);
         if (!res.ok) throw new Error("Author not found");
@@ -52,7 +51,7 @@ function AddPublication({ user, onClose }) {
         return { author_id: author.id, author_type: author.author_type };
     };
 
-    // ------------------- File handlers -------------------
+    // File handlers
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (!selectedFile) return;
@@ -70,7 +69,6 @@ function AddPublication({ user, onClose }) {
         setFileType(droppedFile.name.split(".").pop());
     };
 
-    // ------------------- Submit -------------------
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -105,7 +103,7 @@ function AddPublication({ user, onClose }) {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "Failed to create publication");
 
-                onClose();
+                window.location.reload();
             };
             reader.readAsDataURL(file);
         } catch (err) {
@@ -141,7 +139,7 @@ function AddPublication({ user, onClose }) {
 
                     <label>
                         File Type
-                        <input type="text" value={fileType} onChange={(e) => setFileType(e.target.value)} placeholder="pdf, docx, txt" readOnly />
+                        <input type="text" value={fileType} placeholder="pdf, docx, txt" readOnly />
                     </label>
 
                     <label>
