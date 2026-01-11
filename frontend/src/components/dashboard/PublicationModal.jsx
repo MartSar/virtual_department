@@ -9,10 +9,12 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
     const [success, setSuccess] = useState(false);
     const [showDuration, setShowDuration] = useState(false);
     const [selectedDays, setSelectedDays] = useState(null);
+
     const [authors, setAuthors] = useState([]);
     const [loadingAuthors, setLoadingAuthors] = useState(true);
 
     const [topicName, setTopicName] = useState("");
+    const [authorLocations, setAuthorLocations] = useState([]); // массив объектов { faculty, university, city, country }
 
     const studentId = student?.id;
     const canBorrow = !!studentId;
@@ -21,17 +23,31 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
        Fetch authors
     ------------------------------ */
     useEffect(() => {
-        if (!publication) return; // внутри useEffect условие уже безопасно
+        if (!publication) return;
+
         const fetchAuthors = async () => {
             try {
-                const res = await fetch(
-                    `http://localhost:3000/publications/${publication.id}/authors`
-                );
-
+                const res = await fetch(`http://localhost:3000/publications/${publication.id}/authors`);
                 if (!res.ok) throw new Error("Failed to fetch authors");
-
-                const data = await res.json(); // ожидаем массив авторов
+                const data = await res.json();
                 setAuthors(data);
+
+                // Для каждого автора получаем локацию
+                const locationsPromises = data.map(async (author) => {
+                    try {
+                        const locRes = await fetch(`http://localhost:3000/authors/${author.id}/location`);
+                        if (!locRes.ok) throw new Error("Failed to fetch author location");
+                        const locData = await locRes.json();
+                        return locData; // { faculty, university, city, country }
+                    } catch (err) {
+                        console.error("Author location error:", err);
+                        return { faculty_name: "—", university_name: "—", city_name: "—", country_name: "—" };
+                    }
+                });
+
+                const locations = await Promise.all(locationsPromises);
+                setAuthorLocations(locations);
+
             } catch (err) {
                 console.error(err);
             } finally {
@@ -41,6 +57,26 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
 
         fetchAuthors();
     }, [publication]);
+
+    /* -----------------------------
+       Fetch topic
+    ------------------------------ */
+    useEffect(() => {
+        if (!publication?.topic_id) return;
+
+        const fetchTopic = async () => {
+            try {
+                const res = await fetch(`http://localhost:3000/central_topics/${publication.topic_id}`);
+                if (!res.ok) throw new Error("Topic not found");
+                const data = await res.json();
+                setTopicName(data.name);
+            } catch {
+                setTopicName("—");
+            }
+        };
+
+        fetchTopic();
+    }, [publication?.topic_id]);
 
     /* -----------------------------
        Borrow handlers
@@ -71,44 +107,19 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
                 })
             });
 
-            let data;
-            try {
-                data = await res.json();
-            } catch {
-                data = {};
-            }
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) throw new Error(data.error || "Failed to borrow");
 
             setSuccess(true);
             setSelectedDays(null);
             setShowDuration(false);
-
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        if (!publication.topic_id) return;
-
-        const fetchTopicName = async () => {
-            try {
-                const res = await fetch(`http://localhost:3000/central_topics/${publication.topic_id}`);
-                if (!res.ok) throw new Error("Topic not found");
-
-                const data = await res.json();
-                setTopicName(data.name);
-            } catch (err) {
-                console.error(err);
-                setTopicName("—");
-            }
-        };
-
-        fetchTopicName();
-    }, [publication.topic_id]);
 
     if (!publication) return null;
 
@@ -119,6 +130,7 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
 
                 <h2>{publication.title}</h2>
 
+                {/* ---------------- Authors ---------------- */}
                 <div className="modal-section">
                     {loadingAuthors ? (
                         <p>Loading authors...</p>
@@ -132,14 +144,26 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
                     )}
                 </div>
 
+                {/* ---------------- Attributes from authors ---------------- */}
                 <div className="modal-section">
                     <p><strong>Topic:</strong> {topicName || "—"}</p>
-                    <p><strong>Country:</strong> {publication.country_name || "—"}</p>
-                    <p><strong>City:</strong> {publication.city_name || "—"}</p>
-                    <p><strong>University:</strong> {publication.university_name || "—"}</p>
-                    <p><strong>Faculty:</strong> {publication.faculty_name || "—"}</p>
+
+                    {authorLocations.length > 0 ? (
+                        authorLocations.map((loc, idx) => (
+                            <div key={idx} style={{ marginBottom: "0.5em" }}>
+                                <p><strong>Faculty:</strong> {loc.faculty_name || "—"}</p>
+                                <p><strong>University:</strong> {loc.university_name || "—"}</p>
+                                <p><strong>City:</strong> {loc.city_name || "—"}</p>
+                                <p><strong>Country:</strong> {loc.country_name || "—"}</p>
+                                <hr />
+                            </div>
+                        ))
+                    ) : (
+                        <p>Faculty, University, City, Country: —</p>
+                    )}
                 </div>
 
+                {/* ---------------- Description ---------------- */}
                 <div className="modal-section">
                     <p><strong>Description:</strong></p>
                     <p className="modal-description">
@@ -150,6 +174,7 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
                 {error && <p className="modal-error">{error}</p>}
                 {success && <p className="modal-hint">Successfully borrowed!</p>}
 
+                {/* ---------------- Borrow Actions ---------------- */}
                 {canBorrow && (
                     <div className="modal-actions">
                         {!showDuration && !success && (
