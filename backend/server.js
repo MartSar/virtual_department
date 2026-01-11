@@ -715,6 +715,81 @@ app.get('/api/publications/download/:id', async (req, res) => {
 });
 
 // --------------------------
+// GET student location (University → City → Country)
+// --------------------------
+app.get('/students/:id/location', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT 
+                u.id AS university_id,
+                u.name AS university_name,
+                c.id AS city_id,
+                c.name AS city_name,
+                co.id AS country_id,
+                co.name AS country_name
+            FROM students s
+            LEFT JOIN universities u ON s.university_id = u.id
+            LEFT JOIN cities c ON u.city_id = c.id
+            LEFT JOIN countries co ON c.country_id = co.id
+            WHERE s.id = $1`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Student location not found' });
+        }
+
+        const location = result.rows[0];
+        res.json({
+            university: { id: location.university_id, name: location.university_name },
+            city: { id: location.city_id, name: location.city_name },
+            country: { id: location.country_id, name: location.country_name }
+        });
+    } catch (err) {
+        console.error('Failed to fetch student location:', err);
+        res.status(500).json({ error: 'Failed to fetch student location' });
+    }
+});
+
+
+// Author Location
+app.get('/authors/:id/location', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const client = await pool.connect();
+
+        // Получаем факультет, университет, город, страну для автора
+        const result = await client.query(`
+            SELECT f.name AS faculty_name,
+                   u.name AS university_name,
+                   c.name AS city_name,
+                   co.name AS country_name
+            FROM authors a
+                     JOIN ${'professors'} p ON a.user_id = p.user_id OR 1=1
+                     LEFT JOIN faculties f ON f.id = p.faculty_id
+                     LEFT JOIN universities u ON u.id = f.university_id
+                     LEFT JOIN cities c ON c.id = u.city_id
+                     LEFT JOIN countries co ON co.id = c.country_id
+            WHERE a.id = $1
+                LIMIT 1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Location not found" });
+        }
+
+        res.json(result.rows[0]);
+        client.release();
+    } catch (err) {
+        console.error('❌ Failed to fetch author location:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+// --------------------------
 // Server start
 // --------------------------
 app.listen(port, () => {

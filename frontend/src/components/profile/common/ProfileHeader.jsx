@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Avatar from "../../inner_components/avatar/Avatar";
 
-function ProfileHeader({ user, isOwner }) {
+function ProfileHeader({ user }) {
     const navigate = useNavigate();
 
     return (
@@ -20,12 +20,6 @@ function ProfileHeader({ user, isOwner }) {
                     {user.role} {user.name} {user.lastname}
                 </h2>
             </div>
-
-            {isOwner && (
-                <button className="edit-profile-btn">
-                    Edit Profile
-                </button>
-            )}
         </div>
     );
 }
