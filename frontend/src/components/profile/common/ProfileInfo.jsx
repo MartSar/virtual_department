@@ -20,10 +20,10 @@ function ProfileInfo({ user, studentLocation, authorLocation }) {
                 </>
             ) : (
                 <>
-                    <p><strong>Faculty:</strong> {location.faculty?.name || '-'}</p>
-                    <p><strong>University:</strong> {location.university?.name || '-'}</p>
-                    <p><strong>City:</strong> {location.city?.name || '-'}</p>
-                    <p><strong>Country:</strong> {location.country?.name || '-'}</p>
+                    <p><strong>Faculty:</strong> {location.faculty_name  || '-'}</p>
+                    <p><strong>University:</strong> {location.university_name  || '-'}</p>
+                    <p><strong>City:</strong> {location.city_name  || '-'}</p>
+                    <p><strong>Country:</strong> {location.country_name  || '-'}</p>
                 </>
             )}
         </div>
