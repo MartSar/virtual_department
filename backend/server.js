@@ -13,7 +13,8 @@ const port = 3000;
 // Middleware
 // --------------------------
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // --------------------------
 // PostgreSQL Pool
@@ -80,11 +81,6 @@ app.post('/register', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        const roleTable =
-            role === 'student' ? 'students' :
-                role === 'professor' ? 'professors' :
-                    'postgraduates';
-
         client = await pool.connect();
         await client.query('BEGIN');
 
@@ -92,29 +88,46 @@ app.post('/register', async (req, res) => {
         const userResult = await client.query(
             `INSERT INTO users (name, lastname, password, role)
              VALUES ($1, $2, $3, $4)
-             RETURNING id, name, lastname, role`,
+                 RETURNING id, name, lastname, role`,
             [name, lastname, hashedPassword, role]
         );
 
         const user = userResult.rows[0];
+        let roleData = null;
 
         // create role-specific record
-        let roleResult;
-
         if (role === 'student') {
-            roleResult = await client.query(
+            const studentResult = await client.query(
                 `INSERT INTO students (name, lastname, user_id, university_id)
                  VALUES ($1, $2, $3, $4)
-                 RETURNING *`,
+                     RETURNING *`,
                 [name, lastname, user.id, university_id]
             );
+            roleData = studentResult.rows[0];
+
         } else {
-            roleResult = await client.query(
-                `INSERT INTO ${roleTable} (name, lastname, user_id)
+            // для professors/postgraduates создаем запись в их таблице
+            const tableName = role === 'professor' ? 'professors' : 'postgraduates';
+
+            const roleResult = await client.query(
+                `INSERT INTO ${tableName} (user_id, name, lastname)
                  VALUES ($1, $2, $3)
-                 RETURNING *`,
-                [name, lastname, user.id]
+                     RETURNING id`,
+                [user.id, name, lastname]
             );
+
+            // сразу добавляем запись в authors
+            const authorResult = await client.query(
+                `INSERT INTO authors (user_id, author_type)
+                 VALUES ($1, $2)
+                     RETURNING *`,
+                [user.id, role]  // записываем полностью 'professor' или 'postgraduate'
+            );
+
+            roleData = {
+                roleTableData: roleResult.rows[0],
+                authorData: authorResult.rows[0]
+            };
         }
 
         await client.query('COMMIT');
@@ -127,7 +140,7 @@ app.post('/register', async (req, res) => {
                 name: user.name,
                 lastname: user.lastname,
                 role: user.role,
-                roleData: roleResult.rows[0],
+                roleData
             }
         });
 
@@ -358,7 +371,7 @@ app.get('/filters', async (req, res) => {
 });
 
 // --------------------------
-// Get Student
+// Get Student for Dashboard
 // --------------------------
 app.get('/students/user/:userId', async (req, res) => {
     const userId = req.params.userId;
@@ -378,17 +391,17 @@ app.get('/students/user/:userId', async (req, res) => {
 });
 
 // --------------------------
-// Get Postgraduate
+// Get Author for Dashboard
 // --------------------------
-app.get('/postgraduates/user/:userId', async (req, res) => {
+app.get('/authors/user/:userId', async (req, res) => {
     const userId = req.params.userId;
     try {
         const result = await pool.query(
-            `SELECT * FROM postgraduates WHERE user_id = $1`,
+            `SELECT * FROM authors WHERE user_id = $1`,
             [userId]
         );
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Postgraduate not found' });
+            return res.status(404).json({ error: 'Author not found' });
         }
         res.json(result.rows[0]);
     } catch (err) {
@@ -396,27 +409,6 @@ app.get('/postgraduates/user/:userId', async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
-
-// --------------------------
-// Get Professor
-// --------------------------
-app.get('/professors/user/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const result = await pool.query(
-            `SELECT * FROM professors WHERE user_id = $1`,
-            [userId]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Professor not found' });
-        }
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
 
 // --------------------------
 // Get User
@@ -489,40 +481,54 @@ app.get(`borrowings/:id`, async (req, res) => {
     }
 });
 
+// --------------------------
+// Create Publication
+// --------------------------
+app.post("/api/publications/create", async (req, res) => {
+    const {
+        title,
+        file_type,
+        content,
+        description,
+        author_id,
+        file_name
+    } = req.body;
 
-app.post('/api/publications/create', async (req, res) => {
-    const { title, file_type, content, description, author_id, author_type } = req.body;
-
-    // Проверяем обязательные поля
-    if (!title || !file_type || !content || !author_id || !author_type) {
-        return res.status(400).json({ error: 'Missing required fields' });
+    if (!title || !file_type || !content) {
+        return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
-        // Генерация имени файла
-        const file_name = `${title.toLowerCase().replace(/\s+/g, "_")}.${file_type}`;
+        // Base64 -> BYTEA
+        const contentBuffer = Buffer.from(content, "base64");
 
+        // создаём публикацию
         const pubResult = await pool.query(
             `INSERT INTO publications (title, content, file_name, file_type, description)
-             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [title, content, file_name, file_type, description]
+             VALUES ($1, $2, $3, $4, $5)
+                 RETURNING id`,
+            [title, contentBuffer, file_name, file_type, description]
         );
 
         const publication_id = pubResult.rows[0].id;
 
-        // 2️⃣ Добавляем запись в таблицу publication_authors
-        await pool.query(
-            `INSERT INTO publication_authors (publication_id, author_id, author_type)
-             VALUES ($1, $2, $3)`,
-            [publication_id, author_id, author_type]
-        );
+        // если есть автор (для студента может быть null)
+        if (author_id) {
+            await pool.query(
+                `INSERT INTO publication_authors (publication_id, author_id)
+                 VALUES ($1, $2)`,
+                [publication_id, author_id]
+            );
+        }
 
-        // Возвращаем успех
-        res.status(201).json({ success: true, publication_id });
+        res.status(201).json({
+            success: true,
+            publication_id
+        });
 
     } catch (err) {
-        console.error('Error creating publication:', err);
-        res.status(500).json({ error: 'Failed to create publication' });
+        console.error("CREATE PUBLICATION ERROR:", err);
+        res.status(500).json({ error: "Failed to create publication" });
     }
 });
 

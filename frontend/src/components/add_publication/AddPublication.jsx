@@ -1,4 +1,3 @@
-// components/publications/AddPublication.jsx
 import React, { useState, useEffect } from "react";
 import "../../styles/AddPublication.css";
 
@@ -7,91 +6,120 @@ function AddPublication({ user, onClose }) {
     const [fileType, setFileType] = useState("");
     const [file, setFile] = useState(null);
     const [description, setDescription] = useState("");
-    const [author, setAuthor] = useState(`${user.name} ${user.lastname}`);
     const [fileName, setFileName] = useState("");
+    const [authorName, setAuthorName] = useState(`${user.name} ${user.lastname}`);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isDragOver, setIsDragOver] = useState(false);
+    const [author, setAuthor] = useState(null);
 
-    // Генерация fileName из title и fileType при их изменении
+    /* -----------------------------
+       Generate file name from title
+    ------------------------------ */
     useEffect(() => {
-        if (title) {
-            const ext = fileType ? fileType : "txt";
-            const generatedName = `${title.toLowerCase().replace(/\s+/g, "_")}.${ext}`;
-            setFileName(generatedName);
-        }
+        if (!title) return;
+        const ext = fileType || "txt";
+        const generated = `${title.toLowerCase().replace(/\s+/g, "_")}.${ext}`;
+        setFileName(generated);
     }, [title, fileType]);
 
+    /* -----------------------------
+       Fetch author by user_id (unified fetch)
+    ------------------------------ */
+    useEffect(() => {
+        const fetchAuthor = async () => {
+            if (user.role === "student") return; // студенты не имеют authors
+            try {
+                const res = await fetch(`http://localhost:3000/authors/user/${user.user_id}`);
+                if (!res.ok) throw new Error("Author not found");
+                const data = await res.json();
+                setAuthor(data);
+            } catch (err) {
+                console.error("Failed to fetch author:", err);
+            }
+        };
+
+        fetchAuthor();
+    }, [user]);
+
+    /* -----------------------------
+       File handlers
+    ------------------------------ */
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
-        if (selectedFile) {
-            setFile(selectedFile);
-            const ext = selectedFile.name.split(".").pop();
-            setFileType(ext);
+        if (!selectedFile) return;
 
-            e.target.value = null;
-        }
+        setFile(selectedFile);
+        setFileType(selectedFile.name.split(".").pop());
+        e.target.value = null;
     };
 
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragOver(false);
+
         const droppedFile = e.dataTransfer.files[0];
-        if (droppedFile) {
-            setFile(droppedFile);
-            const ext = droppedFile.name.split(".").pop();
-            setFileType(ext);
-        }
+        if (!droppedFile) return;
+
+        setFile(droppedFile);
+        setFileType(droppedFile.name.split(".").pop());
     };
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setIsDragOver(true);
-    };
-
-    const handleDragLeave = () => {
-        setIsDragOver(false);
-    };
-
+    /* -----------------------------
+       Submit
+    ------------------------------ */
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
 
-        if (!title || !fileType || !file) {
+        if (!title || !file || !fileType) {
             setError("Please fill in all required fields");
-            setLoading(false);
             return;
         }
 
+        setLoading(true);
+
         try {
+            let author_id = null;
+            let author_type = null;
+
+            if (user.role === "professor" || user.role === "postgraduate") {
+                author_id = author?.id;
+                author_type = author?.author_type;
+                if (!author_id) throw new Error("Author not loaded yet");
+            }
+
             const reader = new FileReader();
             reader.onload = async () => {
                 const contentBase64 = reader.result.split(",")[1];
 
-                const response = await fetch("/api/publications/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title,
-                        file_type: fileType,
-                        content: contentBase64,
-                        description,
-                        author_id: user.user_id,
-                        author_type: user.role,
-                        file_name: fileName
-                    })
-                });
+                const response = await fetch(
+                    "http://localhost:3000/api/publications/create",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title,
+                            file_type: fileType,
+                            content: contentBase64,
+                            description,
+                            file_name: fileName,
+                            author_id,
+                            author_type
+                        })
+                    }
+                );
 
                 const data = await response.json();
+
                 if (!response.ok) {
                     throw new Error(data.error || "Failed to create publication");
                 }
 
-                console.log("Publication created:", data);
-                setLoading(false);
                 onClose();
             };
+
             reader.readAsDataURL(file);
         } catch (err) {
             console.error(err);
@@ -100,19 +128,12 @@ function AddPublication({ user, onClose }) {
         }
     };
 
-    const handleZoneClick = (e) => {
-        e.stopPropagation();
-        setTimeout(() => {
-            document.getElementById("fileInput").click();
-        }, 0);
-    };
-
     return (
         <div className="modal-overlay">
             <div className="modal-content">
                 <h2>Add Publication</h2>
-                <form onSubmit={handleSubmit} className="add-publication-form">
-                    {/* Title */}
+
+                <form className="add-publication-form" onSubmit={handleSubmit}>
                     <label>
                         Title
                         <input
@@ -122,13 +143,11 @@ function AddPublication({ user, onClose }) {
                         />
                     </label>
 
-                    {/* Author readonly */}
                     <label>
                         Author
-                        <input type="text" value={author} readOnly />
+                        <input type="text" value={authorName} readOnly />
                     </label>
 
-                    {/* File Type */}
                     <label>
                         File Type
                         <input
@@ -139,7 +158,6 @@ function AddPublication({ user, onClose }) {
                         />
                     </label>
 
-                    {/* File Name */}
                     <label>
                         File Name
                         <input
@@ -149,25 +167,19 @@ function AddPublication({ user, onClose }) {
                         />
                     </label>
 
-                    {/* Content (file) */}
                     <label
-                        htmlFor="fileInput"
                         className={`file-drop-area ${isDragOver ? "drag-over" : ""}`}
                         onDrop={handleDrop}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            setIsDragOver(true);
+                        }}
+                        onDragLeave={() => setIsDragOver(false)}
                     >
                         {file ? file.name : "Drag & drop file here or click to select"}
+                        <input type="file" hidden onChange={handleFileChange} />
                     </label>
 
-                    <input
-                        type="file"
-                        id="fileInput"
-                        onChange={handleFileChange}
-                        style={{ display: "none" }}
-                    />
-
-                    {/* Description */}
                     <label>
                         Description
                         <textarea
@@ -179,10 +191,19 @@ function AddPublication({ user, onClose }) {
                     {error && <p className="error">{error}</p>}
 
                     <div className="form-buttons">
-                        <button type="submit" className="create-btn" disabled={loading}>
+                        <button
+                            type="submit"
+                            className="create-btn"
+                            disabled={loading}
+                        >
                             {loading ? "Creating..." : "Create Publication"}
                         </button>
-                        <button type="button" className="cancel-btn" onClick={onClose}>
+
+                        <button
+                            type="button"
+                            className="cancel-btn"
+                            onClick={onClose}
+                        >
                             Cancel
                         </button>
                     </div>

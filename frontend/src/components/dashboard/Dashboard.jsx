@@ -12,25 +12,20 @@ function Dashboard() {
     const [author, setAuthor] = useState(null);
 
     useEffect(() => {
-        if (role === 'student' && user_id) {
+        if (!user_id || !role) return;
+
+        if (role === 'student') {
             fetch(`http://localhost:3000/students/user/${user_id}`)
                 .then(res => res.json())
                 .then(data => setStudent(data))
                 .catch(err => console.error('Failed to fetch student:', err));
-        }
-        if (role === 'postgraduate' && user_id) {
-            fetch(`http://localhost:3000/postgraduates/user/${user_id}`)
+        } else {
+            // для профессоров и аспирантов единый fetch на таблицу authors
+            fetch(`http://localhost:3000/authors/user/${user_id}`)
                 .then(res => res.json())
                 .then(data => setAuthor(data))
-                .catch(err => console.error('Failed to fetch postgraduate:', err));
+                .catch(err => console.error('Failed to fetch author:', err));
         }
-        if (role === 'professor' && user_id) {
-            fetch(`http://localhost:3000/professors/user/${user_id}`)
-                .then(res => res.json())
-                .then(data => setAuthor(data))
-                .catch(err => console.error('Failed to fetch professor:', err));
-        }
-
     }, [role, user_id]);
 
     if (!role) {
@@ -41,10 +36,10 @@ function Dashboard() {
         <div className="dashboard-wrapper">
             <Navbar user={{ role, name, lastname, user_id }} />
 
-            {role === 'professor' || role === 'postgraduate' ? (
-                author && <AuthorDashboard author={author} />
-            ) : (
+            {role === 'student' ? (
                 student && <StudentDashboard student={student} />
+            ) : (
+                author && <AuthorDashboard author={author} />
             )}
         </div>
     );
