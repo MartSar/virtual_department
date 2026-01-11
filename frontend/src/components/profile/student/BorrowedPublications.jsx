@@ -16,33 +16,43 @@ const BorrowedPublications = ({ studentId }) => {
             .then(async (res) => {
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
-
                     if (res.status === 404 && errData.error === 'No borrowings found for this student') {
                         return [];
                     }
-
-                    // 🔴 реальная ошибка
                     throw new Error(errData.error || 'Failed to fetch borrowings');
                 }
-
                 return res.json();
             })
-            .then(data => {
-                setBorrowings(Array.isArray(data) ? data : []);
-            })
-            .catch(err => {
-                setError(err.message);
-            })
+            .then(data => setBorrowings(Array.isArray(data) ? data : []))
+            .catch(err => setError(err.message))
             .finally(() => setLoading(false));
     }, [studentId]);
 
-    if (loading) {
-        return <p>Loading...</p>;
-    }
+    const handleDownload = async (publicationId, publicationTitle, fileNameFromApi) => {
+        try {
+            const res = await fetch(`http://localhost:3000/api/publications/download/${publicationId}`);
+            if (!res.ok) throw new Error('Failed to download');
 
-    if (error) {
-        return <p style={{ color: 'red' }}>Error: {error}</p>;
-    }
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+
+            // fallback имя
+            const downloadName = fileNameFromApi || `${publicationTitle.toLowerCase().replace(/\s+/g, "_")}.pdf`;
+            link.download = downloadName;
+
+            link.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to download file');
+        }
+    };
+
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
 
     return (
         <section className="borrowed-publications">
@@ -58,6 +68,7 @@ const BorrowedPublications = ({ studentId }) => {
                         <th>Access From</th>
                         <th>Access Until</th>
                         <th>Status</th>
+                        <th>Download</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -72,6 +83,14 @@ const BorrowedPublications = ({ studentId }) => {
                                 ) : (
                                     <span className="status-expired">Expired</span>
                                 )}
+                            </td>
+                            <td>
+                                <button
+                                    className="download-btn"
+                                    onClick={() => handleDownload(b.publication_id, b.publication_title, b.file_name)}
+                                >
+                                    Download
+                                </button>
                             </td>
                         </tr>
                     ))}

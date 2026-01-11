@@ -649,7 +649,7 @@ app.get("/publications", async (req, res) => {
     }
 });
 
-// Получить все публикации конкретного автора
+// Get all publications of one author
 app.get("/authors/:authorId/publications", async (req, res) => {
     const { authorId } = req.params;
 
@@ -681,6 +681,36 @@ app.get("/authors/:authorId/publications", async (req, res) => {
     } catch (err) {
         console.error("AUTHORED PUBLICATIONS ERROR:", err);
         res.status(500).json({ error: "Failed to fetch authored publications" });
+    }
+});
+
+// Download Publication
+app.get('/api/publications/download/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT file_name, file_type, content
+             FROM publications
+             WHERE id = $1`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Publication not found' });
+        }
+
+        const pub = result.rows[0];
+
+        // content хранится как base64 в БД
+        const fileBuffer = Buffer.from(pub.content, 'base64');
+
+        res.setHeader('Content-Disposition', `attachment; filename="${pub.file_name}"`);
+        res.setHeader('Content-Type', pub.file_type || 'application/octet-stream');
+        res.send(fileBuffer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to download publication' });
     }
 });
 
