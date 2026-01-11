@@ -136,3 +136,74 @@
     transform: scale(1.05);
 }
 
+/* --- Контейнер кнопок в модалке --- */
+.professor-postgraduates-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* --- Кнопка Cancel --- */
+.professor-postgraduates-cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.professor-postgraduates-cancel-btn:hover {
+    background-color: #d5d5d5;
+}
+
+/* --- Кнопка Assign --- */
+.assign-btn {
+    background-color: #4caf50;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.assign-btn:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.assign-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- Селектор для модалки назначения аспиранта --- */
+.professor-postgraduates-select {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 10px;
+}
+
+.professor-postgraduates-select:hover {
+    border-color: #999;
+}
+
+.professor-postgraduates-select:focus {
+    border-color: #4caf50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    outline: none;
+}
+
+.professor-postgraduates-select option {
+    padding: 6px 10px;
+}
