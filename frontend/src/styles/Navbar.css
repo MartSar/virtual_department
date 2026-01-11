@@ -8,6 +8,7 @@
     justify-content: space-between;
 
     padding: 0 25px;
+    position: relative;
 }
 
 /* Контейнеры слева и справа */
@@ -20,46 +21,57 @@
 
 /* Центр с приветствием */
 .navbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     font-weight: bold;
     font-size: 16px;
     opacity: 0.9;
     cursor: default;
+    transition: transform 0.3s ease;
 }
 
+/* Лёгкое движение при hover на кнопки */
+.navbar-left button:hover ~ .navbar-center,
+.navbar-right button:hover ~ .navbar-center {
+    transform: translateX(-50%) translateY(-2px);
+}
 /* Общие стили для кнопок */
 .navbar-profile,
 .navbar-dashboard,
 .navbar-logout,
-.navbar-add-publication{
+.navbar-add-publication {
     background: none;
     border: none;
     color: white;
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.35s ease;
+    transition: all 0.25s ease;
 }
 
-/* Аватар пользователя */
-.navbar-profile {
-    font-size: 20px;
-}
-
-/* Hover эффекты с дерганием */
+/* Hover эффекты с дерганием через scale */
 .navbar-profile:hover {
-    font-size: 25px;
+    transform: scale(1.2);
 }
 
 .navbar-dashboard:hover {
     color: lightblue;
-    font-size: 15px;
+    transform: scale(1.1);
 }
 
 .navbar-logout:hover {
     color: #fd2828;
-    font-size: 15px;
+    transform: scale(1.1);
 }
 
 .navbar-add-publication:hover {
     color: #0cf16c;
-    font-size: 15px;
+    transform: scale(1.1);
+}
+
+/* Аватар пользователя */
+.navbar-avatar {
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
 }
