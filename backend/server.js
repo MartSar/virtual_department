@@ -492,6 +492,54 @@ app.get('/professors/:id/postgraduates', async (req, res) => {
     }
 });
 
+// --------------------------
+// GET all professors of a postgraduate
+// --------------------------
+app.get('/postgraduates/:id/professors', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT
+                 p.id,
+                 u.name,
+                 u.lastname,
+                 f.id AS faculty_id,
+                 f.name AS faculty_name,
+                 uni.id AS university_id,
+                 uni.name AS university_name,
+                 ci.id AS city_id,
+                 ci.name AS city_name,
+                 co.id AS country_id,
+                 co.name AS country_name
+             FROM professor_postgraduates pp
+                      JOIN professors p ON pp.professor_id = p.id
+                      JOIN users u ON p.user_id = u.id
+                      LEFT JOIN faculties f ON p.faculty_id = f.id
+                      LEFT JOIN universities uni ON f.university_id = uni.id
+                      LEFT JOIN cities ci ON uni.city_id = ci.id
+                      LEFT JOIN countries co ON ci.country_id = co.id
+             WHERE pp.postgraduate_id = $1`,
+            [id]
+        );
+
+        // Форматируем для фронта
+        const professorsWithLocation = result.rows.map(prof => ({
+            id: prof.id,
+            name: prof.name,
+            lastname: prof.lastname,
+            faculty: { id: prof.faculty_id, name: prof.faculty_name },
+            university: { id: prof.university_id, name: prof.university_name },
+            city: { id: prof.city_id, name: prof.city_name },
+            country: { id: prof.country_id, name: prof.country_name }
+        }));
+
+        res.json(professorsWithLocation);
+    } catch (err) {
+        console.error('Failed to fetch professors:', err);
+        res.status(500).json({ error: 'Failed to fetch professors' });
+    }
+});
 
 
 // --------------------------
@@ -500,8 +548,6 @@ app.get('/professors/:id/postgraduates', async (req, res) => {
 app.post('/professors/:id/postgraduates', async (req, res) => {
     const professorId = req.params.id;
     const { postgraduate_id } = req.body;
-
-    console.log("Assign request:", { professorId, postgraduate_id });
 
     try {
         const result = await pool.query(
@@ -562,7 +608,23 @@ app.get('/professors/user/:userId', async (req, res) => {
     }
 });
 
-
+// GET postgraduates by user_id
+app.get('/postgraduates/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const result = await pool.query(
+            `SELECT id, user_id FROM postgraduates WHERE user_id = $1`,
+            [userId]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Postgraduates not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch postgraduate' });
+    }
+});
 
 // --------------------------
 // Get user avatar

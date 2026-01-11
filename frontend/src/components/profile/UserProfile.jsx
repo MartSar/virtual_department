@@ -6,6 +6,7 @@ import ProfileInfo from "./common/ProfileInfo";
 import BorrowedPublications from "./student/BorrowedPublications";
 import AuthoredPublications from "./author/AuthoredPublications";
 import ProfessorPostgraduates from "./ProfessorPostgraduates";
+import PostgraduateProfessors from "./PostgraduateProfessors";
 import "../../styles/UserProfile.css";
 
 function UserProfile() {
@@ -48,12 +49,10 @@ function UserProfile() {
     useEffect(() => {
         const fetchProfileData = async () => {
             try {
-                // Профиль пользователя
                 const resUser = await fetch(`http://localhost:3000/users/${id}`);
                 const profile = await resUser.json();
                 setProfileUser(profile);
 
-                // Студент
                 if (profile.role === "student") {
                     const resStudent = await fetch(
                         `http://localhost:3000/students/user/${profile.id}`
@@ -68,7 +67,6 @@ function UserProfile() {
                     setLocation(locationData);
                 }
 
-                // Автор (профессор или аспирант)
                 if (profile.role === "professor" || profile.role === "postgraduate") {
                     const resAuthor = await fetch(
                         `http://localhost:3000/authors/user/${profile.id}`
@@ -83,12 +81,10 @@ function UserProfile() {
                     setLocation(locationData);
                 }
 
-                // Профессор — получить текущих аспирантов и список всех
                 if (profile.role === "professor") {
                     fetchPostgraduates();
                 }
 
-                // Аспирант — получить его профессора
                 if (profile.role === "postgraduate") {
                     const resProf = await fetch(
                         `http://localhost:3000/postgraduates/${profile.id}/professor`
@@ -152,6 +148,12 @@ function UserProfile() {
 
                 {profileUser.role === "professor" && (
                     <ProfessorPostgraduates
+                        userId={profileUser.id}
+                    />
+                )}
+
+                {profileUser.role === "postgraduate" && (
+                    <PostgraduateProfessors
                         userId={profileUser.id}
                     />
                 )}
