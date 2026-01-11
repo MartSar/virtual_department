@@ -4,7 +4,6 @@ import "../../styles/PublicationModal.css";
 const borrowOptions = [7, 30, 90, 365];
 
 const PublicationModal = ({ publication, onClose, student, user }) => {
-    // хуки всегда сверху
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -12,6 +11,8 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
     const [selectedDays, setSelectedDays] = useState(null);
     const [authors, setAuthors] = useState([]);
     const [loadingAuthors, setLoadingAuthors] = useState(true);
+
+    const [topicName, setTopicName] = useState("");
 
     const studentId = student?.id;
     const canBorrow = !!studentId;
@@ -40,9 +41,6 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
 
         fetchAuthors();
     }, [publication]);
-
-    // если публикации нет, просто рендерим null (хуки уже вызваны)
-    if (!publication) return null;
 
     /* -----------------------------
        Borrow handlers
@@ -93,6 +91,27 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
         }
     };
 
+    useEffect(() => {
+        if (!publication.topic_id) return;
+
+        const fetchTopicName = async () => {
+            try {
+                const res = await fetch(`http://localhost:3000/central_topics/${publication.topic_id}`);
+                if (!res.ok) throw new Error("Topic not found");
+
+                const data = await res.json();
+                setTopicName(data.name);
+            } catch (err) {
+                console.error(err);
+                setTopicName("—");
+            }
+        };
+
+        fetchTopicName();
+    }, [publication.topic_id]);
+
+    if (!publication) return null;
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -114,7 +133,7 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
                 </div>
 
                 <div className="modal-section">
-                    <p><strong>Topic:</strong> {publication.topic_name || "—"}</p>
+                    <p><strong>Topic:</strong> {topicName || "—"}</p>
                     <p><strong>Country:</strong> {publication.country_name || "—"}</p>
                     <p><strong>City:</strong> {publication.city_name || "—"}</p>
                     <p><strong>University:</strong> {publication.university_name || "—"}</p>

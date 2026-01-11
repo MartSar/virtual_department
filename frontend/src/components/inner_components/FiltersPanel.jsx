@@ -1,64 +1,69 @@
+import React from "react";
+import "../../styles/FiltersPanel.css";
+
+const SelectFilter = ({ label, name, value, onChange, options }) => (
+    <div className="filter-item">
+        <label>{label}</label>
+        <select name={name} value={value} onChange={onChange}>
+            <option value="">{`All ${label.toLowerCase()}`}</option>
+            {options?.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                </option>
+            ))}
+        </select>
+    </div>
+);
+
 const FiltersPanel = ({ filters, setFilters, options }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+        setFilters((prev) => ({ ...prev, [name]: value }));
     };
 
     return (
         <div className="filters-panel">
             <h3>Filters</h3>
 
-            <label>Topic</label>
-            <select name="topic" value={filters.topic} onChange={handleChange}>
-                <option value="">All topics</option>
-                {options.topics.map(topic => (
-                    <option key={topic.id} value={topic.id}>
-                        {topic.name}
-                    </option>
-                ))}
-            </select>
+            <SelectFilter
+                label="Topic"
+                name="topic"
+                value={filters.topic}
+                onChange={handleChange}
+                options={options.topics || []}
+            />
 
-            <label>Country</label>
-            <select name="country" value={filters.country} onChange={handleChange}>
-                <option value="">All countries</option>
-                {options.countries.map(country => (
-                    <option key={country.id} value={country.id}>
-                        {country.name}
-                    </option>
-                ))}
-            </select>
+            <SelectFilter
+                label="Country"
+                name="country"
+                value={filters.country}
+                onChange={handleChange}
+                options={options.countries || []}
+            />
 
-            <label>City</label>
-            <select name="city" value={filters.city} onChange={handleChange}>
-                <option value="">All cities</option>
-                {options.cities.map(city => (
-                    <option key={city.id} value={city.id}>
-                        {city.name}
-                    </option>
-                ))}
-            </select>
+            <SelectFilter
+                label="City"
+                name="city"
+                value={filters.city}
+                onChange={handleChange}
+                options={options.cities || []}
+            />
 
-            <label>University</label>
-            <select name="university" value={filters.university} onChange={handleChange}>
-                <option value="">All universities</option>
-                {options.universities.map(university => (
-                    <option key={university.id} value={university.id}>
-                        {university.name}
-                    </option>
-                ))}
-            </select>
+            <SelectFilter
+                label="University"
+                name="university"
+                value={filters.university}
+                onChange={handleChange}
+                options={options.universities || []}
+            />
 
-            <label>Faculty</label>
-            <select name="faculty" value={filters.faculty} onChange={handleChange}>
-                <option value="">All faculties</option>
-                {options.faculties.map(faculty => (
-                    <option key={faculty.id} value={faculty.id}>
-                        {faculty.name}
-                    </option>
-                ))}
-            </select>
-
-
+            <SelectFilter
+                label="Faculty"
+                name="faculty"
+                value={filters.faculty}
+                onChange={handleChange}
+                options={options.faculties || []}
+            />
         </div>
     );
 };

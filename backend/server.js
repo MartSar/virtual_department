@@ -457,6 +457,28 @@ app.get('/users/:id', async (req, res) => {
 // });
 
 
+// GET /central_topics/:id — получить имя темы по id
+app.get("/central_topics/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            "SELECT id, name FROM central_topics WHERE id = $1",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Topic not found" });
+        }
+
+        res.json(result.rows[0]); // { id, name }
+    } catch (err) {
+        console.error("Failed to fetch topic:", err);
+        res.status(500).json({ error: "Failed to fetch topic" });
+    }
+});
+
+
 // --------------------------
 // Get Borrowings of current student
 // --------------------------
@@ -485,34 +507,26 @@ app.get(`borrowings/:id`, async (req, res) => {
 // Create Publication
 // --------------------------
 app.post("/api/publications/create", async (req, res) => {
-    const {
-        title,
-        file_type,
-        content,
-        description,
-        author_id,
-        file_name
-    } = req.body;
+    const { title, file_type, content, description, author_id, file_name, topic_id } = req.body;
 
-    if (!title || !file_type || !content) {
+    if (!title || !file_type || !content || !topic_id) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
-        // Base64 -> BYTEA
         const contentBuffer = Buffer.from(content, "base64");
 
-        // создаём публикацию
+        // вставка публикации с topic_id
         const pubResult = await pool.query(
-            `INSERT INTO publications (title, content, file_name, file_type, description)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO publications (title, content, file_name, file_type, description, topic_id)
+             VALUES ($1, $2, $3, $4, $5, $6)
                  RETURNING id`,
-            [title, contentBuffer, file_name, file_type, description]
+            [title, contentBuffer, file_name, file_type, description, topic_id]
         );
 
         const publication_id = pubResult.rows[0].id;
 
-        // если есть автор (для студента может быть null)
+        // привязка автора
         if (author_id) {
             await pool.query(
                 `INSERT INTO publication_authors (publication_id, author_id)
@@ -521,18 +535,17 @@ app.post("/api/publications/create", async (req, res) => {
             );
         }
 
-        res.status(201).json({
-            success: true,
-            publication_id
-        });
-
+        res.status(201).json({ success: true, publication_id });
     } catch (err) {
         console.error("CREATE PUBLICATION ERROR:", err);
         res.status(500).json({ error: "Failed to create publication" });
     }
 });
 
-// GET /publications/:id/authors
+
+// --------------------------
+// Get all authors for publication
+// --------------------------
 app.get("/publications/:id/authors", async (req, res) => {
     const publicationId = req.params.id;
 
@@ -550,6 +563,60 @@ app.get("/publications/:id/authors", async (req, res) => {
     } catch (err) {
         console.error("FETCH AUTHORS ERROR:", err);
         res.status(500).json({ error: "Failed to fetch authors" });
+    }
+});
+
+// GET /publications?topic_id=1&country_id=2&city_id=3&university_id=4&faculty_id=5
+app.get("/publications", async (req, res) => {
+    const { topic_id, country_id, city_id, university_id, faculty_id } = req.query;
+
+    try {
+        let query = `
+            SELECT 
+                p.*, 
+                t.name AS topic_name,
+                c.name AS country_name,
+                ci.name AS city_name,
+                u.name AS university_name,
+                f.name AS faculty_name
+            FROM publications p
+            LEFT JOIN central_topics t ON p.topic_id = t.id
+            LEFT JOIN countries c ON p.country_id = c.id
+            LEFT JOIN cities ci ON p.city_id = ci.id
+            LEFT JOIN universities u ON p.university_id = u.id
+            LEFT JOIN faculties f ON p.faculty_id = f.id
+            WHERE 1=1
+        `;
+
+        const params = [];
+        let idx = 1;
+
+        if (topic_id) {
+            query += ` AND p.topic_id = $${idx++}`;
+            params.push(topic_id);
+        }
+        if (country_id) {
+            query += ` AND p.country_id = $${idx++}`;
+            params.push(country_id);
+        }
+        if (city_id) {
+            query += ` AND p.city_id = $${idx++}`;
+            params.push(city_id);
+        }
+        if (university_id) {
+            query += ` AND p.university_id = $${idx++}`;
+            params.push(university_id);
+        }
+        if (faculty_id) {
+            query += ` AND p.faculty_id = $${idx++}`;
+            params.push(faculty_id);
+        }
+
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to fetch publications" });
     }
 });
 

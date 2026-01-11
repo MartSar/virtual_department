@@ -9,47 +9,53 @@ function AddPublication({ user, onClose }) {
     const [fileName, setFileName] = useState("");
     const [authorName, setAuthorName] = useState(`${user.name} ${user.lastname}`);
 
+    // central topic
+    const [topicId, setTopicId] = useState("");
+    const [topics, setTopics] = useState([]);
+    const [selectedTopic, setSelectedTopic] = useState(null);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isDragOver, setIsDragOver] = useState(false);
-    const [author, setAuthor] = useState(null);
 
-    /* -----------------------------
-       Generate file name from title
-    ------------------------------ */
+    // ------------------- Fetch central topics -------------------
+    useEffect(() => {
+        const fetchTopics = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/central_topics");
+                const data = await res.json();
+                setTopics(data);
+            } catch (err) {
+                console.error("Failed to fetch topics:", err);
+            }
+        };
+        fetchTopics();
+    }, []);
+
+    // ------------------- Update selected topic -------------------
+    useEffect(() => {
+        setSelectedTopic(topics.find(t => t.id === Number(topicId)) || null);
+    }, [topicId, topics]);
+
+    // ------------------- Generate file name -------------------
     useEffect(() => {
         if (!title) return;
         const ext = fileType || "txt";
-        const generated = `${title.toLowerCase().replace(/\s+/g, "_")}.${ext}`;
-        setFileName(generated);
+        setFileName(`${title.toLowerCase().replace(/\s+/g, "_")}.${ext}`);
     }, [title, fileType]);
 
-    /* -----------------------------
-       Fetch author by user_id (unified fetch)
-    ------------------------------ */
-    useEffect(() => {
-        const fetchAuthor = async () => {
-            if (user.role === "student") return; // студенты не имеют authors
-            try {
-                const res = await fetch(`http://localhost:3000/authors/user/${user.user_id}`);
-                if (!res.ok) throw new Error("Author not found");
-                const data = await res.json();
-                setAuthor(data);
-            } catch (err) {
-                console.error("Failed to fetch author:", err);
-            }
-        };
+    // ------------------- Fetch author -------------------
+    const fetchAuthor = async () => {
+        const res = await fetch(`http://localhost:3000/authors/user/${user.user_id}`);
+        if (!res.ok) throw new Error("Author not found");
+        const author = await res.json();
+        return { author_id: author.id, author_type: author.author_type };
+    };
 
-        fetchAuthor();
-    }, [user]);
-
-    /* -----------------------------
-       File handlers
-    ------------------------------ */
+    // ------------------- File handlers -------------------
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (!selectedFile) return;
-
         setFile(selectedFile);
         setFileType(selectedFile.name.split(".").pop());
         e.target.value = null;
@@ -58,68 +64,49 @@ function AddPublication({ user, onClose }) {
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragOver(false);
-
         const droppedFile = e.dataTransfer.files[0];
         if (!droppedFile) return;
-
         setFile(droppedFile);
         setFileType(droppedFile.name.split(".").pop());
     };
 
-    /* -----------------------------
-       Submit
-    ------------------------------ */
+    // ------------------- Submit -------------------
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
 
-        if (!title || !file || !fileType) {
+        if (!title || !file || !fileType || !topicId) {
             setError("Please fill in all required fields");
             return;
         }
 
         setLoading(true);
-
         try {
-            let author_id = null;
-            let author_type = null;
-
-            if (user.role === "professor" || user.role === "postgraduate") {
-                author_id = author?.id;
-                author_type = author?.author_type;
-                if (!author_id) throw new Error("Author not loaded yet");
-            }
+            const { author_id } = await fetchAuthor();
 
             const reader = new FileReader();
             reader.onload = async () => {
                 const contentBase64 = reader.result.split(",")[1];
 
-                const response = await fetch(
-                    "http://localhost:3000/api/publications/create",
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            title,
-                            file_type: fileType,
-                            content: contentBase64,
-                            description,
-                            file_name: fileName,
-                            author_id,
-                            author_type
-                        })
-                    }
-                );
+                const res = await fetch("http://localhost:3000/api/publications/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title,
+                        file_type: fileType,
+                        content: contentBase64,
+                        description,
+                        file_name: fileName,
+                        author_id,
+                        topic_id: topicId
+                    })
+                });
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Failed to create publication");
-                }
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "Failed to create publication");
 
                 onClose();
             };
-
             reader.readAsDataURL(file);
         } catch (err) {
             console.error(err);
@@ -132,15 +119,11 @@ function AddPublication({ user, onClose }) {
         <div className="modal-overlay">
             <div className="modal-content">
                 <h2>Add Publication</h2>
-
                 <form className="add-publication-form" onSubmit={handleSubmit}>
+
                     <label>
                         Title
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
+                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
                     </label>
 
                     <label>
@@ -149,31 +132,27 @@ function AddPublication({ user, onClose }) {
                     </label>
 
                     <label>
+                        Central Topic
+                        <select value={topicId} onChange={(e) => setTopicId(e.target.value)}>
+                            <option value="">Select topic</option>
+                            {topics.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                    </label>
+
+                    <label>
                         File Type
-                        <input
-                            type="text"
-                            value={fileType}
-                            onChange={(e) => setFileType(e.target.value)}
-                            placeholder="pdf, docx, txt"
-                        />
+                        <input type="text" value={fileType} onChange={(e) => setFileType(e.target.value)} placeholder="pdf, docx, txt" readOnly />
                     </label>
 
                     <label>
                         File Name
-                        <input
-                            type="text"
-                            value={fileName}
-                            onChange={(e) => setFileName(e.target.value)}
-                        />
+                        <input type="text" value={fileName} onChange={(e) => setFileName(e.target.value)} />
                     </label>
 
                     <label
                         className={`file-drop-area ${isDragOver ? "drag-over" : ""}`}
                         onDrop={handleDrop}
-                        onDragOver={(e) => {
-                            e.preventDefault();
-                            setIsDragOver(true);
-                        }}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                         onDragLeave={() => setIsDragOver(false)}
                     >
                         {file ? file.name : "Drag & drop file here or click to select"}
@@ -182,30 +161,16 @@ function AddPublication({ user, onClose }) {
 
                     <label>
                         Description
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
+                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
                     </label>
 
                     {error && <p className="error">{error}</p>}
 
                     <div className="form-buttons">
-                        <button
-                            type="submit"
-                            className="create-btn"
-                            disabled={loading}
-                        >
+                        <button type="submit" className="create-btn" disabled={loading}>
                             {loading ? "Creating..." : "Create Publication"}
                         </button>
-
-                        <button
-                            type="button"
-                            className="cancel-btn"
-                            onClick={onClose}
-                        >
-                            Cancel
-                        </button>
+                        <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>
                     </div>
                 </form>
             </div>
