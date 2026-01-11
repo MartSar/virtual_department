@@ -1,20 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../styles/PublicationModal.css";
 
 const borrowOptions = [7, 30, 90, 365];
 
 const PublicationModal = ({ publication, onClose, student, user }) => {
+    // хуки всегда сверху
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [showDuration, setShowDuration] = useState(false);
     const [selectedDays, setSelectedDays] = useState(null);
+    const [authors, setAuthors] = useState([]);
+    const [loadingAuthors, setLoadingAuthors] = useState(true);
 
-    if (!publication) return null;
-
-    const studentId = student?.id; // только студент может одалживать
+    const studentId = student?.id;
     const canBorrow = !!studentId;
 
+    /* -----------------------------
+       Fetch authors
+    ------------------------------ */
+    useEffect(() => {
+        if (!publication) return; // внутри useEffect условие уже безопасно
+        const fetchAuthors = async () => {
+            try {
+                const res = await fetch(
+                    `http://localhost:3000/publications/${publication.id}/authors`
+                );
+
+                if (!res.ok) throw new Error("Failed to fetch authors");
+
+                const data = await res.json(); // ожидаем массив авторов
+                setAuthors(data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoadingAuthors(false);
+            }
+        };
+
+        fetchAuthors();
+    }, [publication]);
+
+    // если публикации нет, просто рендерим null (хуки уже вызваны)
+    if (!publication) return null;
+
+    /* -----------------------------
+       Borrow handlers
+    ------------------------------ */
     const handleBorrowClick = () => {
         if (!canBorrow) return;
         setShowDuration(true);
@@ -67,6 +99,19 @@ const PublicationModal = ({ publication, onClose, student, user }) => {
                 <button className="modal-close-btn" onClick={onClose}>✕</button>
 
                 <h2>{publication.title}</h2>
+
+                <div className="modal-section">
+                    {loadingAuthors ? (
+                        <p>Loading authors...</p>
+                    ) : authors.length > 0 ? (
+                        <p>
+                            <strong>Authors:</strong>{" "}
+                            {authors.map((a) => `${a.name} ${a.lastname} (${a.author_type})`).join(", ")}
+                        </p>
+                    ) : (
+                        <p><strong>Authors:</strong> None</p>
+                    )}
+                </div>
 
                 <div className="modal-section">
                     <p><strong>Topic:</strong> {publication.topic_name || "—"}</p>

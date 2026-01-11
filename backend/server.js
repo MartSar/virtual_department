@@ -532,6 +532,28 @@ app.post("/api/publications/create", async (req, res) => {
     }
 });
 
+// GET /publications/:id/authors
+app.get("/publications/:id/authors", async (req, res) => {
+    const publicationId = req.params.id;
+
+    try {
+        const result = await pool.query(
+            `SELECT a.id, u.name, u.lastname, a.author_type
+             FROM publication_authors pa
+             JOIN authors a ON pa.author_id = a.id
+             JOIN users u ON a.user_id = u.id
+             WHERE pa.publication_id = $1`,
+            [publicationId]
+        );
+
+        res.json(result.rows); // возвращаем массив авторов
+    } catch (err) {
+        console.error("FETCH AUTHORS ERROR:", err);
+        res.status(500).json({ error: "Failed to fetch authors" });
+    }
+});
+
+
 // --------------------------
 // Server start
 // --------------------------
