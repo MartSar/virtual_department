@@ -15,6 +15,9 @@ function RegisterForm() {
     const [universities, setUniversities] = useState([]);
     const [universityId, setUniversityId] = useState('');
 
+    const [faculties, setFaculties] = useState([]);
+    const [facultyId, setFacultyId] = useState('');
+
     const navigate = useNavigate();
 
     // load universities
@@ -24,6 +27,20 @@ function RegisterForm() {
             .then(data => setUniversities(data))
             .catch(err => console.error(err));
     }, []);
+
+    // load faculties
+    useEffect(() => {
+        fetch('http://localhost:3000/faculties')
+            .then(res => res.json())
+            .then(data => setFaculties(data))
+            .catch(err => console.error(err));
+    }, []);
+
+    // reset selects when role changes
+    useEffect(() => {
+        setUniversityId('');
+        setFacultyId('');
+    }, [role]);
 
     return (
         <div className="auth-container">
@@ -36,9 +53,14 @@ function RegisterForm() {
                 lastname={lastname} setLastname={setLastname}
                 password={password} setPassword={setPassword}
                 showPassword={showPassword} setShowPassword={setShowPassword}
+
                 universities={universities}
                 universityId={universityId}
                 setUniversityId={setUniversityId}
+
+                faculties={faculties}
+                facultyId={facultyId}
+                setFacultyId={setFacultyId}
             />
 
             <div className="register-btns-container">
@@ -57,7 +79,8 @@ function RegisterForm() {
                             name,
                             lastname,
                             password,
-                            university_id: universityId,
+                            university_id: role === 'student' ? universityId : null,
+                            faculty_id: role !== 'student' ? facultyId : null,
                             setMessage,
                             navigate
                         })

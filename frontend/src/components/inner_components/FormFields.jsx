@@ -7,9 +7,14 @@ export default function FormFields({
                                        lastname, setLastname,
                                        password, setPassword,
                                        showPassword, setShowPassword,
+
                                        universities,
                                        universityId,
-                                       setUniversityId
+                                       setUniversityId,
+
+                                       faculties,
+                                       facultyId,
+                                       setFacultyId
                                    }) {
     return (
         <div className="form">
@@ -22,6 +27,7 @@ export default function FormFields({
                 </select>
             </label>
 
+            {/* STUDENT */}
             {role === 'student' && (
                 <label>
                     University:
@@ -40,6 +46,33 @@ export default function FormFields({
                 </label>
             )}
 
+            {/* PROFESSOR / POSTGRADUATE */}
+            {(role === 'professor' || role === 'postgraduate') && (
+                <label>
+                    Faculty:
+                    <select
+                        value={facultyId}
+                        onChange={(e) => setFacultyId(e.target.value)}
+                        required
+                    >
+                        <option value="">Select faculty</option>
+
+                        {faculties.map(f => {
+                            const university = universities.find(
+                                u => u.id === f.university_id
+                            );
+
+                            return (
+                                <option key={f.id} value={f.id}>
+                                    {university
+                                        ? `${university.name} — ${f.name}`
+                                        : f.name}
+                                </option>
+                            );
+                        })}
+                    </select>
+                </label>
+            )}
 
             <input
                 className="first-name-input"
