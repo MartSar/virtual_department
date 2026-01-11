@@ -55,7 +55,7 @@ function Navbar({ user }) {
 
             {/* CENTER */}
             <div className="navbar-center">
-                Welcome {name} {lastname} (fix)!
+                Welcome {name} {lastname}!
             </div>
 
             {/* RIGHT */}
