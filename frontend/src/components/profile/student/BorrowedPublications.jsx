@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import '../../../styles/BorrowedPublications.css';
+import '../../../styles/UserPublications.css';
 
 const BorrowedPublications = ({ studentId }) => {
     const [borrowings, setBorrowings] = useState([]);

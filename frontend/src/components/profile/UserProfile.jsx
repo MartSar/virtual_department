@@ -4,13 +4,15 @@ import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
 import BorrowedPublications from "./student/BorrowedPublications";
-import "../../styles/UserProfile.css"
+import AuthoredPublications from "./author/AuthoredPublications";
+import "../../styles/UserProfile.css";
 
 function UserProfile() {
     const { id } = useParams();
     const location = useLocation();
 
     const [profileUser, setProfileUser] = useState(null);
+    const [authorId, setAuthorId] = useState(null);
     const [student, setStudent] = useState(null);
 
     const loggedUser =
@@ -18,6 +20,7 @@ function UserProfile() {
         JSON.parse(localStorage.getItem("loggedUser"));
 
     useEffect(() => {
+        // Получаем профиль пользователя
         fetch(`http://localhost:3000/users/${id}`)
             .then(res => res.json())
             .then(data => setProfileUser(data))
@@ -25,11 +28,22 @@ function UserProfile() {
     }, [id]);
 
     useEffect(() => {
-        if (profileUser?.role === 'student' && profileUser.id) {
+        if (!profileUser) return;
+
+        // Если студент — получаем данные студента
+        if (profileUser.role === 'student') {
             fetch(`http://localhost:3000/students/user/${profileUser.id}`)
                 .then(res => res.json())
                 .then(data => setStudent(data))
                 .catch(err => console.error('Failed to fetch student:', err));
+        } else if (profileUser.role === 'professor' || profileUser.role === 'postgraduate') {
+            // Если профессор или аспирант — получаем author_id
+            fetch(`http://localhost:3000/authors/user/${profileUser.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    setAuthorId(data.id); // здесь data.id = author_id
+                })
+                .catch(err => console.error('Failed to fetch author:', err));
         }
     }, [profileUser]);
 
@@ -38,6 +52,7 @@ function UserProfile() {
     }
 
     const isStudent = profileUser.role === "student";
+    const isAuthor = profileUser.role === "professor" || profileUser.role === "postgraduate";
 
     return (
         <>
@@ -54,6 +69,10 @@ function UserProfile() {
 
                 {isStudent && student && (
                     <BorrowedPublications studentId={student.id} />
+                )}
+
+                {isAuthor && authorId && (
+                    <AuthoredPublications authorId={authorId} />
                 )}
             </div>
         </>

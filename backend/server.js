@@ -566,6 +566,27 @@ app.get("/publications/:id/authors", async (req, res) => {
     }
 });
 
+// Publication Deletion
+app.delete('/api/publications/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // проверка, что публикация существует
+        const publication = await pool.query('SELECT * FROM publications WHERE id = $1', [id]);
+        if (!publication.rows.length) {
+            return res.status(404).json({ error: 'Publication not found' });
+        }
+
+        // удаляем публикацию
+        await pool.query('DELETE FROM publications WHERE id = $1', [id]);
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete publication' });
+    }
+});
+
+
 // GET /publications?topic_id=1&country_id=2&city_id=3&university_id=4&faculty_id=5
 app.get("/publications", async (req, res) => {
     const { topic_id, country_id, city_id, university_id, faculty_id } = req.query;
@@ -620,6 +641,40 @@ app.get("/publications", async (req, res) => {
     }
 });
 
+// Получить все публикации конкретного автора
+app.get("/authors/:authorId/publications", async (req, res) => {
+    const { authorId } = req.params;
+
+    if (!authorId) return res.status(400).json({ error: "authorId is required" });
+
+    try {
+        const result = await pool.query(
+            `SELECT
+                 p.id,
+                 p.title,
+                 p.file_type,
+                 p.description,
+                 p.topic_id,
+                 t.name AS topic_name
+             FROM publication_authors pa
+                      JOIN publications p ON pa.publication_id = p.id
+                      LEFT JOIN central_topics t ON p.topic_id = t.id
+             WHERE pa.author_id = $1
+             ORDER BY p.id DESC`,
+            [authorId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "No publications found for this author" });
+        }
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error("AUTHORED PUBLICATIONS ERROR:", err);
+        res.status(500).json({ error: "Failed to fetch authored publications" });
+    }
+});
 
 // --------------------------
 // Server start
