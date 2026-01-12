@@ -26,81 +26,84 @@ function UserProfile() {
         JSON.parse(localStorage.getItem("loggedUser"));
 
     useEffect(() => {
+        if (!userId) return;
+
+        // -------------------
+        // Вспомогательные функции
+        // -------------------
         const fetchLocation = async (url) => {
-            const res = await fetch(url);
-            if (!res.ok) return null;
-            return await res.json();
+            try {
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                return await res.json();
+            } catch {
+                return null;
+            }
         };
 
+        console.log(userId)
+
+        const fetchAuthorId = async (userId) => {
+            try {
+                const res = await fetch(`http://localhost:3000/authors/user/${userId}`);
+                if (!res.ok) return null;
+                const data = await res.json();
+                console.log(data)
+                return data?.id || null;
+            } catch {
+                return null;
+            }
+        };
+
+        // -------------------
+        // Основная функция
+        // -------------------
         const fetchProfileData = async () => {
             try {
-                // -------------------
                 // USER
-                // -------------------
                 const userRes = await fetch(`http://localhost:3000/users/${userId}`);
                 if (!userRes.ok) throw new Error("User not found");
-
                 const userData = await userRes.json();
                 setProfileUser(userData);
 
-                // -------------------
                 // STUDENT
-                // -------------------
                 if (userData.role === "student") {
-                    const res = await fetch(
-                        `http://localhost:3000/students/user/${userId}`
-                    );
-                    const studentData = await res.json();
+                    const studentRes = await fetch(`http://localhost:3000/students/user/${userId}`);
+                    const studentData = await studentRes.json();
                     setStudent(studentData);
 
-                    const loc = await fetchLocation(
-                        `http://localhost:3000/students/${studentData.id}/location`
-                    );
+                    const loc = await fetchLocation(`http://localhost:3000/students/${studentData.id}/location`);
                     setLocation(loc);
                 }
 
-                // -------------------
                 // POSTGRADUATE
-                // -------------------
                 if (userData.role === "postgraduate") {
-                    const res = await fetch(
-                        `http://localhost:3000/postgraduates/user/${userId}`
-                    );
-                    const postgraduateData = await res.json();
+                    const postgraduateRes = await fetch(`http://localhost:3000/postgraduates/user/${userId}`);
+                    const postgraduateData = await postgraduateRes.json();
                     setPostgraduate(postgraduateData);
 
-                    const loc = await fetchLocation(
-                        `http://localhost:3000/postgraduates/${postgraduateData.id}/location`
-                    );
+                    const loc = await fetchLocation(`http://localhost:3000/postgraduates/${postgraduateData.id}/location`);
                     setLocation(loc);
+
+                    // AUTHOR ID
+                    const id = await fetchAuthorId(userId);
+                    setAuthorId(id);
                 }
 
-                // -------------------
                 // PROFESSOR
-                // -------------------
                 if (userData.role === "professor") {
-                    const res = await fetch(
-                        `http://localhost:3000/professors/user/${userId}`
-                    );
-                    const professorData = await res.json();
+                    const professorRes = await fetch(`http://localhost:3000/professors/user/${userId}`);
+                    const professorData = await professorRes.json();
                     setProfessor(professorData);
 
-                    const loc = await fetchLocation(
-                        `http://localhost:3000/professors/${professorData.id}/location`
-                    );
+                    const loc = await fetchLocation(`http://localhost:3000/professors/${professorData.id}/location`);
                     setLocation(loc);
+
+                    // AUTHOR ID
+                    const id = await fetchAuthorId(userId);
+                    setAuthorId(id);
                 }
 
-                // -------------------
-                // AUTHOR (единый источник)
-                // -------------------
-                if (
-                    userData.role === "professor" ||
-                    userData.role === "postgraduate"
-                ) {
-                    const authorId = await fetchAuthorId(userId);
-                    setAuthorId(authorId);
-                }
             } catch (err) {
                 console.error("Failed to fetch profile data:", err);
             }
@@ -108,7 +111,6 @@ function UserProfile() {
 
         fetchProfileData();
     }, [userId]);
-
 
     if (!profileUser || !loggedUser) {
         return <h2 style={{ textAlign: "center" }}>Loading...</h2>;

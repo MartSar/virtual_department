@@ -43,20 +43,7 @@ const PublicationModal = ({ publication, onClose, student }) => {
                 });
 
                 const locations = await Promise.all(locationsPromises);
-
-                // Фильтруем уникальные комбинации
-                const uniqueLocations = locations.filter(
-                    (loc, index, self) =>
-                        index === self.findIndex(
-                            l =>
-                                l.faculty_name === loc.faculty_name &&
-                                l.university_name === loc.university_name &&
-                                l.city_name === loc.city_name &&
-                                l.country_name === loc.country_name
-                        )
-                );
-
-                setAuthorLocations(uniqueLocations);
+                setAuthorLocations(locations);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -136,6 +123,14 @@ const PublicationModal = ({ publication, onClose, student }) => {
     // -----------------------------
     const uniqueAuthors = Array.from(new Map(authors.map(a => [a.id, a])).values());
 
+    // -----------------------------
+    // Собираем уникальные значения для каждой характеристики
+    // -----------------------------
+    const faculties = [...new Set(authorLocations.map(l => l.faculty_name).filter(v => v))];
+    const universities = [...new Set(authorLocations.map(l => l.university_name).filter(v => v))];
+    const cities = [...new Set(authorLocations.map(l => l.city_name).filter(v => v))];
+    const countries = [...new Set(authorLocations.map(l => l.country_name).filter(v => v))];
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -159,15 +154,12 @@ const PublicationModal = ({ publication, onClose, student }) => {
                     <p><strong>Topic:</strong> {topicName || "—"}</p>
 
                     {authorLocations.length > 0 ? (
-                        authorLocations.map((loc, idx) => (
-                            <div key={idx} style={{ marginBottom: "0.5em" }}>
-                                <p><strong>Country:</strong> {loc.country_name}</p>
-                                <p><strong>City:</strong> {loc.city_name}</p>
-                                <p><strong>University:</strong> {loc.university_name}</p>
-                                <p><strong>Faculty:</strong> {loc.faculty_name}</p>
-                                <hr />
-                            </div>
-                        ))
+                        <>
+                            <p><strong>Faculty:</strong> {faculties.join(", ") || "—"}</p>
+                            <p><strong>University:</strong> {universities.join(", ") || "—"}</p>
+                            <p><strong>City:</strong> {cities.join(", ") || "—"}</p>
+                            <p><strong>Country:</strong> {countries.join(", ") || "—"}</p>
+                        </>
                     ) : (
                         <p>Faculty, University, City, Country: —</p>
                     )}
