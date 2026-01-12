@@ -43,16 +43,40 @@ function StudentDashboard({ student }) {
     // -----------------------------
     // Fetch publications
     // -----------------------------
+    const fetchPublications = async () => {
+        try {
+            const res = await fetch('http://localhost:3000/publications');
+            const pubs = await res.json();
+
+            // Для каждой публикации достаем авторов и их местоположение
+            const pubsWithLocations = await Promise.all(
+                pubs.map(async pub => {
+                    const res2 = await fetch(`http://localhost:3000/publications/${pub.id}/authors-location`);
+                    const data = await res2.json(); // { authors: [...] }
+
+                    // Агрегируем все факультеты, университеты, города и страны в публикации
+                    const facultyIds = Array.from(new Set(data.authors.map(a => a.faculty?.faculty_id).filter(Boolean)));
+                    const universityIds = Array.from(new Set(data.authors.map(a => a.university?.university_id).filter(Boolean)));
+                    const cityIds = Array.from(new Set(data.authors.map(a => a.city?.city_id).filter(Boolean)));
+                    const countryIds = Array.from(new Set(data.authors.map(a => a.country?.country_id).filter(Boolean)));
+
+                    return {
+                        ...pub,
+                        faculty_ids: facultyIds,
+                        university_ids: universityIds,
+                        city_ids: cityIds,
+                        country_ids: countryIds
+                    };
+                })
+            );
+
+            setPublications(pubsWithLocations);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
-        const fetchPublications = async () => {
-            try {
-                const res = await fetch('http://localhost:3000/publications');
-                const data = await res.json();
-                setPublications(data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
         fetchPublications();
     }, []);
 
@@ -62,10 +86,10 @@ function StudentDashboard({ student }) {
     const filteredPublications = publications.filter(pub => {
         const matchesSearch = pub.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesTopic = !filters.topic || pub.topic_id === Number(filters.topic);
-        const matchesCountry = !filters.country || pub.country_id === Number(filters.country);
-        const matchesCity = !filters.city || pub.city_id === Number(filters.city);
-        const matchesUniversity = !filters.university || pub.university_id === Number(filters.university);
-        const matchesFaculty = !filters.faculty || pub.faculty_id === Number(filters.faculty);
+        const matchesCountry = !filters.country || pub.country_ids.includes(Number(filters.country));
+        const matchesCity = !filters.city || pub.city_ids.includes(Number(filters.city));
+        const matchesUniversity = !filters.university || pub.university_ids.includes(Number(filters.university));
+        const matchesFaculty = !filters.faculty || pub.faculty_ids.includes(Number(filters.faculty));
 
         return matchesSearch && matchesTopic && matchesCountry && matchesCity && matchesUniversity && matchesFaculty;
     });
