@@ -77,7 +77,6 @@ const PublicationModal = ({ publication, onClose, student }) => {
                 const res = await fetch(`http://localhost:3000/publications/${publication.id}/authors-location`);
                 if (!res.ok) throw new Error("Failed to fetch full data");
                 const data = await res.json();
-                console.log("Raw full data:", data);
 
                 // Faculties
                 const formattedFaculties = data.authors.map(author => ({

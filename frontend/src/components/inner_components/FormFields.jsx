@@ -65,7 +65,7 @@ export default function FormFields({
                             return (
                                 <option key={f.id} value={f.id}>
                                     {university
-                                        ? `${university.name} — ${f.name}`
+                                        ? `${university.name} (${f.name})`
                                         : f.name}
                                 </option>
                             );
