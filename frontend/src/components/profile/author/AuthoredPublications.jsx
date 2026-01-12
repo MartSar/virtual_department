@@ -88,10 +88,10 @@ const AuthoredPublications = ({ authorId }) => {
                             <td>{pub.file_type || "-"}</td>
                             <td>{pub.description || "-"}</td>
                             <td>
-                                {/*<AddCoAuthor*/}
-                                {/*    publicationId={pub.id}*/}
-                                {/*    onUpdate={() => refreshPublicationAuthors(pub.id)}*/}
-                                {/*/>*/}
+                                <AddCoAuthor
+                                    publicationId={pub.id}
+                                    onUpdate={() => refreshPublicationAuthors(pub.id)}
+                                />
                                 <button
                                     className="delete-btn"
                                     onClick={() => handleDelete(pub.id)}

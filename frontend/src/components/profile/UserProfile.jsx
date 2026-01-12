@@ -10,87 +10,96 @@ import PostgraduateProfessors from "./PostgraduateProfessors";
 import "../../styles/UserProfile.css";
 
 function UserProfile() {
-    const { id } = useParams();
-    const profile_location = useLocation();
+    const { id: userId } = useParams();
+    const routerLocation = useLocation();
 
     const [profileUser, setProfileUser] = useState(null);
-    const [authorId, setAuthorId] = useState(null);
     const [student, setStudent] = useState(null);
+    const [postgraduate, setPostgraduate] = useState(null);
+    const [professor, setProfessor] = useState(null);
+
+    const [authorId, setAuthorId] = useState(null);
     const [location, setLocation] = useState(null);
 
-    // --- For Professors ---
-    const [postgraduates, setPostgraduates] = useState([]);
-    const [allPostgraduates, setAllPostgraduates] = useState([]);
-    const [newPgId, setNewPgId] = useState("");
-
     const loggedUser =
-        profile_location.state?.loggedUser ||
+        routerLocation.state?.loggedUser ||
         JSON.parse(localStorage.getItem("loggedUser"));
 
-    // Функция для обновления списка аспирантов профессора
-    const fetchPostgraduates = async () => {
-        if (profileUser?.role !== "professor") return;
-
-        try {
-            const resAssigned = await fetch(
-                `http://localhost:3000/professor_postgraduates/${profileUser.id}`
-            );
-            const assignedData = await resAssigned.json();
-            setPostgraduates(assignedData);
-
-            const resAll = await fetch(`http://localhost:3000/postgraduates`);
-            const allData = await resAll.json();
-            setAllPostgraduates(allData);
-        } catch (err) {
-            console.error("Failed to fetch postgraduates:", err);
-        }
-    };
-
     useEffect(() => {
+        const fetchLocation = async (url) => {
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            return await res.json();
+        };
+
         const fetchProfileData = async () => {
             try {
-                const resUser = await fetch(`http://localhost:3000/users/${id}`);
-                const profile = await resUser.json();
-                setProfileUser(profile);
+                // -------------------
+                // USER
+                // -------------------
+                const userRes = await fetch(`http://localhost:3000/users/${userId}`);
+                if (!userRes.ok) throw new Error("User not found");
 
-                if (profile.role === "student") {
-                    const resStudent = await fetch(
-                        `http://localhost:3000/students/user/${profile.id}`
+                const userData = await userRes.json();
+                setProfileUser(userData);
+
+                // -------------------
+                // STUDENT
+                // -------------------
+                if (userData.role === "student") {
+                    const res = await fetch(
+                        `http://localhost:3000/students/user/${userId}`
                     );
-                    const studentData = await resStudent.json();
+                    const studentData = await res.json();
                     setStudent(studentData);
 
-                    const resLocation = await fetch(
+                    const loc = await fetchLocation(
                         `http://localhost:3000/students/${studentData.id}/location`
                     );
-                    const locationData = await resLocation.json();
-                    setLocation(locationData);
+                    setLocation(loc);
                 }
 
-                if (profile.role === "professor" || profile.role === "postgraduate") {
-                    const resAuthor = await fetch(
-                        `http://localhost:3000/authors/user/${profile.id}`
+                // -------------------
+                // POSTGRADUATE
+                // -------------------
+                if (userData.role === "postgraduate") {
+                    const res = await fetch(
+                        `http://localhost:3000/postgraduates/user/${userId}`
                     );
-                    const authorData = await resAuthor.json();
-                    setAuthorId(authorData.id);
+                    const postgraduateData = await res.json();
+                    setPostgraduate(postgraduateData);
 
-                    const resLocation = await fetch(
-                        `http://localhost:3000/authors/${authorData.id}/location`
+                    const loc = await fetchLocation(
+                        `http://localhost:3000/postgraduates/${postgraduateData.id}/location`
                     );
-                    const locationData = await resLocation.json();
-                    setLocation(locationData);
+                    setLocation(loc);
                 }
 
-                if (profile.role === "professor") {
-                    fetchPostgraduates();
+                // -------------------
+                // PROFESSOR
+                // -------------------
+                if (userData.role === "professor") {
+                    const res = await fetch(
+                        `http://localhost:3000/professors/user/${userId}`
+                    );
+                    const professorData = await res.json();
+                    setProfessor(professorData);
+
+                    const loc = await fetchLocation(
+                        `http://localhost:3000/professors/${professorData.id}/location`
+                    );
+                    setLocation(loc);
                 }
 
-                if (profile.role === "postgraduate") {
-                    const resProf = await fetch(
-                        `http://localhost:3000/postgraduates/${profile.id}/professor`
-                    );
-                    const dataProf = await resProf.json();
-                    setPostgraduates([dataProf]);
+                // -------------------
+                // AUTHOR (единый источник)
+                // -------------------
+                if (
+                    userData.role === "professor" ||
+                    userData.role === "postgraduate"
+                ) {
+                    const authorId = await fetchAuthorId(userId);
+                    setAuthorId(authorId);
                 }
             } catch (err) {
                 console.error("Failed to fetch profile data:", err);
@@ -98,35 +107,20 @@ function UserProfile() {
         };
 
         fetchProfileData();
-    }, [id]);
+    }, [userId]);
 
-    const handleAssignPG = async () => {
-        if (!newPgId) return;
-        try {
-            const res = await fetch(
-                `http://localhost:3000/professors/${id}/postgraduates`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ postgraduate_id: newPgId }),
-                }
-            );
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Failed to assign postgraduate");
-
-            fetchPostgraduates(); // обновляем список после назначения
-            setNewPgId("");
-        } catch (err) {
-            alert(err.message);
-        }
-    };
 
     if (!profileUser || !loggedUser) {
         return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
     }
 
     const isStudent = profileUser.role === "student";
-    const isAuthor = profileUser.role === "professor" || profileUser.role === "postgraduate";
+    const isPostgraduate = profileUser.role === "postgraduate";
+    const isProfessor = profileUser.role === "professor";
+
+    const isAuthor =
+        profileUser.role === "professor" ||
+        profileUser.role === "postgraduate";
 
     return (
         <>
@@ -135,27 +129,24 @@ function UserProfile() {
             <div className="user-profile">
                 <ProfileHeader
                     user={profileUser}
-                    onAvatarChange={(newAvatar) =>
-                        setProfileUser((prev) => ({ ...prev, avatar: newAvatar }))
+                    onAvatarChange={(avatar) =>
+                        setProfileUser((prev) => ({ ...prev, avatar }))
                     }
                 />
+
                 <ProfileInfo
                     user={profileUser}
                     studentLocation={isStudent ? location : null}
-                    authorLocation={isAuthor ? location : null}
-
+                    postgraduateLocation = {isPostgraduate ? location : null}
+                    professorLocation = {isProfessor ? location : null}
                 />
 
                 {profileUser.role === "professor" && (
-                    <ProfessorPostgraduates
-                        userId={profileUser.id}
-                    />
+                    <ProfessorPostgraduates userId={profileUser.id} />
                 )}
 
                 {profileUser.role === "postgraduate" && (
-                    <PostgraduateProfessors
-                        userId={profileUser.id}
-                    />
+                    <PostgraduateProfessors userId={profileUser.id} />
                 )}
 
                 {isStudent && student && (
@@ -165,7 +156,6 @@ function UserProfile() {
                 {isAuthor && authorId && (
                     <AuthoredPublications authorId={authorId} />
                 )}
-
             </div>
         </>
     );
