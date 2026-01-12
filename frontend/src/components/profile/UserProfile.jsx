@@ -4,9 +4,10 @@ import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
 import BorrowedPublications from "./student/BorrowedPublications";
-import AuthoredPublications from "./author/AuthoredPublications";
 import ProfessorPostgraduates from "./ProfessorPostgraduates";
 import PostgraduateProfessors from "./PostgraduateProfessors";
+import AuthoredPublications from "./author/AuthoredPublications";
+import CoAuthoredPublications from "./author/CoAuthoredPublications";
 import "../../styles/UserProfile.css";
 
 function UserProfile() {
@@ -156,7 +157,10 @@ function UserProfile() {
                 )}
 
                 {isAuthor && authorId && (
-                    <AuthoredPublications authorId={authorId} />
+                    <>
+                        <AuthoredPublications authorId={authorId}/>
+                        <CoAuthoredPublications authorId={authorId}/>
+                    </>
                 )}
             </div>
         </>

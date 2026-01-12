@@ -691,7 +691,7 @@ app.post('/publications/:id/authors', async (req, res) => {
         }
 
         await pool.query(
-            `INSERT INTO publication_authors (publication_id, author_id) VALUES ($1, $2)`,
+            `INSERT INTO publication_authors (publication_id, author_id, is_primary_author) VALUES ($1, $2, FALSE)`,
             [id, author_id]
         );
 
@@ -702,6 +702,33 @@ app.post('/publications/:id/authors', async (req, res) => {
     }
 });
 
+// // GET /authors/:authorId/publications-with-primary
+// // Возвращает публикации автора с полем is_primary_author для текущего автора
+// app.get("/authors/:authorId/publications-with-primary", async (req, res) => {
+//     const { authorId } = req.params;
+//
+//     try {
+//         const { rows } = await pool.query(
+//             `SELECT p.id,
+//                     p.title,
+//                     p.topic_id,
+//                     t.name AS topic_name,
+//                     p.file_type,
+//                     p.description,
+//                     pa.is_primary_author
+//              FROM publications p
+//              JOIN publication_authors pa ON pa.publication_id = p.id
+//              LEFT JOIN topics t ON t.id = p.topic_id
+//              WHERE pa.author_id = $1`,
+//             [authorId]
+//         );
+//
+//         res.json(rows);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ error: "Failed to fetch publications with primary author info" });
+//     }
+// });
 
 
 // --------------------------
@@ -798,8 +825,8 @@ app.post("/api/publications/create", async (req, res) => {
         // привязка автора
         if (author_id) {
             await pool.query(
-                `INSERT INTO publication_authors (publication_id, author_id)
-                 VALUES ($1, $2)`,
+                `INSERT INTO publication_authors (publication_id, author_id, is_primary_author)
+                 VALUES ($1, $2, TRUE)`,
                 [publication_id, author_id]
             );
         }
@@ -828,7 +855,7 @@ app.get("/publications/:id/authors", async (req, res) => {
             [publicationId]
         );
 
-        res.json(result.rows); // возвращаем массив авторов
+        res.json(result.rows);
     } catch (err) {
         console.error("FETCH AUTHORS ERROR:", err);
         res.status(500).json({ error: "Failed to fetch authors" });
@@ -839,7 +866,7 @@ app.get("/publications/:id/authors", async (req, res) => {
 app.delete('/api/publications/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // проверка, что публикация существует
+
         const publication = await pool.query('SELECT * FROM publications WHERE id = $1', [id]);
         if (!publication.rows.length) {
             return res.status(404).json({ error: 'Publication not found' });
@@ -944,6 +971,81 @@ app.get("/authors/:authorId/publications", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch authored publications" });
     }
 });
+
+// ----------------------------
+// Get all publications of primary author (is_primary_author = true)
+// ----------------------------
+app.get("/authors/:authorId/publications/primary", async (req, res) => {
+    const { authorId } = req.params;
+
+    if (!authorId) return res.status(400).json({ error: "authorId is required" });
+
+    try {
+        const result = await pool.query(
+            `SELECT
+                 p.id,
+                 p.title,
+                 p.file_type,
+                 p.description,
+                 p.topic_id,
+                 t.name AS topic_name
+             FROM publication_authors pa
+                      JOIN publications p ON pa.publication_id = p.id
+                      LEFT JOIN central_topics t ON p.topic_id = t.id
+             WHERE pa.author_id = $1 AND pa.is_primary_author = true
+             ORDER BY p.id DESC`,
+            [authorId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "No primary authored publications found" });
+        }
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error("PRIMARY AUTHOR PUBLICATIONS ERROR:", err);
+        res.status(500).json({ error: "Failed to fetch primary authored publications" });
+    }
+});
+
+// ----------------------------
+// Get all publications of  co-author (is_primary_author = false)
+// ----------------------------
+app.get("/authors/:authorId/publications/co-author", async (req, res) => {
+    const { authorId } = req.params;
+
+    if (!authorId) return res.status(400).json({ error: "authorId is required" });
+
+    try {
+        const result = await pool.query(
+            `SELECT
+                 p.id,
+                 p.title,
+                 p.file_type,
+                 p.description,
+                 p.topic_id,
+                 t.name AS topic_name
+             FROM publication_authors pa
+                      JOIN publications p ON pa.publication_id = p.id
+                      LEFT JOIN central_topics t ON p.topic_id = t.id
+             WHERE pa.author_id = $1 AND pa.is_primary_author = false
+             ORDER BY p.id DESC`,
+            [authorId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "No co-authored publications found" });
+        }
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error("COAUTHOR PUBLICATIONS ERROR:", err);
+        res.status(500).json({ error: "Failed to fetch co-authored publications" });
+    }
+});
+
 
 // Download Publication
 app.get('/api/publications/download/:id', async (req, res) => {
