@@ -11,6 +11,11 @@ const PublicationModal = ({ publication, onClose, student }) => {
     const [selectedDays, setSelectedDays] = useState(null);
 
     const [authors, setAuthors] = useState([]);
+    const [faculties, setFaculties] = useState([]);
+    const [universities, setUniversities] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [countries, setCountries] = useState([]);
+
     const [loadingAuthors, setLoadingAuthors] = useState(true);
     const [authorLocations, setAuthorLocations] = useState([]);
     const [topicName, setTopicName] = useState("");
@@ -19,7 +24,7 @@ const PublicationModal = ({ publication, onClose, student }) => {
     const canBorrow = !!studentId;
 
     /* -----------------------------
-       Fetch authors and locations
+       Fetch authors
     ------------------------------ */
     useEffect(() => {
         if (!publication) return;
@@ -30,20 +35,6 @@ const PublicationModal = ({ publication, onClose, student }) => {
                 if (!res.ok) throw new Error("Failed to fetch authors");
                 const data = await res.json();
                 setAuthors(data);
-
-                // Получаем локации авторов
-                const locationsPromises = data.map(async (author) => {
-                    try {
-                        const locRes = await fetch(`http://localhost:3000/authors/${author.id}/location`);
-                        if (!locRes.ok) throw new Error("Failed to fetch author location");
-                        return await locRes.json(); // { faculty_name, university_name, city_name, country_name }
-                    } catch {
-                        return { faculty_name: "—", university_name: "—", city_name: "—", country_name: "—" };
-                    }
-                });
-
-                const locations = await Promise.all(locationsPromises);
-                setAuthorLocations(locations);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -55,7 +46,7 @@ const PublicationModal = ({ publication, onClose, student }) => {
     }, [publication]);
 
     /* -----------------------------
-       Fetch topic
+       Get Topic
     ------------------------------ */
     useEffect(() => {
         if (!publication?.topic_id) return;
@@ -73,6 +64,66 @@ const PublicationModal = ({ publication, onClose, student }) => {
 
         fetchTopic();
     }, [publication?.topic_id]);
+
+
+    /* -----------------------------
+       Get Locations of authors /publications/:id/authors-location
+    ------------------------------ */
+    useEffect(() => {
+        if (!publication?.id) return;
+
+        const fetchFullData = async () => {
+            try {
+                const res = await fetch(`http://localhost:3000/publications/${publication.id}/authors-location`);
+                if (!res.ok) throw new Error("Failed to fetch full data");
+                const data = await res.json();
+                console.log("Raw full data:", data);
+
+                // Faculties
+                const formattedFaculties = data.authors.map(author => ({
+                    authorId: author.author_id,
+                    authorType: author.author_type,
+                    facultyId: author.faculty?.faculty_id || null,
+                    facultyName: author.faculty?.faculty_name || null
+                }));
+
+                // Universities
+                const formattedUniversities = data.authors
+                    .map(author => ({
+                        universityId: author.university?.university_id || null,
+                        universityName: author.university?.university_name || null
+                    }))
+                    .filter((v, i, self) => v.universityId && self.findIndex(u => u.universityId === v.universityId) === i);
+
+                // Cities
+                const formattedCities = data.authors
+                    .map(author => ({
+                        cityId: author.city?.city_id || null,
+                        cityName: author.city?.city_name || null
+                    }))
+                    .filter((v, i, self) => v.cityId && self.findIndex(c => c.cityId === v.cityId) === i);
+
+                // Countries
+                const formattedCountries = data.authors
+                    .map(author => ({
+                        countryId: author.country?.country_id || null,
+                        countryName: author.country?.country_name || null
+                    }))
+                    .filter((v, i, self) => v.countryId && self.findIndex(c => c.countryId === v.countryId) === i);
+
+                setFaculties(formattedFaculties);
+                setUniversities(formattedUniversities);
+                setCities(formattedCities);
+                setCountries(formattedCountries);
+
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchFullData();
+    }, [publication?.id]);
+
 
     /* -----------------------------
        Borrow handlers
@@ -118,19 +169,6 @@ const PublicationModal = ({ publication, onClose, student }) => {
 
     if (!publication) return null;
 
-    // -----------------------------
-    // Уникальные авторы
-    // -----------------------------
-    const uniqueAuthors = Array.from(new Map(authors.map(a => [a.id, a])).values());
-
-    // -----------------------------
-    // Собираем уникальные значения для каждой характеристики
-    // -----------------------------
-    const faculties = [...new Set(authorLocations.map(l => l.faculty_name).filter(v => v))];
-    const universities = [...new Set(authorLocations.map(l => l.university_name).filter(v => v))];
-    const cities = [...new Set(authorLocations.map(l => l.city_name).filter(v => v))];
-    const countries = [...new Set(authorLocations.map(l => l.country_name).filter(v => v))];
-
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -142,28 +180,51 @@ const PublicationModal = ({ publication, onClose, student }) => {
                 <div className="modal-section">
                     {loadingAuthors ? (
                         <p>Loading authors...</p>
-                    ) : uniqueAuthors.length > 0 ? (
-                        <p><strong>Authors:</strong> {uniqueAuthors.map(a => `${a.name} ${a.lastname} (${a.author_type})`).join(", ")}</p>
+                    ) : authors.length > 0 ? (
+                        <p><strong>Authors:</strong> {authors.map(a => `${a.name} ${a.lastname} (${a.author_type})`).join(", ")}</p>
                     ) : (
                         <p><strong>Authors:</strong> None</p>
                     )}
                 </div>
 
-                {/* Author locations */}
                 <div className="modal-section">
                     <p><strong>Topic:</strong> {topicName || "—"}</p>
 
-                    {authorLocations.length > 0 ? (
-                        <>
-                            <p><strong>Faculty:</strong> {faculties.join(", ") || "—"}</p>
-                            <p><strong>University:</strong> {universities.join(", ") || "—"}</p>
-                            <p><strong>City:</strong> {cities.join(", ") || "—"}</p>
-                            <p><strong>Country:</strong> {countries.join(", ") || "—"}</p>
-                        </>
-                    ) : (
-                        <p>Faculty, University, City, Country: —</p>
-                    )}
+                    <p>
+                        <strong>Faculty:</strong>{" "}
+                        {faculties.length > 0
+                            ? faculties
+                                .map(f => f.facultyName || "—")
+                                .filter((value, index, self) => self.indexOf(value) === index)
+                                .join(", ")
+                            : "—"}
+                    </p>
+                    <p>
+                        <strong>University:</strong>{" "}
+                        {universities.length > 0
+                        ? universities
+                            .map(u => u.universityName || "—")
+                            .filter((value, index, self) => self.indexOf(value) === index)
+                            .join(", ")
+                        : "—"}
+                    </p>
+                    <p>
+                        <strong>City:</strong>{" "}
+                        {cities.length > 0
+                            ? cities
+                                .map(с => с.cityName || "—")
+                                .filter((value, index, self) => self.indexOf(value) === index)
+                                .join(", ")
+                            : "—"}
+                    </p>
+                    <p>
+                        <strong>Country:</strong>{" "}
+                        {countries.length > 0
+                            ? countries.map(c => c.countryName || "—").join(", ")
+                            : "—"}
+                    </p>
                 </div>
+
 
                 {/* Description */}
                 <div className="modal-section">

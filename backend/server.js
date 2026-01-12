@@ -1208,6 +1208,94 @@ app.get('/authors/:id/location', async (req, res) => {
     }
 });
 
+// GET all faculties of authors for a publication
+app.get("/publications/:id/authors-location", async (req, res) => {
+    const { id: publicationId } = req.params;
+
+    try {
+        // 1. Берём всех авторов публикации
+        const { rows: authorRows } = await pool.query(
+            `SELECT id AS author_id, author_type, user_id
+             FROM authors
+             WHERE id IN (
+                 SELECT author_id
+                 FROM publication_authors
+                 WHERE publication_id = $1
+             )`,
+            [publicationId]
+        );
+
+        if (authorRows.length === 0) {
+            return res.json({ authors: [] });
+        }
+
+        // 2. Для каждого автора определяем faculty, university, city и country
+        const authorsFullData = await Promise.all(
+            authorRows.map(async author => {
+                let faculty = null;
+                let university = null;
+                let city = null;
+                let country = null;
+
+                if (author.author_type === "professor") {
+                    const { rows } = await pool.query(
+                        `SELECT f.id AS faculty_id, f.name AS faculty_name,
+                                u.id AS university_id, u.name AS university_name,
+                                c.id AS city_id, c.name AS city_name,
+                                co.id AS country_id, co.name AS country_name
+                         FROM professors p
+                                  JOIN faculties f ON p.faculty_id = f.id
+                                  JOIN universities u ON f.university_id = u.id
+                                  JOIN cities c ON u.city_id = c.id
+                                  JOIN countries co ON c.country_id = co.id
+                         WHERE p.user_id = $1`,
+                        [author.user_id]
+                    );
+                    if (rows[0]) {
+                        faculty = { faculty_id: rows[0].faculty_id, faculty_name: rows[0].faculty_name };
+                        university = { university_id: rows[0].university_id, university_name: rows[0].university_name };
+                        city = { city_id: rows[0].city_id, city_name: rows[0].city_name };
+                        country = { country_id: rows[0].country_id, country_name: rows[0].country_name };
+                    }
+                } else if (author.author_type === "postgraduate") {
+                    const { rows } = await pool.query(
+                        `SELECT f.id AS faculty_id, f.name AS faculty_name,
+                                u.id AS university_id, u.name AS university_name,
+                                c.id AS city_id, c.name AS city_name,
+                                co.id AS country_id, co.name AS country_name
+                         FROM postgraduates pg
+                                  JOIN faculties f ON pg.faculty_id = f.id
+                                  JOIN universities u ON f.university_id = u.id
+                                  JOIN cities c ON u.city_id = c.id
+                                  JOIN countries co ON c.country_id = co.id
+                         WHERE pg.user_id = $1`,
+                        [author.user_id]
+                    );
+                    if (rows[0]) {
+                        faculty = { faculty_id: rows[0].faculty_id, faculty_name: rows[0].faculty_name };
+                        university = { university_id: rows[0].university_id, university_name: rows[0].university_name };
+                        city = { city_id: rows[0].city_id, city_name: rows[0].city_name };
+                        country = { country_id: rows[0].country_id, country_name: rows[0].country_name };
+                    }
+                }
+
+                return {
+                    author_id: author.author_id,
+                    author_type: author.author_type,
+                    faculty,
+                    university,
+                    city,
+                    country
+                };
+            })
+        );
+
+        res.json({ authors: authorsFullData });
+    } catch (error) {
+        console.error("Error fetching authors, faculties, universities, cities, and countries:", error);
+        res.status(500).json({ error: "Failed to fetch full author location info" });
+    }
+});
 
 // --------------------------
 // Server start
