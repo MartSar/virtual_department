@@ -29,9 +29,6 @@ function UserProfile() {
     useEffect(() => {
         if (!userId) return;
 
-        // -------------------
-        // Вспомогательные функции
-        // -------------------
         const fetchLocation = async (url) => {
             try {
                 const res = await fetch(url);
@@ -56,9 +53,6 @@ function UserProfile() {
             }
         };
 
-        // -------------------
-        // Основная функция
-        // -------------------
         const fetchProfileData = async () => {
             try {
                 // USER
