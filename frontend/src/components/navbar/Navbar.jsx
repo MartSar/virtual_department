@@ -10,7 +10,7 @@ function Navbar({ user }) {
 
     if (!user) return null;
 
-    const { name, lastname, user_id, role } = user;
+    const {login, name, lastname, user_id, role } = user;
 
     const goToProfile = () => {
         navigate(`/profile/${user_id}`, {
@@ -42,7 +42,6 @@ function Navbar({ user }) {
                     Dashboard
                 </button>
 
-                {/* Кнопка + Add для профессоров и аспирантов */}
                 {(role === "professor" || role === "postgraduate") && (
                     <button
                         className="navbar-add-publication"
@@ -55,7 +54,7 @@ function Navbar({ user }) {
 
             {/* CENTER */}
             <div className="navbar-center">
-                Welcome {name} {lastname}!
+                Welcome {login}!
             </div>
 
             {/* RIGHT */}

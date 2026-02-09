@@ -21,6 +21,7 @@ function ProfileInfo({ user, studentLocation, postgraduateLocation, professorLoc
         <div className="profile-info">
             <h3>Profile Information</h3>
 
+            <p><strong>Login:</strong> {render(user.login)}</p>
             <p><strong>Name:</strong> {render(user.name)}</p>
             <p><strong>Last name:</strong> {render(user.lastname)}</p>
             <p><strong>Role:</strong> {render(user.role)}</p>

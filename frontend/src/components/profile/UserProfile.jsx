@@ -39,14 +39,11 @@ function UserProfile() {
             }
         };
 
-        console.log(userId)
-
         const fetchAuthorId = async (userId) => {
             try {
                 const res = await fetch(`http://localhost:3000/authors/user/${userId}`);
                 if (!res.ok) return null;
                 const data = await res.json();
-                console.log(data)
                 return data?.id || null;
             } catch {
                 return null;
@@ -59,7 +56,11 @@ function UserProfile() {
                 const userRes = await fetch(`http://localhost:3000/users/${userId}`);
                 if (!userRes.ok) throw new Error("User not found");
                 const userData = await userRes.json();
-                setProfileUser(userData);
+
+                setProfileUser({
+                    ...userData,
+                    login: userData.login
+                });
 
                 // STUDENT
                 if (userData.role === "student") {
@@ -67,7 +68,9 @@ function UserProfile() {
                     const studentData = await studentRes.json();
                     setStudent(studentData);
 
-                    const loc = await fetchLocation(`http://localhost:3000/students/${studentData.id}/location`);
+                    const loc = await fetchLocation(
+                        `http://localhost:3000/students/${studentData.id}/location`
+                    );
                     setLocation(loc);
                 }
 
@@ -77,10 +80,11 @@ function UserProfile() {
                     const postgraduateData = await postgraduateRes.json();
                     setPostgraduate(postgraduateData);
 
-                    const loc = await fetchLocation(`http://localhost:3000/postgraduates/${postgraduateData.id}/location`);
+                    const loc = await fetchLocation(
+                        `http://localhost:3000/postgraduates/${postgraduateData.id}/location`
+                    );
                     setLocation(loc);
 
-                    // AUTHOR ID
                     const id = await fetchAuthorId(userId);
                     setAuthorId(id);
                 }
@@ -91,10 +95,11 @@ function UserProfile() {
                     const professorData = await professorRes.json();
                     setProfessor(professorData);
 
-                    const loc = await fetchLocation(`http://localhost:3000/professors/${professorData.id}/location`);
+                    const loc = await fetchLocation(
+                        `http://localhost:3000/professors/${professorData.id}/location`
+                    );
                     setLocation(loc);
 
-                    // AUTHOR ID
                     const id = await fetchAuthorId(userId);
                     setAuthorId(id);
                 }

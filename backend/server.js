@@ -67,12 +67,13 @@ app.post('/register', async (req, res) => {
             role,
             name,
             lastname,
+            login,
             password,
             university_id,
             faculty_id
         } = req.body;
 
-        if (!role || !name || !lastname || !password) {
+        if (!role || !name || !lastname || !login || !password) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
@@ -95,10 +96,10 @@ app.post('/register', async (req, res) => {
 
         // users
         const userResult = await client.query(
-            `INSERT INTO users (name, lastname, password, role)
-             VALUES ($1, $2, $3, $4)
-                 RETURNING id, name, lastname, role`,
-            [name, lastname, hashedPassword, role]
+            `INSERT INTO users (login, name, lastname, password, role)
+             VALUES ($1, $2, $3, $4, $5)
+                 RETURNING id, login, name, lastname, role`,
+            [login, name, lastname, hashedPassword, role]
         );
 
         const user = userResult.rows[0];
@@ -127,7 +128,7 @@ app.post('/register', async (req, res) => {
                 [user.id, name, lastname, faculty_id]
             );
 
-            // authors — связь через user_id
+            // authors — connection through user_id
             const authorResult = await client.query(
                 `INSERT INTO authors (user_id, author_type)
                  VALUES ($1, $2)
@@ -165,91 +166,95 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
 // --------------------------
-// Login
+// Login (by users table + bcrypt.compare)
 // --------------------------
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
     try {
-        const {
-            role,
-            name,
-            lastname,
-            password,
-            university_id,
-            faculty_id
-        } = req.body;
+        const { role, login, password, university_id } = req.body;
 
-        if (!role || !name || !lastname || !password) {
-            return res.status(400).json({ error: 'All fields are required' });
+        if (!role || !login || !password) {
+            return res.status(400).json({ error: "role, login, password are required" });
         }
 
-        if (!['student', 'professor', 'postgraduate'].includes(role)) {
-            return res.status(400).json({ error: 'Invalid role' });
+        if (!["student", "professor", "postgraduate"].includes(role)) {
+            return res.status(400).json({ error: "Invalid role" });
         }
 
-        let userResult;
-
-        // student
-        if (role === 'student') {
-            if (!university_id) {
-                return res.status(400).json({ error: 'University is required' });
-            }
-
-            userResult = await pool.query(
-                `SELECT u.*
-                 FROM users u
-                          JOIN students s ON s.user_id = u.id
-                 WHERE u.name = $1
-                   AND u.lastname = $2
-                   AND u.role = $3
-                   AND s.university_id = $4`,
-                [name, lastname, role, university_id]
-            );
-        }
-
-        // professor / postgraduate
-        if (role === 'professor' || role === 'postgraduate') {
-            const tableName = role === 'professor' ? 'professors' : 'postgraduates';
-
-            userResult = await pool.query(
-                `SELECT u.*
-                 FROM users u
-                          JOIN ${tableName} r ON r.user_id = u.id
-                 WHERE u.name = $1
-                   AND u.lastname = $2
-                   AND u.role = $3`,
-                [name, lastname, role]
-            );
-        }
+        // 1) Always load user from users table
+        const userResult = await pool.query(
+            `SELECT id, login, role, password
+               FROM users
+               WHERE login = $1 AND role = $2
+               LIMIT 1`,
+            [login, role]
+        );
 
         if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: "User not found" });
         }
 
         const user = userResult.rows[0];
-        const passwordMatch = await bcrypt.compare(password, user.password);
 
+        // 2) Check password (hash created via bcrypt.hash(password, 12) is OK)
+        const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            return res.status(401).json({ error: 'Incorrect password' });
+            return res.status(401).json({ error: "Incorrect password" });
         }
 
-        res.json({
+        // 3) Role-specific checks (optional but keeps your previous logic)
+        if (role === "student") {
+            if (!university_id) {
+                return res.status(400).json({ error: "University is required" });
+            }
+
+            const studentCheck = await pool.query(
+                `SELECT 1
+                 FROM students
+                 WHERE user_id = $1 AND university_id = $2
+                 LIMIT 1`,
+                [user.id, university_id]
+            );
+
+            if (studentCheck.rows.length === 0) {
+                return res.status(404).json({ error: "Student record not found for this university" });
+            }
+        }
+
+        if (role === "professor" || role === "postgraduate") {
+            const tableName = role === "professor" ? "professors" : "postgraduates";
+
+            const roleCheck = await pool.query(
+                `SELECT 1
+                 FROM ${tableName}
+                 WHERE user_id = $1
+                 LIMIT 1`,
+                [user.id]
+            );
+
+            if (roleCheck.rows.length === 0) {
+                return res.status(404).json({ error: `${role} record not found` });
+            }
+        }
+
+        // 4) Success
+        return res.json({
             success: true,
-            message: 'Login successful',
+            message: "Login successful",
             user: {
                 id: user.id,
+                login: user.login,
                 name: user.name,
                 lastname: user.lastname,
-                role: user.role
-            }
+                role: user.role,
+            },
         });
-
     } catch (err) {
-        console.error('❌ Login error:', err);
-        res.status(500).json({ error: 'Login failed' });
+        console.error("Login error:", err);
+        return res.status(500).json({ error: "Login failed" });
     }
 });
+
 
 // --------------------------
 // Upload user avatar
@@ -459,7 +464,7 @@ app.get('/users/:id', async (req, res) => {
 
     try {
         const result = await pool.query(
-            `SELECT id, name, lastname, role
+            `SELECT id, login, name, lastname, role
              FROM users
              WHERE id = $1`,
             [userId]

@@ -8,6 +8,8 @@ function RegisterForm() {
     const [role, setRole] = useState('student');
     const [name, setName] = useState('');
     const [lastname, setLastname] = useState('');
+    const [login, setLogin] = useState('');
+
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
@@ -51,6 +53,8 @@ function RegisterForm() {
                 role={role} setRole={setRole}
                 name={name} setName={setName}
                 lastname={lastname} setLastname={setLastname}
+                login={login} setLogin={setLogin}
+
                 password={password} setPassword={setPassword}
                 showPassword={showPassword} setShowPassword={setShowPassword}
 
@@ -61,6 +65,8 @@ function RegisterForm() {
                 faculties={faculties}
                 facultyId={facultyId}
                 setFacultyId={setFacultyId}
+
+                requiredFieldType={"registration"}
             />
 
             <div className="register-btns-container">
@@ -78,6 +84,7 @@ function RegisterForm() {
                             role,
                             name,
                             lastname,
+                            login,
                             password,
                             university_id: role === 'student' ? universityId : null,
                             faculty_id: role !== 'student' ? facultyId : null,

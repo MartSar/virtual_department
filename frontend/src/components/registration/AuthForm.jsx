@@ -8,6 +8,8 @@ function AuthForm() {
     const [role, setRole] = useState('student');
     const [name, setName] = useState('');
     const [lastname, setLastname] = useState('');
+    const [login, setLogin] = useState('');
+
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
@@ -51,6 +53,8 @@ function AuthForm() {
                 role={role} setRole={setRole}
                 name={name} setName={setName}
                 lastname={lastname} setLastname={setLastname}
+                login={login} setLogin={setLogin}
+
                 password={password} setPassword={setPassword}
                 showPassword={showPassword} setShowPassword={setShowPassword}
 
@@ -82,6 +86,7 @@ function AuthForm() {
                             role,
                             name,
                             lastname,
+                            login,
                             password,
                             university_id: role === 'student' ? universityId : null,
                             faculty_id: role !== 'student' ? facultyId : null,

@@ -5,6 +5,8 @@ export default function FormFields({
                                        role, setRole,
                                        name, setName,
                                        lastname, setLastname,
+                                       login, setLogin,
+
                                        password, setPassword,
                                        showPassword, setShowPassword,
 
@@ -14,7 +16,9 @@ export default function FormFields({
 
                                        faculties,
                                        facultyId,
-                                       setFacultyId
+                                       setFacultyId,
+
+                                       requiredFieldType
                                    }) {
     return (
         <div className="form">
@@ -74,20 +78,32 @@ export default function FormFields({
                 </label>
             )}
 
-            <input
-                className="first-name-input"
-                type="text"
-                placeholder="First Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-            />
+            {requiredFieldType && (
+                <div>
+                    <input
+                        className="first-name-input"
+                        type="text"
+                        placeholder="First Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+
+                    <input
+                        className="last-name-input"
+                        type="text"
+                        placeholder="Last Name"
+                        value={lastname}
+                        onChange={(e) => setLastname(e.target.value)}
+                    />
+                </div>
+            )}
 
             <input
-                className="last-name-input"
+                className="login-input"
                 type="text"
-                placeholder="Last Name"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
+                placeholder="Login"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
             />
 
             <div className="password-wrapper">

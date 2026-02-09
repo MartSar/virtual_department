@@ -74,6 +74,14 @@ select:focus {
     font-size: 14px;
 }
 
+.login-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
 .auth-container button {
     margin: 5px 5px 0 0;
     border: none;

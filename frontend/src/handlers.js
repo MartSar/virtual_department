@@ -2,6 +2,7 @@ export const handleSignIn = async ({
                                        role,
                                        name,
                                        lastname,
+                                       login,
                                        password,
                                        university_id,
                                        setMessage,
@@ -12,10 +13,10 @@ export const handleSignIn = async ({
             role,
             name,
             lastname,
+            login,
             password
         };
 
-        // university нужен только студенту
         if (role === 'student') {
             body.university_id = university_id;
         }
@@ -29,22 +30,21 @@ export const handleSignIn = async ({
         const data = await res.json();
 
         if (data.success) {
-            const { id, name: serverName, lastname: serverLastname, role: serverRole } = data.user;
+            const { id, login: login, role: serverRole } = data.user;
 
             navigate('/dashboard', {
                 state: {
                     user_id: id,
-                    name: serverName,
-                    lastname: serverLastname,
+                    login: login,
                     role: serverRole,
                 }
             });
         } else {
-            setMessage(data.error || 'Ошибка входа');
+            setMessage(data.error || 'Sign In Error');
         }
     } catch (err) {
         console.error('Login error:', err);
-        setMessage('Ошибка сервера. Попробуйте позже.');
+        setMessage('Server Error. Try Later.');
     }
 };
 
@@ -53,6 +53,7 @@ export const handleRegister = async ({
                                          role,
                                          name,
                                          lastname,
+                                         login,
                                          password,
                                          university_id,
                                          faculty_id,
@@ -67,6 +68,7 @@ export const handleRegister = async ({
                 role,
                 name,
                 lastname,
+                login,
                 password,
                 university_id,
                 faculty_id
