@@ -4,7 +4,6 @@ export const handleSignIn = async ({
                                        lastname,
                                        login,
                                        password,
-                                       university_id,
                                        setMessage,
                                        navigate
                                    }) => {
@@ -16,10 +15,6 @@ export const handleSignIn = async ({
             login,
             password
         };
-
-        if (role === 'student') {
-            body.university_id = university_id;
-        }
 
         const res = await fetch('http://localhost:3000/login', {
             method: 'POST',
@@ -55,7 +50,6 @@ export const handleRegister = async ({
                                          lastname,
                                          login,
                                          password,
-                                         university_id,
                                          faculty_id,
                                          setMessage,
                                          navigate
@@ -70,7 +64,6 @@ export const handleRegister = async ({
                 lastname,
                 login,
                 password,
-                university_id,
                 faculty_id
             }),
         });

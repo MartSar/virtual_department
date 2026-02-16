@@ -63,181 +63,77 @@ app.post('/register', async (req, res) => {
     let client;
 
     try {
-        const {
-            role,
-            name,
-            lastname,
-            login,
-            password,
-            university_id,
-            faculty_id
-        } = req.body;
+        const { role, name, lastname, login, password, faculty_id } = req.body;
 
+        // validation
         if (!role || !name || !lastname || !login || !password) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
-        if (!['student', 'professor', 'postgraduate'].includes(role)) {
-            return res.status(400).json({ error: 'Invalid role' });
-        }
-
-        if (role === 'student' && !university_id) {
-            return res.status(400).json({ error: 'University is required for students' });
-        }
-
-        if ((role === 'professor' || role === 'postgraduate') && !faculty_id) {
-            return res.status(400).json({ error: 'Faculty is required for authors' });
+        if (faculty_id === undefined || faculty_id === null || faculty_id === '') {
+            return res.status(400).json({ error: 'Faculty is required' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
         client = await pool.connect();
-        await client.query('BEGIN');
 
-        // users
+        // insert into users
         const userResult = await client.query(
-            `INSERT INTO users (login, name, lastname, password, role)
-             VALUES ($1, $2, $3, $4, $5)
-                 RETURNING id, login, name, lastname, role`,
-            [login, name, lastname, hashedPassword, role]
+            `INSERT INTO users (login, name, lastname, password, role, faculty_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, login, name, lastname, role, faculty_id`,
+            [login, name, lastname, hashedPassword, role, faculty_id]
         );
 
-        const user = userResult.rows[0];
-        let roleData = null;
-
-        // students
-        if (role === 'student') {
-            const studentResult = await client.query(
-                `INSERT INTO students (user_id, name, lastname, university_id)
-                 VALUES ($1, $2, $3, $4)
-                     RETURNING *`,
-                [user.id, name, lastname, university_id]
-            );
-
-            roleData = studentResult.rows[0];
-        }
-
-        // professors / postgraduates
-        if (role === 'professor' || role === 'postgraduate') {
-            const tableName = role === 'professor' ? 'professors' : 'postgraduates';
-
-            const roleResult = await client.query(
-                `INSERT INTO ${tableName} (user_id, name, lastname, faculty_id)
-                 VALUES ($1, $2, $3, $4)
-                 RETURNING *`,
-                [user.id, name, lastname, faculty_id]
-            );
-
-            // authors — connection through user_id
-            const authorResult = await client.query(
-                `INSERT INTO authors (user_id, author_type)
-                 VALUES ($1, $2)
-                 RETURNING *`,
-                [user.id, role]
-            );
-
-            roleData = {
-                profile: roleResult.rows[0],
-                author: authorResult.rows[0]
-            };
-        }
-
-        await client.query('COMMIT');
-
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: 'Registration successful',
-            user: {
-                id: user.id,
-                name: user.name,
-                lastname: user.lastname,
-                role: user.role,
-                roleData
-            }
+            user: userResult.rows[0],
         });
 
     } catch (err) {
         if (client) await client.query('ROLLBACK');
         console.error('❌ Registration error:', err);
-
-        res.status(500).json({ error: 'Registration failed' });
+        return res.status(500).json({ error: 'Registration failed' });
     } finally {
         if (client) client.release();
     }
 });
 
 // --------------------------
-// Login (by users table + bcrypt.compare)
+// Login
 // --------------------------
 app.post("/login", async (req, res) => {
     try {
-        const { role, login, password, university_id } = req.body;
+        const { login, password } = req.body;
 
-        if (!role || !login || !password) {
-            return res.status(400).json({ error: "role, login, password are required" });
+        if (!login || !password) {
+            return res.status(400).json({ error: "login and password are required" });
         }
 
-        if (!["student", "professor", "postgraduate"].includes(role)) {
-            return res.status(400).json({ error: "Invalid role" });
-        }
-
-        // 1) Always load user from users table
+        // Load user by login
         const userResult = await pool.query(
-            `SELECT id, login, role, password
-               FROM users
-               WHERE login = $1 AND role = $2
-               LIMIT 1`,
-            [login, role]
+            `SELECT id, login, name, lastname, role, password, faculty_id
+             FROM users
+             WHERE login = $1
+                 LIMIT 1`,
+            [login]
         );
 
-        if (userResult.rows.length === 0) {
+        if (userResult.rowCount === 0) {
             return res.status(404).json({ error: "User not found" });
         }
 
         const user = userResult.rows[0];
 
-        // 2) Check password (hash created via bcrypt.hash(password, 12) is OK)
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
+        // Check password
+        const ok = await bcrypt.compare(password, user.password);
+        if (!ok) {
             return res.status(401).json({ error: "Incorrect password" });
         }
 
-        // 3) Role-specific checks (optional but keeps your previous logic)
-        if (role === "student") {
-            if (!university_id) {
-                return res.status(400).json({ error: "University is required" });
-            }
-
-            const studentCheck = await pool.query(
-                `SELECT 1
-                 FROM students
-                 WHERE user_id = $1 AND university_id = $2
-                 LIMIT 1`,
-                [user.id, university_id]
-            );
-
-            if (studentCheck.rows.length === 0) {
-                return res.status(404).json({ error: "Student record not found for this university" });
-            }
-        }
-
-        if (role === "professor" || role === "postgraduate") {
-            const tableName = role === "professor" ? "professors" : "postgraduates";
-
-            const roleCheck = await pool.query(
-                `SELECT 1
-                 FROM ${tableName}
-                 WHERE user_id = $1
-                 LIMIT 1`,
-                [user.id]
-            );
-
-            if (roleCheck.rows.length === 0) {
-                return res.status(404).json({ error: `${role} record not found` });
-            }
-        }
-
-        // 4) Success
+        // Success (do NOT return hashed password)
         return res.json({
             success: true,
             message: "Login successful",
@@ -247,6 +143,7 @@ app.post("/login", async (req, res) => {
                 name: user.name,
                 lastname: user.lastname,
                 role: user.role,
+                faculty_id: user.faculty_id,
             },
         });
     } catch (err) {

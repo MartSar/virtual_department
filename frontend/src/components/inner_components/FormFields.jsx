@@ -11,12 +11,10 @@ export default function FormFields({
                                        showPassword, setShowPassword,
 
                                        universities,
-                                       universityId,
-                                       setUniversityId,
 
                                        faculties,
-                                       facultyId,
-                                       setFacultyId,
+                                       faculty_id,
+                                       setFaculty_id,
 
                                        requiredFieldType
                                    }) {
@@ -31,52 +29,30 @@ export default function FormFields({
                 </select>
             </label>
 
-            {/* STUDENT */}
-            {role === 'student' && (
-                <label>
-                    University:
-                    <select
-                        value={universityId}
-                        onChange={(e) => setUniversityId(e.target.value)}
-                        required
-                    >
-                        <option value="">Select university</option>
-                        {universities.map(u => (
-                            <option key={u.id} value={u.id}>
-                                {u.name}
+            <label>
+                Faculty:
+                <select
+                    value={faculty_id}
+                    onChange={(e) => setFaculty_id(e.target.value)}
+                    required
+                >
+                    <option value="">Select faculty</option>
+
+                    {faculties.map(f => {
+                        const university = universities.find(
+                            u => u.id === f.university_id
+                        );
+
+                        return (
+                            <option key={f.id} value={f.id}>
+                                {university
+                                    ? `${f.name} (${university.name})`
+                                    : f.name}
                             </option>
-                        ))}
-                    </select>
-                </label>
-            )}
-
-            {/* PROFESSOR / POSTGRADUATE */}
-            {(role === 'professor' || role === 'postgraduate') && (
-                <label>
-                    Faculty:
-                    <select
-                        value={facultyId}
-                        onChange={(e) => setFacultyId(e.target.value)}
-                        required
-                    >
-                        <option value="">Select faculty</option>
-
-                        {faculties.map(f => {
-                            const university = universities.find(
-                                u => u.id === f.university_id
-                            );
-
-                            return (
-                                <option key={f.id} value={f.id}>
-                                    {university
-                                        ? `${university.name} (${f.name})`
-                                        : f.name}
-                                </option>
-                            );
-                        })}
-                    </select>
-                </label>
-            )}
+                        );
+                    })}
+                </select>
+            </label>
 
             {requiredFieldType && (
                 <div>

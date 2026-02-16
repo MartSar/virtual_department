@@ -15,10 +15,9 @@ function AuthForm() {
     const [message, setMessage] = useState('');
 
     const [universities, setUniversities] = useState([]);
-    const [universityId, setUniversityId] = useState('');
 
     const [faculties, setFaculties] = useState([]);
-    const [facultyId, setFacultyId] = useState('');
+    const [faculty_id, setFaculty_id] = useState('');
 
     const navigate = useNavigate();
 
@@ -40,8 +39,7 @@ function AuthForm() {
 
     // reset selects on role change
     useEffect(() => {
-        setUniversityId('');
-        setFacultyId('');
+        setFaculty_id('');
     }, [role]);
 
     return (
@@ -59,12 +57,10 @@ function AuthForm() {
                 showPassword={showPassword} setShowPassword={setShowPassword}
 
                 universities={universities}
-                universityId={universityId}
-                setUniversityId={setUniversityId}
 
                 faculties={faculties}
-                facultyId={facultyId}
-                setFacultyId={setFacultyId}
+                faculty_id={faculty_id}
+                setFaculty_id={setFaculty_id}
             />
 
             <div className="auth-btns-container">
@@ -77,10 +73,6 @@ function AuthForm() {
 
                 <button
                     className="sign-in-btn"
-                    disabled={
-                        (role === 'student' && !universityId) ||
-                        (role !== 'student' && !facultyId)
-                    }
                     onClick={() =>
                         handleSignIn({
                             role,
@@ -88,8 +80,8 @@ function AuthForm() {
                             lastname,
                             login,
                             password,
-                            university_id: role === 'student' ? universityId : null,
-                            faculty_id: role !== 'student' ? facultyId : null,
+                            universities,
+                            faculty_id,
                             setMessage,
                             navigate
                         })

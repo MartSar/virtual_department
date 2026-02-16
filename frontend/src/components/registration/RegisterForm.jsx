@@ -15,10 +15,9 @@ function RegisterForm() {
     const [message, setMessage] = useState('');
 
     const [universities, setUniversities] = useState([]);
-    const [universityId, setUniversityId] = useState('');
 
     const [faculties, setFaculties] = useState([]);
-    const [facultyId, setFacultyId] = useState('');
+    const [faculty_id, setFaculty_id] = useState('');
 
     const navigate = useNavigate();
 
@@ -40,8 +39,7 @@ function RegisterForm() {
 
     // reset selects when role changes
     useEffect(() => {
-        setUniversityId('');
-        setFacultyId('');
+        setFaculty_id('');
     }, [role]);
 
     return (
@@ -59,12 +57,10 @@ function RegisterForm() {
                 showPassword={showPassword} setShowPassword={setShowPassword}
 
                 universities={universities}
-                universityId={universityId}
-                setUniversityId={setUniversityId}
 
                 faculties={faculties}
-                facultyId={facultyId}
-                setFacultyId={setFacultyId}
+                faculty_id={faculty_id}
+                setFaculty_id={setFaculty_id}
 
                 requiredFieldType={"registration"}
             />
@@ -86,8 +82,7 @@ function RegisterForm() {
                             lastname,
                             login,
                             password,
-                            university_id: role === 'student' ? universityId : null,
-                            faculty_id: role !== 'student' ? facultyId : null,
+                            faculty_id,
                             setMessage,
                             navigate
                         })
