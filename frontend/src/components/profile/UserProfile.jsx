@@ -3,6 +3,7 @@ import { useParams, useLocation } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
+import BorrowedPublications from "./student/BorrowedPublications";
 import ProfessorPostgraduates from "./ProfessorPostgraduates";
 import PostgraduateProfessors from "./PostgraduateProfessors";
 import AuthoredPublications from "./author/AuthoredPublications";
@@ -58,6 +59,10 @@ function UserProfile() {
                 />
 
                 <ProfileInfo user={profileUser} location={location} />
+
+                {profileUser.role === "student" && (
+                    <BorrowedPublications userId={profileUser.id} />
+                )}
 
                 {profileUser.role === "professor" && (
                     <ProfessorPostgraduates userId={profileUser.id} />

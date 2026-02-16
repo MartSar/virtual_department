@@ -189,20 +189,20 @@ app.post("/login", async (req, res) => {
 // });
 
 // --------------------------
-// Create Borrowing (only students)
+// Create Borrowing (only students) + prevent duplicate active borrowings
 // --------------------------
 app.post("/api/borrowings/create", async (req, res) => {
-    const { user_id, publication_id, duration_days } = req.body;
+    const { borrower_id, publication_id, duration_days } = req.body;
 
-    if (!user_id || !publication_id || !duration_days) {
+    if (!borrower_id || !publication_id || !duration_days) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
-        // ✅ проверка что user — студент
+        // 1) Проверка что borrower — студент
         const userRes = await pool.query(
             `SELECT role FROM users WHERE id = $1 LIMIT 1`,
-            [user_id]
+            [borrower_id]
         );
 
         if (userRes.rowCount === 0) {
@@ -213,17 +213,29 @@ app.post("/api/borrowings/create", async (req, res) => {
             return res.status(403).json({ error: "Only students can borrow publications" });
         }
 
-        // даты
+        const activeRes = await pool.query(
+            `SELECT 1
+       FROM borrowings
+       WHERE borrower_id = $1
+         AND publication_id = $2
+         AND end_date >= NOW()
+       LIMIT 1`,
+            [borrower_id, publication_id]
+        );
+
+        if (activeRes.rowCount > 0) {
+            return res.status(409).json({ error: "You already have active access to this publication" });
+        }
+
+        // 3) Создаём borrowing
         const startDate = new Date();
         const endDate = new Date();
         endDate.setDate(startDate.getDate() + Number(duration_days));
 
-        // ✅ если у тебя таблица borrowings уже есть — подставь правильные колонки
-        // Рекомендуемая структура: borrowings(user_id, publication_id, start_date, end_date)
         await pool.query(
-            `INSERT INTO borrowings (user_id, publication_id, start_date, end_date)
-       VALUES ($1, $2, $3, $4)`,
-            [user_id, publication_id, startDate, endDate]
+            `INSERT INTO borrowings (borrower_id, publication_id, start_date, end_date)
+             VALUES ($1, $2, $3, $4)`,
+            [borrower_id, publication_id, startDate, endDate]
         );
 
         return res.status(201).json({ success: true });
@@ -234,34 +246,44 @@ app.post("/api/borrowings/create", async (req, res) => {
 });
 
 
+
 // --------------------------
-// Get Borrowings of a student by borrower_id
+// GET borrowings for user (borrower_id -> users.id)
 // --------------------------
-app.get('/borrowings/:borrowerId', async (req, res) => {
-    const { borrowerId } = req.params;
+app.get('/users/:userId/borrowings', async (req, res) => {
+    const { userId } = req.params;
 
     try {
         const result = await pool.query(
-            `SELECT b.id, b.start_date, b.end_date, 
-                    b.publication_id, p.title AS publication_title,
-                    (b.end_date > NOW()) AS is_active
-             FROM borrowings b
-             JOIN publications p ON b.publication_id = p.id
-             WHERE b.borrower_id = $1
-             ORDER BY b.start_date DESC`,
-            [borrowerId]
+            `
+                SELECT
+                    b.id,
+                    b.publication_id,
+                    b.start_date,
+                    b.end_date,
+                    p.title AS publication_title,
+                    p.file_name,
+                    (NOW() <= b.end_date) AS is_active
+                FROM borrowings b
+                         JOIN publications p ON p.id = b.publication_id
+                WHERE b.borrower_id = $1
+                ORDER BY b.start_date DESC
+            `,
+            [userId]
         );
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'No borrowings found for this student' });
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'No borrowings found' });
         }
 
-        res.json(result.rows);
+        return res.json(result.rows);
     } catch (err) {
         console.error('Failed to fetch borrowings:', err);
-        res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: 'Failed to fetch borrowings' });
     }
 });
+
+
 
 // --------------------------
 // Filters
