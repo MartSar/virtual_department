@@ -1,67 +1,54 @@
 import '../../styles/Dashboard.css';
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import StudentDashboard from './StudentDashboard';
-import AuthorDashboard from './AuthorDashboard';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../../components/navbar/Navbar";
+import AuthorDashboard from './AuthorDashboard';
 
 function Dashboard() {
     const location = useLocation();
-    const { role, login, user_id } = location.state || {};
-    const [name, setName] = useState("")
-    const [lastname, setLastName] = useState("")
+    const navigate = useNavigate();
 
-    const [student, setStudent] = useState(null);
-    const [author, setAuthor] = useState(null);
-
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
-        if (!user_id) return;
+        // 1) пробуем взять user_id из location.state
+        const stateUserId = location.state?.user_id ?? location.state?.id;
 
-        fetch(`http://localhost:3000/users/${user_id}`)
+        // 2) если нет — берём из localStorage
+        let saved = null;
+        try {
+            saved = JSON.parse(localStorage.getItem("loggedUser"));
+        } catch (_) {}
+
+        const savedUserId = saved?.user_id ?? saved?.id;
+
+        const userId = stateUserId ?? savedUserId;
+
+        if (!userId) {
+            navigate("/", { replace: true });
+            return;
+        }
+
+        fetch(`http://localhost:3000/users/${userId}`)
             .then(res => {
-                if (!res.ok) {
-                    throw new Error("Failed to load user");
-                }
+                if (!res.ok) throw new Error("Failed to load user");
                 return res.json();
             })
-            .then(user => {
-                setName(user.name);
-                setLastName(user.lastname);
-            })
-            .catch(err => console.error("User fetch error:", err));
-    }, [user_id]);
+            .then(data => setUser(data))
+            .catch(err => {
+                console.error("User fetch error:", err);
+                navigate("/", { replace: true });
+            });
+    }, [location.state, navigate]);
 
-
-    useEffect(() => {
-        if (!user_id || !role) return;
-
-        if (role === 'student') {
-            fetch(`http://localhost:3000/students/user/${user_id}`)
-                .then(res => res.json())
-                .then(data => setStudent(data))
-                .catch(err => console.error('Failed to fetch student:', err));
-        } else {
-            fetch(`http://localhost:3000/authors/user/${user_id}`)
-                .then(res => res.json())
-                .then(data => setAuthor(data))
-                .catch(err => console.error('Failed to fetch author:', err));
-        }
-    }, [role, user_id]);
-
-    if (!role) {
-        return <h2 style={{ textAlign: 'center' }}>Access denied</h2>;
+    if (!user) {
+        return <h2 style={{ textAlign: 'center' }}>Loading...</h2>;
     }
 
     return (
         <div className="dashboard-wrapper">
-            <Navbar user={{ role, login, name, lastname, user_id }} />
-
-            {role === 'student' ? (
-                student && <StudentDashboard student={student} />
-            ) : (
-                author && <AuthorDashboard author={author} />
-            )}
+            <Navbar user={user} />
+            <AuthorDashboard user={user} />
         </div>
     );
 }

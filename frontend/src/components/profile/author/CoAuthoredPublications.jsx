@@ -1,34 +1,31 @@
 import { useEffect, useState } from "react";
 import "../../../styles/UserPublications.css";
 
-const CoAuthoredPublications = ({ authorId }) => {
+const CoAuthoredPublications = ({ userId }) => {
     const [publications, setPublications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // -----------------------------
-    // Fetch publications
-    // -----------------------------
     const fetchPublications = async () => {
-        if (!authorId) return;
+        if (!userId) return;
         setLoading(true);
         setError(null);
 
         try {
             const res = await fetch(
-                `http://localhost:3000/authors/${authorId}/publications/co-author`
+                `http://localhost:3000/users/${userId}/publications/co-author`
             );
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
+
             if (!res.ok) {
-                if (res.status === 404) {
-                    setPublications([]);
-                    return;
-                }
+                // лучше не 404, а просто []
                 throw new Error(data.error || "Failed to fetch co-authored publications");
             }
+
             setPublications(Array.isArray(data) ? data : []);
         } catch (err) {
             setError(err.message);
+            setPublications([]);
         } finally {
             setLoading(false);
         }
@@ -36,7 +33,7 @@ const CoAuthoredPublications = ({ authorId }) => {
 
     useEffect(() => {
         fetchPublications();
-    }, [authorId]);
+    }, [userId]);
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
@@ -52,16 +49,14 @@ const CoAuthoredPublications = ({ authorId }) => {
                     <thead>
                     <tr>
                         <th>Title</th>
-                        <th>Topic</th>
                         <th>File Type</th>
                         <th>Description</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {publications.map(pub => (
+                    {publications.map((pub) => (
                         <tr key={pub.id}>
                             <td>{pub.title}</td>
-                            <td>{pub.topic_name || "-"}</td>
                             <td>{pub.file_type || "-"}</td>
                             <td>{pub.description || "-"}</td>
                         </tr>

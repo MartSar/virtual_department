@@ -3,7 +3,6 @@ import { useParams, useLocation } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
-import BorrowedPublications from "./student/BorrowedPublications";
 import ProfessorPostgraduates from "./ProfessorPostgraduates";
 import PostgraduateProfessors from "./PostgraduateProfessors";
 import AuthoredPublications from "./author/AuthoredPublications";
@@ -15,11 +14,6 @@ function UserProfile() {
     const routerLocation = useLocation();
 
     const [profileUser, setProfileUser] = useState(null);
-    const [student, setStudent] = useState(null);
-    const [postgraduate, setPostgraduate] = useState(null);
-    const [professor, setProfessor] = useState(null);
-
-    const [authorId, setAuthorId] = useState(null);
     const [location, setLocation] = useState(null);
 
     const loggedUser =
@@ -29,81 +23,16 @@ function UserProfile() {
     useEffect(() => {
         if (!userId) return;
 
-        const fetchLocation = async (url) => {
-            try {
-                const res = await fetch(url);
-                if (!res.ok) return null;
-                return await res.json();
-            } catch {
-                return null;
-            }
-        };
-
-        const fetchAuthorId = async (userId) => {
-            try {
-                const res = await fetch(`http://localhost:3000/authors/user/${userId}`);
-                if (!res.ok) return null;
-                const data = await res.json();
-                return data?.id || null;
-            } catch {
-                return null;
-            }
-        };
-
         const fetchProfileData = async () => {
             try {
-                // USER
                 const userRes = await fetch(`http://localhost:3000/users/${userId}`);
                 if (!userRes.ok) throw new Error("User not found");
                 const userData = await userRes.json();
+                setProfileUser(userData);
 
-                setProfileUser({
-                    ...userData,
-                    login: userData.login
-                });
-
-                // STUDENT
-                if (userData.role === "student") {
-                    const studentRes = await fetch(`http://localhost:3000/students/user/${userId}`);
-                    const studentData = await studentRes.json();
-                    setStudent(studentData);
-
-                    const loc = await fetchLocation(
-                        `http://localhost:3000/students/${studentData.id}/location`
-                    );
-                    setLocation(loc);
-                }
-
-                // POSTGRADUATE
-                if (userData.role === "postgraduate") {
-                    const postgraduateRes = await fetch(`http://localhost:3000/postgraduates/user/${userId}`);
-                    const postgraduateData = await postgraduateRes.json();
-                    setPostgraduate(postgraduateData);
-
-                    const loc = await fetchLocation(
-                        `http://localhost:3000/postgraduates/${postgraduateData.id}/location`
-                    );
-                    setLocation(loc);
-
-                    const id = await fetchAuthorId(userId);
-                    setAuthorId(id);
-                }
-
-                // PROFESSOR
-                if (userData.role === "professor") {
-                    const professorRes = await fetch(`http://localhost:3000/professors/user/${userId}`);
-                    const professorData = await professorRes.json();
-                    setProfessor(professorData);
-
-                    const loc = await fetchLocation(
-                        `http://localhost:3000/professors/${professorData.id}/location`
-                    );
-                    setLocation(loc);
-
-                    const id = await fetchAuthorId(userId);
-                    setAuthorId(id);
-                }
-
+                // если location реально нужно
+                const locRes = await fetch(`http://localhost:3000/users/${userId}/location`);
+                setLocation(locRes.ok ? await locRes.json() : null);
             } catch (err) {
                 console.error("Failed to fetch profile data:", err);
             }
@@ -115,14 +44,6 @@ function UserProfile() {
     if (!profileUser || !loggedUser) {
         return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
     }
-
-    const isStudent = profileUser.role === "student";
-    const isPostgraduate = profileUser.role === "postgraduate";
-    const isProfessor = profileUser.role === "professor";
-
-    const isAuthor =
-        profileUser.role === "professor" ||
-        profileUser.role === "postgraduate";
 
     return (
         <>
@@ -136,12 +57,7 @@ function UserProfile() {
                     }
                 />
 
-                <ProfileInfo
-                    user={profileUser}
-                    studentLocation={isStudent ? location : null}
-                    postgraduateLocation = {isPostgraduate ? location : null}
-                    professorLocation = {isProfessor ? location : null}
-                />
+                <ProfileInfo user={profileUser} location={location} />
 
                 {profileUser.role === "professor" && (
                     <ProfessorPostgraduates userId={profileUser.id} />
@@ -151,16 +67,8 @@ function UserProfile() {
                     <PostgraduateProfessors userId={profileUser.id} />
                 )}
 
-                {isStudent && student && (
-                    <BorrowedPublications studentId={student.id} />
-                )}
-
-                {isAuthor && authorId && (
-                    <>
-                        <AuthoredPublications authorId={authorId}/>
-                        <CoAuthoredPublications authorId={authorId}/>
-                    </>
-                )}
+                <AuthoredPublications userId={profileUser.id} />
+                <CoAuthoredPublications userId={profileUser.id} />
             </div>
         </>
     );

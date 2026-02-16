@@ -10,16 +10,17 @@ function Navbar({ user }) {
 
     if (!user) return null;
 
-    const {login, name, lastname, user_id, role } = user;
+    const userId = user.user_id ?? user.id;
+    const { login, name, lastname } = user;
 
     const goToProfile = () => {
-        navigate(`/profile/${user_id}`, {
-            state: { loggedUser: user }
-        });
+        if (!userId) return;
+        navigate(`/profile/${userId}`, { state: { loggedUser: user } });
     };
 
     const goToDashboard = () => {
-        navigate("/dashboard", { state: user });
+        if (!userId) return;
+        navigate("/dashboard", { state: { user_id: userId } });
     };
 
     const logout = () => {
@@ -27,12 +28,8 @@ function Navbar({ user }) {
         navigate("/");
     };
 
-    const openAddPublication = () => setShowAddModal(true);
-    const closeAddPublication = () => setShowAddModal(false);
-
     return (
         <div className="navbar">
-            {/* LEFT */}
             <div className="navbar-left">
                 <div className="navbar-avatar" onClick={goToProfile}>
                     <Avatar name={name} lastname={lastname} size={38} />
@@ -42,22 +39,13 @@ function Navbar({ user }) {
                     Dashboard
                 </button>
 
-                {(role === "professor" || role === "postgraduate") && (
-                    <button
-                        className="navbar-add-publication"
-                        onClick={openAddPublication}
-                    >
-                        Add Publication
-                    </button>
-                )}
+                <button className="navbar-add-publication" onClick={() => setShowAddModal(true)}>
+                    Add Publication
+                </button>
             </div>
 
-            {/* CENTER */}
-            <div className="navbar-center">
-                Welcome {login}!
-            </div>
+            <div className="navbar-center">Welcome {login}!</div>
 
-            {/* RIGHT */}
             <div className="navbar-right">
                 <button className="navbar-logout" onClick={logout}>
                     Sign Out
@@ -65,9 +53,8 @@ function Navbar({ user }) {
             </div>
 
             {showAddModal && (
-                <AddPublication user={user} onClose={closeAddPublication} />
+                <AddPublication user={user} onClose={() => setShowAddModal(false)} />
             )}
-
         </div>
     );
 }

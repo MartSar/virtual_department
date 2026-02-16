@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AddCoAuthor from "./AddCoAuthor";
 import "../../../styles/UserPublications.css";
 
-const AuthoredPublications = ({ authorId }) => {
+const AuthoredPublications = ({ userId }) => {
     const [publications, setPublications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -11,15 +11,17 @@ const AuthoredPublications = ({ authorId }) => {
     // Fetch publications
     // -----------------------------
     const fetchPublications = async () => {
-        if (!authorId) return;
+        if (!userId) return;
+
         setLoading(true);
         setError(null);
 
         try {
             const res = await fetch(
-                `http://localhost:3000/authors/${authorId}/publications/primary`
+                `http://localhost:3000/users/${userId}/publications/primary`
             );
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
+
             if (!res.ok) {
                 if (res.status === 404) {
                     setPublications([]);
@@ -27,6 +29,7 @@ const AuthoredPublications = ({ authorId }) => {
                 }
                 throw new Error(data.error || "Failed to fetch authored publications");
             }
+
             setPublications(Array.isArray(data) ? data : []);
         } catch (err) {
             setError(err.message);
@@ -37,7 +40,7 @@ const AuthoredPublications = ({ authorId }) => {
 
     useEffect(() => {
         fetchPublications();
-    }, [authorId]);
+    }, [userId]);
 
     // -----------------------------
     // Delete Publication
@@ -49,17 +52,13 @@ const AuthoredPublications = ({ authorId }) => {
             const res = await fetch(`http://localhost:3000/api/publications/${id}`, {
                 method: "DELETE",
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to delete publication");
 
             fetchPublications();
         } catch (err) {
             alert("Error: " + err.message);
         }
-    };
-
-    const refreshPublicationAuthors = (pubId) => {
-        fetchPublications();
     };
 
     if (loading) return <p>Loading...</p>;
@@ -92,12 +91,9 @@ const AuthoredPublications = ({ authorId }) => {
                             <td>
                                 <AddCoAuthor
                                     publicationId={pub.id}
-                                    onUpdate={() => refreshPublicationAuthors(pub.id)}
+                                    onUpdate={fetchPublications}
                                 />
-                                <button
-                                    className="delete-btn"
-                                    onClick={() => handleDelete(pub.id)}
-                                >
+                                <button className="delete-btn" onClick={() => handleDelete(pub.id)}>
                                     Delete
                                 </button>
                             </td>

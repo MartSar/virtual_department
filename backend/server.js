@@ -272,64 +272,29 @@ app.get('/filters', async (req, res) => {
         res.status(500).json({ error: 'Failed to load filters' });
     }
 });
-
 // --------------------------
-// Get Student for Dashboard
+// Get User for Dashboard (from users table)
 // --------------------------
-app.get('/students/user/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const result = await pool.query(
-            `SELECT * FROM students WHERE user_id = $1`,
-            [userId]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Student not found' });
-        }
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
-
-// --------------------------
-// Get Postgraduate for Dashboard
-// --------------------------
-app.get('/postgraduates/user/:userId', async (req, res) => {
+app.get('/users/:userId', async (req, res) => {
     const { userId } = req.params;
-    try {
-        const result = await pool.query(
-            `SELECT id, user_id FROM postgraduates WHERE user_id = $1`,
-            [userId]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Postgraduates not found' });
-        }
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch postgraduate' });
-    }
-});
 
-// --------------------------
-// Get Professor for Dashboard
-// --------------------------
-app.get('/professors/user/:userId', async (req, res) => {
-    const userId = req.params.userId;
     try {
         const result = await pool.query(
-            `SELECT * FROM professors WHERE user_id = $1`,
+            `SELECT id, login, name, lastname, role, faculty_id
+             FROM users
+             WHERE id = $1
+                 LIMIT 1`,
             [userId]
         );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Professors not found' });
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
         }
-        res.json(result.rows[0]);
+
+        return res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: 'Database error' });
     }
 });
 
@@ -409,7 +374,7 @@ app.get('/professors/:id/postgraduates', async (req, res) => {
             [id]
         );
 
-        // Форматируем для фронта
+        // format for front
         const postgraduatesWithLocation = result.rows.map(pg => ({
             id: pg.id,
             name: pg.name,
@@ -980,167 +945,64 @@ app.get('/api/publications/download/:id', async (req, res) => {
 });
 
 // --------------------------
-// GET student location (University → City → Country)
+// GET user location (Faculty -> University -> City -> Country) for ALL roles
 // --------------------------
-app.get('/students/:id/location', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const result = await pool.query(
-            `SELECT 
-                u.id AS university_id,
-                u.name AS university_name,
-                c.id AS city_id,
-                c.name AS city_name,
-                co.id AS country_id,
-                co.name AS country_name
-            FROM students s
-            LEFT JOIN universities u ON s.university_id = u.id
-            LEFT JOIN cities c ON u.city_id = c.id
-            LEFT JOIN countries co ON c.country_id = co.id
-            WHERE s.id = $1`,
-            [id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Student location not found' });
-        }
-
-        const location = result.rows[0];
-        res.json({
-            university: { id: location.university_id, name: location.university_name },
-            city: { id: location.city_id, name: location.city_name },
-            country: { id: location.country_id, name: location.country_name }
-        });
-    } catch (err) {
-        console.error('Failed to fetch student location:', err);
-        res.status(500).json({ error: 'Failed to fetch student location' });
-    }
-});
-
-// --------------------------
-// GET postgraduate location (Faculty -> University → City → Country)
-// --------------------------
-
-app.get('/postgraduates/:id/location', async (req, res) => {
+app.get('/users/:id/location', async (req, res) => {
     const { id } = req.params;
 
     try {
         const result = await pool.query(
             `
                 SELECT
+                    us.role AS role,
+
                     f.id  AS faculty_id,
                     f.name AS faculty_name,
 
-                    u.id  AS university_id,
-                    u.name AS university_name,
+                    uni.id  AS university_id,
+                    uni.name AS university_name,
 
                     c.id  AS city_id,
                     c.name AS city_name,
 
                     co.id AS country_id,
                     co.name AS country_name
-                FROM postgraduates pg
-                         LEFT JOIN faculties f ON pg.faculty_id = f.id
-                         LEFT JOIN universities u ON f.university_id = u.id
-                         LEFT JOIN cities c ON u.city_id = c.id
-                         LEFT JOIN countries co ON c.country_id = co.id
-                WHERE pg.id = $1
+                FROM users us
+                         LEFT JOIN faculties f       ON us.faculty_id = f.id
+                         LEFT JOIN universities uni  ON f.university_id = uni.id
+                         LEFT JOIN cities c          ON uni.city_id = c.id
+                         LEFT JOIN countries co      ON c.country_id = co.id
+                WHERE us.id = $1
+                    LIMIT 1
             `,
             [id]
         );
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Professor location not found' });
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        const location = result.rows[0];
+        const loc = result.rows[0];
 
-        res.json({
-            faculty: {
-                id: location.faculty_id,
-                name: location.faculty_name
-            },
-            university: {
-                id: location.university_id,
-                name: location.university_name
-            },
-            city: {
-                id: location.city_id,
-                name: location.city_name
-            },
-            country: {
-                id: location.country_id,
-                name: location.country_name
-            }
+        // если у пользователя нет faculty_id или цепочка не настроена
+        if (!loc.faculty_id) {
+            return res.status(404).json({ error: 'User location not found (faculty not set)' });
+        }
+
+        return res.json({
+            role: loc.role,
+            faculty: loc.faculty_id ? { id: loc.faculty_id, name: loc.faculty_name } : null,
+            university: loc.university_id ? { id: loc.university_id, name: loc.university_name } : null,
+            city: loc.city_id ? { id: loc.city_id, name: loc.city_name } : null,
+            country: loc.country_id ? { id: loc.country_id, name: loc.country_name } : null,
         });
     } catch (err) {
-        console.error('Failed to fetch postgraduate location:', err);
-        res.status(500).json({ error: 'Failed to fetch postgraduate location' });
+        console.error('Failed to fetch user location:', err);
+        return res.status(500).json({ error: 'Failed to fetch user location' });
     }
 });
 
-// --------------------------
-// GET professors location (Faculty -> University → City → Country)
-// --------------------------
 
-app.get('/professors/:id/location', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const result = await pool.query(
-            `
-                SELECT
-                    f.id  AS faculty_id,
-                    f.name AS faculty_name,
-
-                    u.id  AS university_id,
-                    u.name AS university_name,
-
-                    c.id  AS city_id,
-                    c.name AS city_name,
-
-                    co.id AS country_id,
-                    co.name AS country_name
-                FROM professors p
-                         LEFT JOIN faculties f ON p.faculty_id = f.id
-                         LEFT JOIN universities u ON f.university_id = u.id
-                         LEFT JOIN cities c ON u.city_id = c.id
-                         LEFT JOIN countries co ON c.country_id = co.id
-                WHERE p.id = $1
-            `,
-            [id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Professor location not found' });
-        }
-
-        const location = result.rows[0];
-
-        res.json({
-            faculty: {
-                id: location.faculty_id,
-                name: location.faculty_name
-            },
-            university: {
-                id: location.university_id,
-                name: location.university_name
-            },
-            city: {
-                id: location.city_id,
-                name: location.city_name
-            },
-            country: {
-                id: location.country_id,
-                name: location.country_name
-            }
-        });
-    } catch (err) {
-        console.error('Failed to fetch professor location:', err);
-        res.status(500).json({ error: 'Failed to fetch professor location' });
-    }
-});
 
 // get Author id by postgraduate or professor (postgraduate/professor -> user -> authors)
 // по профессора либо аспиранту берем user_id и находим такого автора у которого user_id равняется найденному
@@ -1174,6 +1036,30 @@ app.get('/authors/user/:userId', async (req, res) => {
         res.status(500).json({
             error: 'Failed to fetch author'
         });
+    }
+});
+
+// --------------------------
+// Get primary publications for user
+// --------------------------
+app.get('/users/:userId/publications/primary', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT p.*
+             FROM publications p
+                      JOIN publication_authors pa ON pa.publication_id = p.id
+             WHERE pa.user_id = $1 AND pa.is_primary_author = true
+             ORDER BY p.id DESC`,
+            [userId]
+        );
+
+        if (result.rowCount === 0) return res.status(404).json({ error: 'No publications found' });
+        return res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Failed to fetch publications' });
     }
 });
 
@@ -1211,6 +1097,31 @@ app.get('/authors/:id/location', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+// --------------------------
+// Get co-authored publications for user (is_primary_author = false)
+// --------------------------
+app.get('/users/:userId/publications/co-author', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT p.*
+       FROM publications p
+       JOIN publication_authors pa ON pa.publication_id = p.id
+       WHERE pa.user_id = $1 AND pa.is_primary_author = false
+       ORDER BY p.id DESC`,
+            [userId]
+        );
+
+        // всегда возвращаем массив, даже если пусто
+        return res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Failed to fetch co-authored publications' });
+    }
+});
+
 
 // GET all faculties of authors for a publication
 app.get("/publications/:id/authors-location", async (req, res) => {
