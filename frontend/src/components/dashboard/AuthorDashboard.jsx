@@ -130,7 +130,6 @@ function AuthorDashboard({ user }) {
                 <PublicationModal
                     publication={selectedPublication}
                     onClose={closePublication}
-                    student={null}
                     user={user}
                 />
             )}

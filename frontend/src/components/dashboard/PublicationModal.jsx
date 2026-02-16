@@ -3,10 +3,12 @@ import "../../styles/PublicationModal.css";
 
 const borrowOptions = [7, 30, 90, 365];
 
-const PublicationModal = ({ publication, onClose, student }) => {
+const PublicationModal = ({ publication, onClose, student, user }) => {
     const [loading, setLoading] = useState(false);
+    const [loadingAuthors, setLoadingAuthors] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+
     const [showDuration, setShowDuration] = useState(false);
     const [selectedDays, setSelectedDays] = useState(null);
 
@@ -16,47 +18,28 @@ const PublicationModal = ({ publication, onClose, student }) => {
     const [cities, setCities] = useState([]);
     const [countries, setCountries] = useState([]);
 
-    const [loadingAuthors, setLoadingAuthors] = useState(true);
-    const [authorLocations, setAuthorLocations] = useState([]);
-    const [topicName, setTopicName] = useState("");
+    const [topicName, setTopicName] = useState("—");
 
-    const studentId = student?.id;
+    const studentId = student?.id; // если borrowings ещё завязаны на students
     const canBorrow = !!studentId;
 
-    /* -----------------------------
-       Fetch authors
-    ------------------------------ */
+    // -----------------------------
+    // Get Topic (central_topics)
+    // -----------------------------
     useEffect(() => {
-        if (!publication) return;
-
-        const fetchAuthors = async () => {
-            try {
-                const res = await fetch(`http://localhost:3000/publications/${publication.id}/authors`);
-                if (!res.ok) throw new Error("Failed to fetch authors");
-                const data = await res.json();
-                setAuthors(data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoadingAuthors(false);
-            }
-        };
-
-        fetchAuthors();
-    }, [publication]);
-
-    /* -----------------------------
-       Get Topic
-    ------------------------------ */
-    useEffect(() => {
-        if (!publication?.topic_id) return;
+        if (!publication?.topic_id) {
+            setTopicName("—");
+            return;
+        }
 
         const fetchTopic = async () => {
             try {
-                const res = await fetch(`http://localhost:3000/central_topics/${publication.topic_id}`);
+                const res = await fetch(
+                    `http://localhost:3000/central_topics/${publication.topic_id}`
+                );
                 if (!res.ok) throw new Error("Topic not found");
                 const data = await res.json();
-                setTopicName(data.name);
+                setTopicName(data?.name || "—");
             } catch {
                 setTopicName("—");
             }
@@ -65,68 +48,107 @@ const PublicationModal = ({ publication, onClose, student }) => {
         fetchTopic();
     }, [publication?.topic_id]);
 
-
-    /* -----------------------------
-       Get Locations of authors /publications/:id/authors-location
-    ------------------------------ */
+    // -----------------------------
+    // Get Authors + Locations
+    // /publications/:id/authors-location
+    // Expected author shape:
+    // {
+    //   user_id, name, lastname, role, is_primary_author,
+    //   faculty: { faculty_id, name } | null,
+    //   university: { university_id, name } | null,
+    //   city: { city_id, name } | null,
+    //   country: { country_id, name } | null
+    // }
+    // -----------------------------
     useEffect(() => {
         if (!publication?.id) return;
 
+        const uniqBy = (arr, keyFn) => {
+            const seen = new Set();
+            const out = [];
+            for (const item of arr) {
+                const k = keyFn(item);
+                if (!k || seen.has(k)) continue;
+                seen.add(k);
+                out.push(item);
+            }
+            return out;
+        };
+
         const fetchFullData = async () => {
+            setLoadingAuthors(true);
             try {
-                const res = await fetch(`http://localhost:3000/publications/${publication.id}/authors-location`);
-                if (!res.ok) throw new Error("Failed to fetch full data");
+                const res = await fetch(
+                    `http://localhost:3000/publications/${publication.id}/authors-location`
+                );
+                if (!res.ok) throw new Error("Failed to fetch authors-location");
                 const data = await res.json();
 
-                // Faculties
-                const formattedFaculties = data.authors.map(author => ({
-                    authorId: author.author_id,
-                    authorType: author.author_type,
-                    facultyId: author.faculty?.faculty_id || null,
-                    facultyName: author.faculty?.faculty_name || null
-                }));
+                const authorsArr = Array.isArray(data?.authors) ? data.authors : [];
+                setAuthors(authorsArr);
 
-                // Universities
-                const formattedUniversities = data.authors
-                    .map(author => ({
-                        universityId: author.university?.university_id || null,
-                        universityName: author.university?.university_name || null
-                    }))
-                    .filter((v, i, self) => v.universityId && self.findIndex(u => u.universityId === v.universityId) === i);
+                const fac = uniqBy(
+                    authorsArr
+                        .map((a) => ({
+                            facultyId: a.faculty?.faculty_id ?? null,
+                            facultyName: a.faculty?.name ?? null,
+                        }))
+                        .filter((x) => x.facultyId),
+                    (x) => x.facultyId
+                );
 
-                // Cities
-                const formattedCities = data.authors
-                    .map(author => ({
-                        cityId: author.city?.city_id || null,
-                        cityName: author.city?.city_name || null
-                    }))
-                    .filter((v, i, self) => v.cityId && self.findIndex(c => c.cityId === v.cityId) === i);
+                const uni = uniqBy(
+                    authorsArr
+                        .map((a) => ({
+                            universityId: a.university?.university_id ?? null,
+                            universityName: a.university?.name ?? null,
+                        }))
+                        .filter((x) => x.universityId),
+                    (x) => x.universityId
+                );
 
-                // Countries
-                const formattedCountries = data.authors
-                    .map(author => ({
-                        countryId: author.country?.country_id || null,
-                        countryName: author.country?.country_name || null
-                    }))
-                    .filter((v, i, self) => v.countryId && self.findIndex(c => c.countryId === v.countryId) === i);
+                const cit = uniqBy(
+                    authorsArr
+                        .map((a) => ({
+                            cityId: a.city?.city_id ?? null,
+                            cityName: a.city?.name ?? null,
+                        }))
+                        .filter((x) => x.cityId),
+                    (x) => x.cityId
+                );
 
-                setFaculties(formattedFaculties);
-                setUniversities(formattedUniversities);
-                setCities(formattedCities);
-                setCountries(formattedCountries);
+                const cou = uniqBy(
+                    authorsArr
+                        .map((a) => ({
+                            countryId: a.country?.country_id ?? null,
+                            countryName: a.country?.name ?? null,
+                        }))
+                        .filter((x) => x.countryId),
+                    (x) => x.countryId
+                );
 
+                setFaculties(fac);
+                setUniversities(uni);
+                setCities(cit);
+                setCountries(cou);
             } catch (err) {
                 console.error(err);
+                setAuthors([]);
+                setFaculties([]);
+                setUniversities([]);
+                setCities([]);
+                setCountries([]);
+            } finally {
+                setLoadingAuthors(false);
             }
         };
 
         fetchFullData();
     }, [publication?.id]);
 
-
-    /* -----------------------------
-       Borrow handlers
-    ------------------------------ */
+    // -----------------------------
+    // Borrow handlers
+    // -----------------------------
     const handleBorrowClick = () => {
         if (!canBorrow) return;
         setShowDuration(true);
@@ -168,10 +190,15 @@ const PublicationModal = ({ publication, onClose, student }) => {
 
     if (!publication) return null;
 
+    const uniqueNames = (arr) =>
+        Array.from(new Set(arr.filter(Boolean))).join(", ");
+
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <button className="modal-close-btn" onClick={onClose}>✕</button>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close-btn" onClick={onClose}>
+                    ✕
+                </button>
 
                 <h2>{publication.title}</h2>
 
@@ -180,55 +207,60 @@ const PublicationModal = ({ publication, onClose, student }) => {
                     {loadingAuthors ? (
                         <p>Loading authors...</p>
                     ) : authors.length > 0 ? (
-                        <p><strong>Authors:</strong> {authors.map(a => `${a.name} ${a.lastname} (${a.author_type})`).join(", ")}</p>
+                        <p>
+                            <strong>Authors:</strong>{" "}
+                            {authors
+                                .map((a) => {
+                                    const main = a.is_primary_author ? " (primary)" : "";
+                                    return `${a.name} ${a.lastname} (${a.role})${main}`;
+                                })
+                                .join(", ")}
+                        </p>
                     ) : (
-                        <p><strong>Authors:</strong> None</p>
+                        <p>
+                            <strong>Authors:</strong> None
+                        </p>
                     )}
                 </div>
 
                 <div className="modal-section">
-                    <p><strong>Topic:</strong> {topicName || "—"}</p>
+                    <p>
+                        <strong>Topic:</strong> {topicName || "—"}
+                    </p>
 
                     <p>
                         <strong>Faculty:</strong>{" "}
-                        {faculties.length > 0
-                            ? faculties
-                                .map(f => f.facultyName || "—")
-                                .filter((value, index, self) => self.indexOf(value) === index)
-                                .join(", ")
-                            : "—"}
+                        {faculties.length ? uniqueNames(faculties.map((f) => f.facultyName)) : "—"}
                     </p>
+
                     <p>
                         <strong>University:</strong>{" "}
-                        {universities.length > 0
-                        ? universities
-                            .map(u => u.universityName || "—")
-                            .filter((value, index, self) => self.indexOf(value) === index)
-                            .join(", ")
-                        : "—"}
-                    </p>
-                    <p>
-                        <strong>City:</strong>{" "}
-                        {cities.length > 0
-                            ? cities
-                                .map(с => с.cityName || "—")
-                                .filter((value, index, self) => self.indexOf(value) === index)
-                                .join(", ")
+                        {universities.length
+                            ? uniqueNames(universities.map((u) => u.universityName))
                             : "—"}
                     </p>
+
+                    <p>
+                        <strong>City:</strong>{" "}
+                        {cities.length ? uniqueNames(cities.map((c) => c.cityName)) : "—"}
+                    </p>
+
                     <p>
                         <strong>Country:</strong>{" "}
-                        {countries.length > 0
-                            ? countries.map(c => c.countryName || "—").join(", ")
+                        {countries.length
+                            ? uniqueNames(countries.map((c) => c.countryName))
                             : "—"}
                     </p>
                 </div>
 
-
                 {/* Description */}
                 <div className="modal-section">
-                    <p><strong>Description:</strong></p>
-                    <p className="modal-description">{publication.description || "No description available."}</p>
+                    <p>
+                        <strong>Description:</strong>
+                    </p>
+                    <p className="modal-description">
+                        {publication.description || "No description available."}
+                    </p>
                 </div>
 
                 {error && <p className="modal-error">{error}</p>}
@@ -250,11 +282,14 @@ const PublicationModal = ({ publication, onClose, student }) => {
                         {showDuration && !success && (
                             <>
                                 <div className="duration-buttons-row">
-                                    {borrowOptions.map(days => (
+                                    {borrowOptions.map((days) => (
                                         <button
                                             key={days}
-                                            className={`duration-btn ${selectedDays === days ? "selected" : ""}`}
+                                            className={`duration-btn ${
+                                                selectedDays === days ? "selected" : ""
+                                            }`}
                                             onClick={() => setSelectedDays(days)}
+                                            type="button"
                                         >
                                             {days} days
                                         </button>
@@ -266,6 +301,7 @@ const PublicationModal = ({ publication, onClose, student }) => {
                                         className="confirm-btn"
                                         onClick={handleConfirm}
                                         disabled={!selectedDays || loading}
+                                        type="button"
                                     >
                                         {loading ? "Processing..." : "Confirm"}
                                     </button>

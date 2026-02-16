@@ -2,37 +2,20 @@ import React, { useState, useEffect } from "react";
 import "../../styles/UserPublications.css";
 
 const ProfessorPostgraduates = ({ userId }) => {
-    const [professorId, setProfessorId] = useState(null);
     const [postgraduates, setPostgraduates] = useState([]);
     const [allPostgraduates, setAllPostgraduates] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedPgId, setSelectedPgId] = useState("");
 
     // -------------------
-    // Получаем professorId по userId
-    // -------------------
-    useEffect(() => {
-        const fetchProfessorId = async () => {
-            try {
-                const res = await fetch(`http://localhost:3000/professors/user/${userId}`);
-                const data = await res.json();
-                setProfessorId(data.id);
-            } catch (err) {
-                console.error("Failed to fetch professorId:", err);
-            }
-        };
-        fetchProfessorId();
-    }, [userId]);
-
-    // -------------------
-    // Получаем список всех аспирантов
+    // Все аспиранты (users.role='postgraduate')
     // -------------------
     useEffect(() => {
         const fetchAllPostgraduates = async () => {
             try {
                 const res = await fetch(`http://localhost:3000/postgraduates`);
                 const data = await res.json();
-                setAllPostgraduates(data);
+                setAllPostgraduates(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Failed to fetch all postgraduates:", err);
             }
@@ -41,14 +24,14 @@ const ProfessorPostgraduates = ({ userId }) => {
     }, []);
 
     // -------------------
-    // Получаем назначенных аспирантов с полной локацией
+    // Назначенные аспиранты профессора (professor = userId)
     // -------------------
     const fetchAssignedPostgraduates = async () => {
-        if (!professorId) return;
+        if (!userId) return;
         try {
-            const res = await fetch(`http://localhost:3000/professors/${professorId}/postgraduates`);
+            const res = await fetch(`http://localhost:3000/professors/${userId}/postgraduates`);
             const data = await res.json();
-            setPostgraduates(data);
+            setPostgraduates(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Failed to fetch assigned postgraduates:", err);
         }
@@ -56,36 +39,34 @@ const ProfessorPostgraduates = ({ userId }) => {
 
     useEffect(() => {
         fetchAssignedPostgraduates();
-    }, [professorId]);
+    }, [userId]);
 
     // -------------------
-    // Назначение нового аспиранта
+    // Assign
     // -------------------
     const handleAssign = async () => {
-        if (!selectedPgId || !professorId) return;
-        try {
-            const res = await fetch(
-                `http://localhost:3000/professors/${professorId}/postgraduates`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ postgraduate_id: selectedPgId }),
-                }
-            );
+        if (!selectedPgId || !userId) return;
 
-            const data = await res.json();
+        try {
+            const res = await fetch(`http://localhost:3000/professors/${userId}/postgraduates`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ postgraduate_id: Number(selectedPgId) }),
+            });
+
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || "Failed to assign postgraduate");
 
             setSelectedPgId("");
             setShowModal(false);
-            fetchAssignedPostgraduates(); // обновляем список
+            fetchAssignedPostgraduates();
         } catch (err) {
             alert("Failed to assign postgraduate: " + err.message);
         }
     };
 
     // -------------------
-    // Фильтруем всех аспирантов, чтобы исключить уже назначенных
+    // available list (exclude already assigned)
     // -------------------
     const availablePostgraduates = allPostgraduates.filter(
         (pg) => !postgraduates.some((assigned) => assigned.id === pg.id)
@@ -114,10 +95,10 @@ const ProfessorPostgraduates = ({ userId }) => {
                         <tr key={pg.id}>
                             <td>{pg.name}</td>
                             <td>{pg.lastname}</td>
-                            <td>{pg.faculty?.name || '-'}</td>
-                            <td>{pg.university?.name || '-'}</td>
-                            <td>{pg.city?.name || '-'}</td>
-                            <td>{pg.country?.name || '-'}</td>
+                            <td>{pg.faculty?.name || "-"}</td>
+                            <td>{pg.university?.name || "-"}</td>
+                            <td>{pg.city?.name || "-"}</td>
+                            <td>{pg.country?.name || "-"}</td>
                         </tr>
                     ))}
                     </tbody>
@@ -132,7 +113,6 @@ const ProfessorPostgraduates = ({ userId }) => {
                 Assign Postgraduate
             </button>
 
-            {/* --- Modal --- */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div
@@ -159,8 +139,16 @@ const ProfessorPostgraduates = ({ userId }) => {
                             </select>
                         )}
 
-                        <div className="professor-postgraduates-btns" style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-                            <button className="professor-postgraduates-cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                        <div
+                            className="professor-postgraduates-btns"
+                            style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}
+                        >
+                            <button
+                                className="professor-postgraduates-cancel-btn"
+                                onClick={() => setShowModal(false)}
+                            >
+                                Cancel
+                            </button>
                             <button
                                 className="assign-btn"
                                 onClick={handleAssign}

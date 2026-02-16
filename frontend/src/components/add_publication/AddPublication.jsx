@@ -7,23 +7,23 @@ function AddPublication({ user, onClose }) {
     const [file, setFile] = useState(null);
     const [description, setDescription] = useState("");
     const [fileName, setFileName] = useState("");
-    const [authorName, setAuthorName] = useState(`${user.name} ${user.lastname}`);
+    const [authorName] = useState(`${user.name} ${user.lastname}`);
 
     const [topicId, setTopicId] = useState("");
     const [topics, setTopics] = useState([]);
-    const [selectedTopic, setSelectedTopic] = useState(null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
-    // Fetch central topics
+    const userId = user.user_id ?? user.id;
+
     useEffect(() => {
         const fetchTopics = async () => {
             try {
                 const res = await fetch("http://localhost:3000/central_topics");
                 const data = await res.json();
-                setTopics(data);
+                setTopics(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Failed to fetch topics:", err);
             }
@@ -31,27 +31,12 @@ function AddPublication({ user, onClose }) {
         fetchTopics();
     }, []);
 
-    // Update selected topic
-    useEffect(() => {
-        setSelectedTopic(topics.find(t => t.id === Number(topicId)) || null);
-    }, [topicId, topics]);
-
-    // Generate file name
     useEffect(() => {
         if (!title) return;
         const ext = fileType || "txt";
         setFileName(`${title.toLowerCase().replace(/\s+/g, "_")}.${ext}`);
     }, [title, fileType]);
 
-    // Fetch author
-    const fetchAuthor = async () => {
-        const res = await fetch(`http://localhost:3000/authors/user/${user.user_id}`);
-        if (!res.ok) throw new Error("Author not found");
-        const author = await res.json();
-        return { author_id: author.id, author_type: author.author_type };
-    };
-
-    // File handlers
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (!selectedFile) return;
@@ -73,38 +58,49 @@ function AddPublication({ user, onClose }) {
         e.preventDefault();
         setError(null);
 
+        if (!userId) {
+            setError("User not found");
+            return;
+        }
+
         if (!title || !file || !fileType || !topicId) {
             setError("Please fill in all required fields");
             return;
         }
 
         setLoading(true);
-        try {
-            const { author_id } = await fetchAuthor();
 
+        try {
             const reader = new FileReader();
             reader.onload = async () => {
-                const contentBase64 = reader.result.split(",")[1];
+                try {
+                    const contentBase64 = reader.result.split(",")[1];
 
-                const res = await fetch("http://localhost:3000/api/publications/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title,
-                        file_type: fileType,
-                        content: contentBase64,
-                        description,
-                        file_name: fileName,
-                        author_id,
-                        topic_id: topicId
-                    })
-                });
+                    const res = await fetch("http://localhost:3000/api/publications/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title,
+                            file_type: fileType,
+                            content: contentBase64,
+                            description,
+                            file_name: fileName,
+                            user_id: userId,     // ✅ вместо author_id
+                            topic_id: topicId
+                        })
+                    });
 
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "Failed to create publication");
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.error || "Failed to create publication");
 
-                window.location.reload();
+                    window.location.reload();
+                } catch (err) {
+                    console.error(err);
+                    setError(err.message);
+                    setLoading(false);
+                }
             };
+
             reader.readAsDataURL(file);
         } catch (err) {
             console.error(err);
@@ -118,7 +114,6 @@ function AddPublication({ user, onClose }) {
             <div className="modal-content">
                 <h2>Add Publication</h2>
                 <form className="add-publication-form" onSubmit={handleSubmit}>
-
                     <label>
                         Title
                         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -133,7 +128,9 @@ function AddPublication({ user, onClose }) {
                         Central Topic
                         <select value={topicId} onChange={(e) => setTopicId(e.target.value)}>
                             <option value="">Select topic</option>
-                            {topics.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                            {topics.map(t => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
                         </select>
                     </label>
 

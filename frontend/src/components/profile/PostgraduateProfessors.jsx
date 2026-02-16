@@ -2,45 +2,28 @@ import React, { useState, useEffect } from "react";
 import "../../styles/UserPublications.css";
 
 const PostgraduateProfessors = ({ userId }) => {
-    const [postgraduateId, setPostgraduateId] = useState(null);
     const [professors, setProfessors] = useState([]);
 
-    // -------------------
-    // Получаем id аспиранта по userId
-    // -------------------
-    useEffect(() => {
-        const fetchPostgraduateId = async () => {
-            try {
-                const res = await fetch(`http://localhost:3000/postgraduates/user/${userId}`);
-                const data = await res.json();
-
-                setPostgraduateId(data.id);
-            } catch (err) {
-                console.error("Failed to fetch postgraduateId:", err);
-            }
-        };
-        fetchPostgraduateId();
-    }, [userId]);
-
-    // -------------------
-    // Получаем профессоров по postgraduateId
-    // -------------------
     useEffect(() => {
         const fetchProfessors = async () => {
-            if (!postgraduateId) return;
+            if (!userId) return;
 
             try {
-                const res = await fetch(
-                    `http://localhost:3000/postgraduates/${postgraduateId}/professors`
-                );
+                const res = await fetch(`http://localhost:3000/postgraduates/${userId}/professors`);
+                if (res.status === 404) {
+                    setProfessors([]);
+                    return;
+                }
                 const data = await res.json();
-                setProfessors(data);
+                setProfessors(Array.isArray(data) ? data : []);
             } catch (err) {
                 console.error("Failed to fetch professors:", err);
+                setProfessors([]);
             }
         };
+
         fetchProfessors();
-    }, [postgraduateId]);
+    }, [userId]);
 
     return (
         <section className="borrowed-publications">
@@ -65,10 +48,10 @@ const PostgraduateProfessors = ({ userId }) => {
                         <tr key={prof.id}>
                             <td>{prof.name}</td>
                             <td>{prof.lastname}</td>
-                            <td>{prof.faculty?.name || '-'}</td>
-                            <td>{prof.university?.name || '-'}</td>
-                            <td>{prof.city?.name || '-'}</td>
-                            <td>{prof.country?.name || '-'}</td>
+                            <td>{prof.faculty?.name || "-"}</td>
+                            <td>{prof.university?.name || "-"}</td>
+                            <td>{prof.city?.name || "-"}</td>
+                            <td>{prof.country?.name || "-"}</td>
                         </tr>
                     ))}
                     </tbody>
