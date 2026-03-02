@@ -1,0 +1,56 @@
+.reader-container {
+    min-height: 100vh;
+    background-color: #f4f6f9;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.reader-header {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.reader-back-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #2c3e50;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+/* 🔥 Hover эффект */
+.reader-back-btn:hover {
+    background: #1a252f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.reader-back-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.reader-content {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.reader-page-wrapper {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}

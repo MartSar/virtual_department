@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../../styles/UserPublications.css";
 
 const BorrowedPublications = ({ userId }) => {
     const [borrowings, setBorrowings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const navigate = useNavigate();
 
     const fetchBorrowings = async () => {
         if (!userId) return;
@@ -62,6 +65,12 @@ const BorrowedPublications = ({ userId }) => {
         }
     };
 
+    const handleRead = (publicationId, isActive) => {
+        if (!isActive) return;
+        navigate(`/reader/${publicationId}?user_id=${userId}`);
+    };
+
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
@@ -79,7 +88,7 @@ const BorrowedPublications = ({ userId }) => {
                         <th>Access From</th>
                         <th>Access Until</th>
                         <th>Status</th>
-                        <th>Download</th>
+                        <th>Read</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -97,14 +106,12 @@ const BorrowedPublications = ({ userId }) => {
                             </td>
                             <td>
                                 <button
-                                    className="download-btn"
-                                    onClick={() =>
-                                        handleDownload(b.publication_id, b.publication_title, b.file_name, b.is_active)
-                                    }
+                                    className="read-btn"
+                                    onClick={() => handleRead(b.publication_id, b.is_active)}
                                     disabled={!b.is_active}
                                     title={!b.is_active ? "Borrowing expired" : ""}
                                 >
-                                    Download
+                                    Read
                                 </button>
                             </td>
                         </tr>

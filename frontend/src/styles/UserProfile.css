@@ -97,7 +97,7 @@
     align-items: center;
 }
 
-.download-btn {
+.read-btn {
     padding: 4px 8px;
     background-color: #4CAF50;
     color: white;
@@ -106,11 +106,11 @@
     cursor: pointer;
 }
 
-.download-btn:hover {
+.read-btn:hover {
     background-color: #45a049;
 }
 
-.download-btn:disabled {
+.read-btn:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }

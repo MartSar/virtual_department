@@ -16,6 +16,50 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+
+// File reader
+const path = require("path");
+const fs = require("fs/promises");
+const os = require("os");
+const crypto = require("crypto");
+const { execa } = require("execa");
+
+function isDocxLike(fileType, fileName = "") {
+    const t = (fileType || "").toLowerCase();
+    const n = (fileName || "").toLowerCase();
+    return (
+        t.includes("officedocument") ||
+        t.includes("word") ||
+        n.endsWith(".docx") ||
+        n.endsWith(".doc")
+    );
+}
+
+function isPdfLike(fileType, fileName = "") {
+    const t = (fileType || "").toLowerCase();
+    const n = (fileName || "").toLowerCase();
+    return t.includes("pdf") || n.endsWith(".pdf");
+}
+
+async function convertToPdfWithLibreOffice(inputPath, outDir, sofficePath) {
+    // LibreOffice сам создаст PDF с тем же base-name
+    await execa(
+        sofficePath,
+        [
+            "--headless",
+            "--nologo",
+            "--nofirststartwizard",
+            "--norestore",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            outDir,
+            inputPath,
+        ],
+        { timeout: 120000 } // 2 минуты на конвертацию
+    );
+}
+
 // --------------------------
 // PostgreSQL Pool
 // --------------------------
@@ -1017,8 +1061,7 @@ app.get('/api/publications/download/:id', async (req, res) => {
 
         const pub = result.rows[0];
 
-        // content хранится как base64 в БД
-        const fileBuffer = Buffer.from(pub.content, 'base64');
+        const fileBuffer = pub.content;
 
         res.setHeader('Content-Disposition', `attachment; filename="${pub.file_name}"`);
         res.setHeader('Content-Type', pub.file_type || 'application/octet-stream');
@@ -1090,7 +1133,6 @@ app.get('/users/:id/location', async (req, res) => {
 
 
 // get Author id by postgraduate or professor (postgraduate/professor -> user -> authors)
-// по профессора либо аспиранту берем user_id и находим такого автора у которого user_id равняется найденному
 // ----------------------------------------
 // GET author by user_id (for professor/postgraduate)
 // ----------------------------------------
@@ -1276,6 +1318,98 @@ app.get('/publications/:id/authors-location', async (req, res) => {
         return res.status(500).json({ error: "Failed to fetch authors location" });
     }
 });
+
+app.get("/api/publications/read/:id", async (req, res) => {
+    const { id } = req.params;
+    const userId = req.query.user_id;
+
+    if (!userId) return res.status(400).json({ error: "user_id is required" });
+
+    try {
+        // 1) Check access
+        const accessRes = await pool.query(
+            `SELECT 1
+             FROM borrowings
+             WHERE borrower_id = $1
+               AND publication_id = $2
+               AND end_date >= NOW()
+                 LIMIT 1`,
+            [userId, id]
+        );
+
+        if (accessRes.rowCount === 0) {
+            return res.status(403).json({ error: "No active access" });
+        }
+
+        // 2) Load publication
+        const pubRes = await pool.query(
+            `SELECT file_name, file_type, content
+             FROM publications
+             WHERE id = $1`,
+            [id]
+        );
+
+        if (pubRes.rowCount === 0) {
+            return res.status(404).json({ error: "Publication not found" });
+        }
+
+        const pub = pubRes.rows[0];
+        const fileName = pub.file_name || "file";
+        const fileType = pub.file_type || "";
+        const contentBuffer = pub.content; // bytea -> Buffer
+
+        // 3) If PDF -> stream PDF
+        if (isPdfLike(fileType, fileName)) {
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+            res.setHeader("X-Content-Type-Options", "nosniff");
+            return res.send(contentBuffer);
+        }
+
+        // 4) If DOC/DOCX -> convert to PDF then stream
+        if (isDocxLike(fileType, fileName)) {
+            const sofficePath =
+                process.env.LIBREOFFICE_PATH ||
+                "C:\\Program Files\\LibreOffice\\program\\soffice.exe";
+
+            // temp working directory
+            const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vd-lo-"));
+
+            try {
+                // stable random name to avoid weird characters in fileName
+                const base = crypto.randomBytes(12).toString("hex");
+                const inputExt = fileName.toLowerCase().endsWith(".doc") ? ".doc" : ".docx";
+                const inputPath = path.join(tmpDir, `${base}${inputExt}`);
+                const outDir = tmpDir;
+
+                await fs.writeFile(inputPath, contentBuffer);
+
+                await convertToPdfWithLibreOffice(inputPath, outDir, sofficePath);
+
+                const outputPdfPath = path.join(outDir, `${base}.pdf`);
+                const pdfBuffer = await fs.readFile(outputPdfPath);
+
+                res.setHeader("Content-Type", "application/pdf");
+                res.setHeader("Content-Disposition", `inline; filename="${base}.pdf"`);
+                res.setHeader("X-Content-Type-Options", "nosniff");
+                return res.send(pdfBuffer);
+            } finally {
+                // cleanup temp dir
+                await fs.rm(tmpDir, { recursive: true, force: true });
+            }
+        }
+
+        // 5) Other types (future: video/image/etc.)
+        return res.status(415).json({
+            error: "Preview not supported for this file type yet",
+            file_type: fileType,
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Failed to open publication" });
+    }
+});
+
 
 // --------------------------
 // Server start
