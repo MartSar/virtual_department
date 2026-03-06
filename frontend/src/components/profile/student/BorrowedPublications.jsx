@@ -10,7 +10,11 @@ const BorrowedPublications = ({ userId }) => {
     const navigate = useNavigate();
 
     const fetchBorrowings = async () => {
-        if (!userId) return;
+        if (!userId) {
+            setBorrowings([]);
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         setError(null);
@@ -29,7 +33,7 @@ const BorrowedPublications = ({ userId }) => {
 
             setBorrowings(Array.isArray(data) ? data : []);
         } catch (err) {
-            setError(err.message);
+            setError(err.message || "Failed to fetch borrowings");
             setBorrowings([]);
         } finally {
             setLoading(false);
@@ -40,36 +44,47 @@ const BorrowedPublications = ({ userId }) => {
         fetchBorrowings();
     }, [userId]);
 
-    const handleDownload = async (publicationId, publicationTitle, fileNameFromApi, isActive) => {
-        if (!isActive) return;
-
-        try {
-            const res = await fetch(`http://localhost:3000/api/publications/download/${publicationId}`);
-            if (!res.ok) throw new Error("Failed to download");
-
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-
-            const link = document.createElement("a");
-            link.href = url;
-
-            const downloadName =
-                fileNameFromApi || `${publicationTitle.toLowerCase().replace(/\s+/g, "_")}.pdf`;
-            link.download = downloadName;
-
-            link.click();
-            window.URL.revokeObjectURL(url);
-        } catch (err) {
-            console.error(err);
-            alert("Failed to download file");
-        }
-    };
-
-    const handleRead = (publicationId, isActive) => {
+    const handleOpen = (publicationId, isActive) => {
         if (!isActive) return;
         navigate(`/reader/${publicationId}?user_id=${userId}`);
     };
 
+    const getPublicationTypeLabel = (fileType, fileName = "") => {
+        const type = (fileType || "").toLowerCase();
+        const name = (fileName || "").toLowerCase();
+
+        if (type.includes("pdf") || name.endsWith(".pdf")) {
+            return "PDF";
+        }
+
+        if (
+            type.includes("word") ||
+            type.includes("officedocument") ||
+            type.includes("docx") ||
+            type.includes("doc") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".doc")
+        ) {
+            return "Word";
+        }
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "MP4";
+        }
+
+        return "Unknown";
+    };
+
+    const getActionLabel = (fileType, fileName = "") => {
+        const type = (fileType || "").toLowerCase();
+        const name = (fileName || "").toLowerCase();
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "Watch";
+        }
+
+        return "Read";
+    };
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
@@ -85,16 +100,18 @@ const BorrowedPublications = ({ userId }) => {
                     <thead>
                     <tr>
                         <th>Publication</th>
+                        <th>Type</th>
                         <th>Access From</th>
                         <th>Access Until</th>
                         <th>Status</th>
-                        <th>Read</th>
+                        <th>Get</th>
                     </tr>
                     </thead>
                     <tbody>
                     {borrowings.map((b) => (
                         <tr key={b.id}>
                             <td>{b.publication_title}</td>
+                            <td>{getPublicationTypeLabel(b.file_type, b.file_name)}</td>
                             <td>{new Date(b.start_date).toLocaleDateString()}</td>
                             <td>{new Date(b.end_date).toLocaleDateString()}</td>
                             <td>
@@ -107,11 +124,11 @@ const BorrowedPublications = ({ userId }) => {
                             <td>
                                 <button
                                     className="read-btn"
-                                    onClick={() => handleRead(b.publication_id, b.is_active)}
+                                    onClick={() => handleOpen(b.publication_id, b.is_active)}
                                     disabled={!b.is_active}
                                     title={!b.is_active ? "Borrowing expired" : ""}
                                 >
-                                    Read
+                                    {getActionLabel(b.file_type, b.file_name)}
                                 </button>
                             </td>
                         </tr>

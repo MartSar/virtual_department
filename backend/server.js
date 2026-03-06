@@ -307,6 +307,7 @@ app.get('/users/:userId/borrowings', async (req, res) => {
                     b.end_date,
                     p.title AS publication_title,
                     p.file_name,
+                    p.file_type,
                     (NOW() <= b.end_date) AS is_active
                 FROM borrowings b
                          JOIN publications p ON p.id = b.publication_id
@@ -326,8 +327,6 @@ app.get('/users/:userId/borrowings', async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch borrowings' });
     }
 });
-
-
 
 // --------------------------
 // Filters
@@ -814,10 +813,38 @@ app.post("/api/publications/create", async (req, res) => {
     try {
         const contentBuffer = Buffer.from(content, "base64");
 
+        const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150 MB
+
+        const allowedTypes = [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "video/mp4"
+        ];
+
+        const lowerFileName = (file_name || "").toLowerCase();
+
+        const isPdf = file_type === "application/pdf" || lowerFileName.endsWith(".pdf");
+        const isDocx =
+            file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+            lowerFileName.endsWith(".docx");
+        const isMp4 = file_type === "video/mp4" || lowerFileName.endsWith(".mp4");
+
+        if (!isPdf && !isDocx && !isMp4) {
+            return res.status(400).json({
+                error: "Only PDF, DOCX, and MP4 files are allowed"
+            });
+        }
+
+        if (contentBuffer.length > MAX_FILE_SIZE) {
+            return res.status(400).json({
+                error: "File is too large. Maximum allowed size is 150 MB"
+            });
+        }
+
         const pubResult = await pool.query(
             `INSERT INTO publications (title, content, file_name, file_type, description, topic_id)
              VALUES ($1, $2, $3, $4, $5, $6)
-                 RETURNING id`,
+             RETURNING id`,
             [title, contentBuffer, file_name, file_type, description, topic_id]
         );
 
@@ -1323,7 +1350,9 @@ app.get("/api/publications/read/:id", async (req, res) => {
     const { id } = req.params;
     const userId = req.query.user_id;
 
-    if (!userId) return res.status(400).json({ error: "user_id is required" });
+    if (!userId) {
+        return res.status(400).json({ error: "user_id is required" });
+    }
 
     try {
         // 1) Check access
@@ -1355,10 +1384,10 @@ app.get("/api/publications/read/:id", async (req, res) => {
 
         const pub = pubRes.rows[0];
         const fileName = pub.file_name || "file";
-        const fileType = pub.file_type || "";
+        const fileType = (pub.file_type || "").toLowerCase();
         const contentBuffer = pub.content; // bytea -> Buffer
 
-        // 3) If PDF -> stream PDF
+        // 3) PDF -> stream inline
         if (isPdfLike(fileType, fileName)) {
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
@@ -1366,24 +1395,21 @@ app.get("/api/publications/read/:id", async (req, res) => {
             return res.send(contentBuffer);
         }
 
-        // 4) If DOC/DOCX -> convert to PDF then stream
+        // 4) DOC / DOCX -> convert to PDF then stream inline
         if (isDocxLike(fileType, fileName)) {
             const sofficePath =
                 process.env.LIBREOFFICE_PATH ||
                 "C:\\Program Files\\LibreOffice\\program\\soffice.exe";
 
-            // temp working directory
             const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vd-lo-"));
 
             try {
-                // stable random name to avoid weird characters in fileName
                 const base = crypto.randomBytes(12).toString("hex");
                 const inputExt = fileName.toLowerCase().endsWith(".doc") ? ".doc" : ".docx";
                 const inputPath = path.join(tmpDir, `${base}${inputExt}`);
                 const outDir = tmpDir;
 
                 await fs.writeFile(inputPath, contentBuffer);
-
                 await convertToPdfWithLibreOffice(inputPath, outDir, sofficePath);
 
                 const outputPdfPath = path.join(outDir, `${base}.pdf`);
@@ -1394,22 +1420,83 @@ app.get("/api/publications/read/:id", async (req, res) => {
                 res.setHeader("X-Content-Type-Options", "nosniff");
                 return res.send(pdfBuffer);
             } finally {
-                // cleanup temp dir
                 await fs.rm(tmpDir, { recursive: true, force: true });
             }
         }
 
-        // 5) Other types (future: video/image/etc.)
+        // 5) MP4 video -> stream with Range support
+        if (fileType.includes("video/mp4") || fileName.toLowerCase().endsWith(".mp4")) {
+            const range = req.headers.range;
+            const videoSize = contentBuffer.length;
+
+            if (!range) {
+                res.writeHead(200, {
+                    "Content-Length": videoSize,
+                    "Content-Type": "video/mp4",
+                    "Accept-Ranges": "bytes",
+                    "Content-Disposition": `inline; filename="${fileName}"`,
+                    "X-Content-Type-Options": "nosniff",
+                });
+                return res.end(contentBuffer);
+            }
+
+            const CHUNK_SIZE = 10 ** 6; // 1 MB
+            const start = Number(range.replace(/\D/g, ""));
+            const end = Math.min(start + CHUNK_SIZE - 1, videoSize - 1);
+
+            if (start >= videoSize || end >= videoSize) {
+                res.status(416).set({
+                    "Content-Range": `bytes */${videoSize}`,
+                });
+                return res.end();
+            }
+
+            const chunk = contentBuffer.slice(start, end + 1);
+
+            res.writeHead(206, {
+                "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+                "Accept-Ranges": "bytes",
+                "Content-Length": chunk.length,
+                "Content-Type": "video/mp4",
+                "Content-Disposition": `inline; filename="${fileName}"`,
+                "X-Content-Type-Options": "nosniff",
+            });
+
+            return res.end(chunk);
+        }
+
+        // 6) Other types
         return res.status(415).json({
             error: "Preview not supported for this file type yet",
             file_type: fileType,
         });
     } catch (err) {
-        console.error(err);
+        console.error("READ ERROR:", err);
         return res.status(500).json({ error: "Failed to open publication" });
     }
 });
 
+app.get("/api/publications/:id/meta", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT id, title, file_name, file_type
+             FROM publications
+             WHERE id = $1`,
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Publication not found" });
+        }
+
+        return res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Failed to fetch publication meta:", err);
+        return res.status(500).json({ error: "Failed to fetch publication meta" });
+    }
+});
 
 // --------------------------
 // Server start

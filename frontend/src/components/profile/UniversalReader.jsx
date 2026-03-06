@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import "./../../styles/UniversalReader.css";
+import "../../styles/UniversalReader.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc =
     `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -13,12 +13,14 @@ export default function UniversalReader({ apiBaseUrl = "http://localhost:3000" }
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
+    const [meta, setMeta] = useState(null);
+    const [metaLoading, setMetaLoading] = useState(true);
     const [numPages, setNumPages] = useState(null);
     const [error, setError] = useState("");
 
     const userId = useMemo(() => {
-        const v = searchParams.get("user_id");
-        return v ? String(v) : null;
+        const value = searchParams.get("user_id");
+        return value ? String(value) : null;
     }, [searchParams]);
 
     const fileUrl = useMemo(() => {
@@ -32,102 +34,142 @@ export default function UniversalReader({ apiBaseUrl = "http://localhost:3000" }
         return () => document.removeEventListener("contextmenu", handler);
     }, []);
 
+    useEffect(() => {
+        const fetchMeta = async () => {
+            try {
+                setMetaLoading(true);
+                setError("");
+
+                const res = await fetch(`${apiBaseUrl}/api/publications/${id}/meta`);
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Failed to fetch file metadata");
+                }
+
+                setMeta(data);
+            } catch (err) {
+                console.error(err);
+                setError(err.message || "Failed to fetch file metadata");
+            } finally {
+                setMetaLoading(false);
+            }
+        };
+
+        fetchMeta();
+    }, [apiBaseUrl, id]);
+
+    const handleBack = () => {
+        if (window.history.length <= 1) {
+            navigate("/dashboard");
+        } else {
+            navigate(-1);
+        }
+    };
+
+    const getFileKind = () => {
+        const type = (meta?.file_type || "").toLowerCase();
+        const name = (meta?.file_name || "").toLowerCase();
+
+        if (type.includes("pdf") || name.endsWith(".pdf")) return "pdf";
+
+        if (
+            type.includes("word") ||
+            type.includes("officedocument") ||
+            type.includes("docx") ||
+            type.includes("doc") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".doc")
+        ) {
+            return "word";
+        }
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) return "video";
+
+        return "unknown";
+    };
+
+    const fileKind = getFileKind();
+
     if (!userId) {
         return (
-            <div style={{ padding: 20 }}>
-                <button onClick={() => navigate(-1)}>Back</button>
-                <p style={{ color: "red" }}>Missing user_id in URL</p>
+            <div className="reader-container">
+                <div className="reader-header">
+                    <button className="reader-back-btn" onClick={handleBack}>
+                        ← Back
+                    </button>
+                    <div className="reader-title">Publication #{id}</div>
+                    <div className="reader-header-spacer" />
+                </div>
+
+                <p className="reader-error">Missing user_id in URL</p>
             </div>
         );
     }
 
     return (
-        <div
-            style={{
-                minHeight: "100vh",
-                backgroundColor: "#f4f6f9",
-                padding: "30px 20px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-            }}
-        >
-            {/* Header */}
-            <div
-                style={{
-                    width: "100%",
-                    maxWidth: 1000,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 20,
-                }}
-            >
-                <button
-                    onClick={() => navigate(-1)}
-                    style={{
-                        padding: "8px 14px",
-                        borderRadius: 8,
-                        border: "none",
-                        background: "#2c3e50",
-                        color: "white",
-                        cursor: "pointer",
-                    }}
-                >
+        <div className="reader-container">
+            <div className="reader-header">
+                <button className="reader-back-btn" onClick={handleBack}>
                     ← Back
                 </button>
 
-                <div style={{ fontWeight: 600, fontSize: 18 }}>
-                    Publication #{id}
+                <div className="reader-title">
+                    {meta?.title || `Publication #${id}`}
                 </div>
 
-                <div style={{ width: 80 }} /> {/* spacing */}
+                <div className="reader-header-spacer" />
             </div>
 
-            {error && (
-                <div style={{ color: "red", marginBottom: 15 }}>{error}</div>
+            {metaLoading && <div className="reader-loading">Loading document...</div>}
+            {error && <div className="reader-error">{error}</div>}
+
+            {!metaLoading && !error && fileUrl && (
+                <div className="reader-content">
+                    {(fileKind === "pdf" || fileKind === "word") && (
+                        <Document
+                            file={fileUrl}
+                            onLoadSuccess={({ numPages }) => {
+                                setNumPages(numPages);
+                                setError("");
+                            }}
+                            onLoadError={(e) => {
+                                setError(e?.message || "Failed to load document");
+                                setNumPages(null);
+                            }}
+                            loading={<div className="reader-loading">Loading document...</div>}
+                            error={<div className="reader-error">Failed to render document</div>}
+                        >
+                            {numPages &&
+                                Array.from({ length: numPages }, (_, i) => (
+                                    <div key={i} className="reader-page-wrapper">
+                                        <Page pageNumber={i + 1} scale={1.2} />
+                                    </div>
+                                ))}
+                        </Document>
+                    )}
+
+                    {fileKind === "video" && (
+                        <div className="reader-video-wrapper">
+                            <video
+                                className="reader-video"
+                                controls
+                                controlsList="nodownload"
+                                onContextMenu={(e) => e.preventDefault()}
+                            >
+                                <source src={fileUrl} type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    )}
+
+                    {fileKind === "unknown" && (
+                        <div className="reader-error">
+                            This file type is not supported for preview.
+                        </div>
+                    )}
+                </div>
             )}
-
-            {/* PDF Container */}
-            <div
-                style={{
-                    width: "100%",
-                    maxWidth: 900,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 30,
-                }}
-            >
-                {fileUrl && (
-                    <Document
-                        file={fileUrl}
-                        onLoadSuccess={({ numPages }) => {
-                            setNumPages(numPages);
-                            setError("");
-                        }}
-                        onLoadError={(e) =>
-                            setError(e?.message || "Failed to load PDF")
-                        }
-                        loading={<div>Loading document...</div>}
-                    >
-                        {numPages &&
-                            Array.from({ length: numPages }, (_, i) => (
-                                <div
-                                    key={i}
-                                    style={{
-                                        background: "white",
-                                        padding: 20,
-                                        borderRadius: 12,
-                                        boxShadow: "0 4px 18px rgba(0,0,0,0.08)",
-                                    }}
-                                >
-                                    <Page pageNumber={i + 1} scale={1.2} />
-                                </div>
-                            ))}
-                    </Document>
-                )}
-            </div>
         </div>
     );
 }
