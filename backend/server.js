@@ -898,18 +898,10 @@ app.get("/publications", async (req, res) => {
             SELECT
                 p.*,
                 t.name AS topic_name,
-                st.name AS subtopic_name,
-                c.name AS country_name,
-                ci.name AS city_name,
-                u.name AS university_name,
-                f.name AS faculty_name
+                st.name AS subtopic_name
             FROM publications p
                      LEFT JOIN central_topics t ON p.topic_id = t.id
                      LEFT JOIN subtopics st ON p.subtopic_id = st.id
-                     LEFT JOIN countries c ON p.country_id = c.id
-                     LEFT JOIN cities ci ON p.city_id = ci.id
-                     LEFT JOIN universities u ON p.university_id = u.id
-                     LEFT JOIN faculties f ON p.faculty_id = f.id
             WHERE 1=1
         `;
 
@@ -920,31 +912,76 @@ app.get("/publications", async (req, res) => {
             query += ` AND p.topic_id = $${idx++}`;
             params.push(topic_id);
         }
+
         if (subtopic_id) {
             query += ` AND p.subtopic_id = $${idx++}`;
             params.push(subtopic_id);
         }
-        if (country_id) {
-            query += ` AND p.country_id = $${idx++}`;
-            params.push(country_id);
-        }
-        if (city_id) {
-            query += ` AND p.city_id = $${idx++}`;
-            params.push(city_id);
-        }
-        if (university_id) {
-            query += ` AND p.university_id = $${idx++}`;
-            params.push(university_id);
-        }
+
         if (faculty_id) {
-            query += ` AND p.faculty_id = $${idx++}`;
+            query += `
+                AND EXISTS (
+                    SELECT 1
+                    FROM publication_authors pa
+                    JOIN users u ON u.id = pa.user_id
+                    WHERE pa.publication_id = p.id
+                      AND u.faculty_id = $${idx++}
+                )
+            `;
             params.push(faculty_id);
         }
+
+        if (university_id) {
+            query += `
+                AND EXISTS (
+                    SELECT 1
+                    FROM publication_authors pa
+                    JOIN users u ON u.id = pa.user_id
+                    JOIN faculties f ON f.id = u.faculty_id
+                    WHERE pa.publication_id = p.id
+                      AND f.university_id = $${idx++}
+                )
+            `;
+            params.push(university_id);
+        }
+
+        if (city_id) {
+            query += `
+                AND EXISTS (
+                    SELECT 1
+                    FROM publication_authors pa
+                    JOIN users u ON u.id = pa.user_id
+                    JOIN faculties f ON f.id = u.faculty_id
+                    JOIN universities un ON un.id = f.university_id
+                    WHERE pa.publication_id = p.id
+                      AND un.city_id = $${idx++}
+                )
+            `;
+            params.push(city_id);
+        }
+
+        if (country_id) {
+            query += `
+                AND EXISTS (
+                    SELECT 1
+                    FROM publication_authors pa
+                    JOIN users u ON u.id = pa.user_id
+                    JOIN faculties f ON f.id = u.faculty_id
+                    JOIN universities un ON un.id = f.university_id
+                    JOIN cities ci ON ci.id = un.city_id
+                    WHERE pa.publication_id = p.id
+                      AND ci.country_id = $${idx++}
+                )
+            `;
+            params.push(country_id);
+        }
+
+        query += ` ORDER BY p.id DESC`;
 
         const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error("PUBLICATIONS FILTER ERROR:", err);
         res.status(500).json({ error: "Failed to fetch publications" });
     }
 });
