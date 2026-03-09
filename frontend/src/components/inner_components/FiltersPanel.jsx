@@ -18,8 +18,28 @@ const SelectFilter = ({ label, name, value, onChange, options }) => (
 const FiltersPanel = ({ filters, setFilters, options }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFilters((prev) => ({ ...prev, [name]: value }));
+
+        setFilters((prev) => {
+            if (name === "topic") {
+                return {
+                    ...prev,
+                    topic: value,
+                    subtopic: "",
+                };
+            }
+
+            return {
+                ...prev,
+                [name]: value,
+            };
+        });
     };
+
+    const filteredSubtopics = filters.topic
+        ? (options.subtopics || []).filter(
+            (subtopic) => String(subtopic.topic_id) === String(filters.topic)
+        )
+        : [];
 
     return (
         <div className="filters-panel">
@@ -32,6 +52,16 @@ const FiltersPanel = ({ filters, setFilters, options }) => {
                 onChange={handleChange}
                 options={options.topics || []}
             />
+
+            {filters.topic && (
+                <SelectFilter
+                    label="Subtopics"
+                    name="subtopic"
+                    value={filters.subtopic || ""}
+                    onChange={handleChange}
+                    options={filteredSubtopics}
+                />
+            )}
 
             <SelectFilter
                 label="Country"

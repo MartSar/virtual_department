@@ -8,15 +8,17 @@ function AuthorDashboard({ user }) {
     const [publications, setPublications] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({
-        topic: '',
-        country: '',
-        city: '',
-        university: '',
-        faculty: ''
+        topic: "",
+        subtopic: "",
+        country: "",
+        city: "",
+        university: "",
+        faculty: "",
     });
 
     const [filterOptions, setFilterOptions] = useState({
         topics: [],
+        subtopics: [],
         countries: [],
         cities: [],
         universities: [],
@@ -74,14 +76,36 @@ function AuthorDashboard({ user }) {
         fetchPublications();
     }, []);
 
-    const filteredPublications = publications.filter(pub => {
+    const filteredPublications = publications.filter((pub) => {
         const matchesSearch = pub.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTopic = !filters.topic || pub.topic_id === Number(filters.topic);
-        const matchesCountry = !filters.country || pub.country_ids.includes(Number(filters.country));
-        const matchesCity = !filters.city || pub.city_ids.includes(Number(filters.city));
-        const matchesUniversity = !filters.university || pub.university_ids.includes(Number(filters.university));
-        const matchesFaculty = !filters.faculty || pub.faculty_ids.includes(Number(filters.faculty));
-        return matchesSearch && matchesTopic && matchesCountry && matchesCity && matchesUniversity && matchesFaculty;
+
+        const matchesTopic =
+            !filters.topic || pub.topic_id === Number(filters.topic);
+
+        const matchesSubtopic =
+            !filters.subtopic || pub.subtopic_id === Number(filters.subtopic);
+
+        const matchesCountry =
+            !filters.country || pub.country_ids.includes(Number(filters.country));
+
+        const matchesCity =
+            !filters.city || pub.city_ids.includes(Number(filters.city));
+
+        const matchesUniversity =
+            !filters.university || pub.university_ids.includes(Number(filters.university));
+
+        const matchesFaculty =
+            !filters.faculty || pub.faculty_ids.includes(Number(filters.faculty));
+
+        return (
+            matchesSearch &&
+            matchesTopic &&
+            matchesSubtopic &&
+            matchesCountry &&
+            matchesCity &&
+            matchesUniversity &&
+            matchesFaculty
+        );
     });
 
     const openPublication = (pub) => {
@@ -117,9 +141,9 @@ function AuthorDashboard({ user }) {
                                 onClick={() => openPublication(pub)}
                             >
                                 <strong>{pub.title}</strong>
-                                {pub.topic_name && (
-                                    <span className="publication-topic"> — {pub.topic_name}</span>
-                                )}
+                                {/*{pub.topic_name && (*/}
+                                {/*    <span className="publication-topic"> — {pub.topic_name}</span>*/}
+                                {/*)}*/}
                             </li>
                         ))}
                     </ul>
