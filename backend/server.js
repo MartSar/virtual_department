@@ -88,6 +88,7 @@ const getAllFromTable = (tableName) => async (req, res) => {
 // Table GET routes
 // --------------------------
 app.get('/central_topics', getAllFromTable('central_topics'));
+app.get('/subtopics', getAllFromTable('subtopics'));
 app.get('/countries', getAllFromTable('countries'));
 app.get('/cities', getAllFromTable('cities'));
 app.get('/universities', getAllFromTable('universities'));
@@ -107,7 +108,6 @@ app.get('/postgraduates', async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch postgraduates' });
     }
 });
-app.get('/publications', getAllFromTable('publications'));
 app.get('/publication_authors', getAllFromTable('publication_authors'));
 app.get('/students', getAllFromTable('students'));
 app.get('/users', getAllFromTable('users'));
@@ -334,6 +334,7 @@ app.get('/users/:userId/borrowings', async (req, res) => {
 app.get('/filters', async (req, res) => {
     try {
         const topicsRes = await pool.query('SELECT id, name FROM central_topics ORDER BY name');
+        const subtopicsRes = await pool.query('SELECT id, name, topic_id FROM subtopics ORDER BY name');
         const countriesRes = await pool.query('SELECT id, name FROM countries ORDER BY name');
         const citiesRes = await pool.query('SELECT id, name FROM cities ORDER BY name');
         const universitiesRes = await pool.query('SELECT id, name FROM universities ORDER BY name');
@@ -341,6 +342,7 @@ app.get('/filters', async (req, res) => {
 
         res.json({
             topics: topicsRes.rows,
+            subtopics: subtopicsRes.rows,
             countries: countriesRes.rows,
             cities: citiesRes.rows,
             universities: universitiesRes.rows,
@@ -377,25 +379,6 @@ app.get('/users/:userId', async (req, res) => {
     }
 });
 
-// --------------------------
-// Get Author for Dashboard
-// --------------------------
-app.get('/authors/user/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const result = await pool.query(
-            `SELECT * FROM authors WHERE user_id = $1`,
-            [userId]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Author not found' });
-        }
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
 
 // --------------------------
 // Get User
@@ -779,8 +762,8 @@ app.get("/central_topics/:id", async (req, res) => {
 // --------------------------
 // Get Borrowings of current student
 // --------------------------
-app.get(`borrowings/:id`, async (req, res) => {
-    const { studentId } = req.params;
+app.get(`/borrowings/:id`, async (req, res) => {
+    const { id } = req.params;
     try {
         const result = await pool.query(
             `SELECT b.id, b.start_date, b.end_date, 
@@ -790,7 +773,7 @@ app.get(`borrowings/:id`, async (req, res) => {
              JOIN publications p ON b.publication_id = p.id
              WHERE b.borrower_id = $1
              ORDER BY b.start_date DESC`,
-            [studentId]
+            [id]
         );
 
         res.json(result.rows);
@@ -804,7 +787,7 @@ app.get(`borrowings/:id`, async (req, res) => {
 // Create Publication (user_id -> publication_authors.user_id)
 // --------------------------
 app.post("/api/publications/create", async (req, res) => {
-    const { title, file_type, content, description, user_id, file_name, topic_id } = req.body;
+    const { title, file_type, content, description, user_id, file_name, topic_id, subtopic_id } = req.body;
 
     if (!title || !file_type || !content || !topic_id || !user_id) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -842,10 +825,10 @@ app.post("/api/publications/create", async (req, res) => {
         }
 
         const pubResult = await pool.query(
-            `INSERT INTO publications (title, content, file_name, file_type, description, topic_id)
-             VALUES ($1, $2, $3, $4, $5, $6)
-             RETURNING id`,
-            [title, contentBuffer, file_name, file_type, description, topic_id]
+            `INSERT INTO publications (title, content, file_name, file_type, description, topic_id, subtopic_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 RETURNING id`,
+            [title, contentBuffer, file_name, file_type, description, topic_id, subtopic_id || null]
         );
 
         const publication_id = pubResult.rows[0].id;
@@ -908,23 +891,25 @@ app.delete('/api/publications/:id', async (req, res) => {
 
 
 app.get("/publications", async (req, res) => {
-    const { topic_id, country_id, city_id, university_id, faculty_id } = req.query;
+    const { topic_id, subtopic_id, country_id, city_id, university_id, faculty_id } = req.query;
 
     try {
         let query = `
-            SELECT 
-                p.*, 
+            SELECT
+                p.*,
                 t.name AS topic_name,
+                st.name AS subtopic_name,
                 c.name AS country_name,
                 ci.name AS city_name,
                 u.name AS university_name,
                 f.name AS faculty_name
             FROM publications p
-            LEFT JOIN central_topics t ON p.topic_id = t.id
-            LEFT JOIN countries c ON p.country_id = c.id
-            LEFT JOIN cities ci ON p.city_id = ci.id
-            LEFT JOIN universities u ON p.university_id = u.id
-            LEFT JOIN faculties f ON p.faculty_id = f.id
+                     LEFT JOIN central_topics t ON p.topic_id = t.id
+                     LEFT JOIN subtopics st ON p.subtopic_id = st.id
+                     LEFT JOIN countries c ON p.country_id = c.id
+                     LEFT JOIN cities ci ON p.city_id = ci.id
+                     LEFT JOIN universities u ON p.university_id = u.id
+                     LEFT JOIN faculties f ON p.faculty_id = f.id
             WHERE 1=1
         `;
 
@@ -934,6 +919,10 @@ app.get("/publications", async (req, res) => {
         if (topic_id) {
             query += ` AND p.topic_id = $${idx++}`;
             params.push(topic_id);
+        }
+        if (subtopic_id) {
+            query += ` AND p.subtopic_id = $${idx++}`;
+            params.push(subtopic_id);
         }
         if (country_id) {
             query += ` AND p.country_id = $${idx++}`;
@@ -974,10 +963,13 @@ app.get("/authors/:authorId/publications", async (req, res) => {
                  p.file_type,
                  p.description,
                  p.topic_id,
-                 t.name AS topic_name
+                 p.subtopic_id,
+                 t.name AS topic_name,
+                 st.name AS subtopic_name
              FROM publication_authors pa
                       JOIN publications p ON pa.publication_id = p.id
                       LEFT JOIN central_topics t ON p.topic_id = t.id
+                      LEFT JOIN subtopics st ON p.subtopic_id = st.id
              WHERE pa.author_id = $1
              ORDER BY p.id DESC`,
             [authorId]
@@ -1011,10 +1003,13 @@ app.get("/authors/:authorId/publications/primary", async (req, res) => {
                  p.file_type,
                  p.description,
                  p.topic_id,
-                 t.name AS topic_name
+                 p.subtopic_id,
+                 t.name AS topic_name,
+                 st.name AS subtopic_name
              FROM publication_authors pa
                       JOIN publications p ON pa.publication_id = p.id
                       LEFT JOIN central_topics t ON p.topic_id = t.id
+                      LEFT JOIN subtopics st ON p.subtopic_id = st.id
              WHERE pa.author_id = $1 AND pa.is_primary_author = true
              ORDER BY p.id DESC`,
             [authorId]
@@ -1048,10 +1043,13 @@ app.get("/authors/:authorId/publications/co-author", async (req, res) => {
                  p.file_type,
                  p.description,
                  p.topic_id,
-                 t.name AS topic_name
+                 p.subtopic_id,
+                 t.name AS topic_name,
+                 st.name AS subtopic_name
              FROM publication_authors pa
                       JOIN publications p ON pa.publication_id = p.id
                       LEFT JOIN central_topics t ON p.topic_id = t.id
+                      LEFT JOIN subtopics st ON p.subtopic_id = st.id
              WHERE pa.author_id = $1 AND pa.is_primary_author = false
              ORDER BY p.id DESC`,
             [authorId]
@@ -1203,12 +1201,15 @@ app.get('/users/:userId/publications/primary', async (req, res) => {
         const result = await pool.query(
             `SELECT
                  p.*,
-                 ct.name AS topic_name
+                 ct.name AS topic_name,
+                 st.name AS subtopic_name
              FROM publications p
                       JOIN publication_authors pa
                            ON pa.publication_id = p.id
                       LEFT JOIN central_topics ct
                                 ON ct.id = p.topic_id
+                      LEFT JOIN subtopics st
+                                ON st.id = p.subtopic_id
              WHERE pa.user_id = $1
                AND pa.is_primary_author = true
              ORDER BY p.id DESC`,
@@ -1268,12 +1269,15 @@ app.get('/users/:userId/publications/co-author', async (req, res) => {
         const result = await pool.query(
             `SELECT
                  p.*,
-                 ct.name AS topic_name
+                 ct.name AS topic_name,
+                 st.name AS subtopic_name
              FROM publications p
                       JOIN publication_authors pa
                            ON pa.publication_id = p.id
                       LEFT JOIN central_topics ct
                                 ON ct.id = p.topic_id
+                      LEFT JOIN subtopics st
+                                ON st.id = p.subtopic_id
              WHERE pa.user_id = $1
                AND pa.is_primary_author = false
              ORDER BY p.id DESC`,
@@ -1497,6 +1501,28 @@ app.get("/api/publications/:id/meta", async (req, res) => {
         return res.status(500).json({ error: "Failed to fetch publication meta" });
     }
 });
+
+app.get('/central_topics/:id/subtopics', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `
+            SELECT id, name, topic_id
+            FROM subtopics
+            WHERE topic_id = $1
+            ORDER BY name
+            `,
+            [id]
+        );
+
+        return res.json(result.rows);
+    } catch (err) {
+        console.error('Failed to fetch subtopics:', err);
+        return res.status(500).json({ error: 'Failed to fetch subtopics' });
+    }
+});
+
 
 // --------------------------
 // Server start
