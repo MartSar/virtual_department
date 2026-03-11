@@ -77,7 +77,6 @@ const AuthoredPublications = ({ userId }) => {
                         <th>Title</th>
                         <th>Topic</th>
                         <th>File Type</th>
-                        <th>Description</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -87,7 +86,6 @@ const AuthoredPublications = ({ userId }) => {
                             <td>{pub.title}</td>
                             <td>{pub.topic_name || "-"}</td>
                             <td>{pub.file_type || "-"}</td>
-                            <td>{pub.description || "-"}</td>
                             <td>
                                 <AddCoAuthor
                                     publicationId={pub.id}

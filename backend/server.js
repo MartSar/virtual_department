@@ -737,7 +737,7 @@ app.post('/publications/:id/authors', async (req, res) => {
 // });
 
 
-// GET /central_topics/:id — получить имя темы по id
+// GET /central_topics/:id — get topic name by id
 app.get("/central_topics/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -755,6 +755,28 @@ app.get("/central_topics/:id", async (req, res) => {
     } catch (err) {
         console.error("Failed to fetch topic:", err);
         res.status(500).json({ error: "Failed to fetch topic" });
+    }
+});
+
+
+// GET /subtopics/:id — get subtopics name by id
+app.get("/subtopics/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            "SELECT id, name FROM subtopics WHERE id = $1",
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Subtopic not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Failed to fetch subtopic:", err);
+        res.status(500).json({ error: "Failed to fetch subtopic" });
     }
 });
 

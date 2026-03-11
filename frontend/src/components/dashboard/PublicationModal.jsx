@@ -18,6 +18,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
     const [cities, setCities] = useState([]);
     const [countries, setCountries] = useState([]);
     const [topicName, setTopicName] = useState("—");
+    const [subtopicName, setSubtopicName] = useState("");
 
     const userId = user?.id ?? user?.user_id;
     const canBorrow = user?.role === "student";
@@ -46,6 +47,32 @@ const PublicationModal = ({ publication, onClose, user }) => {
 
         fetchTopic();
     }, [publication?.topic_id]);
+
+    // -----------------------------
+    // Get Subtopic
+    // -----------------------------
+        useEffect(() => {
+            if (!publication?.subtopic_id) {
+                setSubtopicName("—");
+                return;
+            }
+
+            const fetchSubtopic = async () => {
+                try {
+                    const res = await fetch(
+                        `http://localhost:3000/subtopics/${publication.subtopic_id}`
+                    );
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    setSubtopicName(data?.name || "—");
+                } catch {
+                    setSubtopicName("—");
+                }
+            };
+
+            fetchSubtopic();
+        }, [publication?.subtopic_id]);
+
 
     // -----------------------------
     // Get Authors + Locations
@@ -234,6 +261,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
 
                 <div className="modal-section">
                     <p><strong>Topic:</strong> {topicName}</p>
+                    <p><strong>Subtopic:</strong> {subtopicName}</p>
                     <p><strong>Faculty:</strong> {faculties.length ? uniqueNames(faculties) : "—"}</p>
                     <p><strong>University:</strong> {universities.length ? uniqueNames(universities) : "—"}</p>
                     <p><strong>City:</strong> {cities.length ? uniqueNames(cities) : "—"}</p>

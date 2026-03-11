@@ -10,7 +10,9 @@ function AddPublication({ user, onClose }) {
     const [authorName] = useState(`${user.name} ${user.lastname}`);
 
     const [topicId, setTopicId] = useState("");
+    const [subtopicId, setSubtopicId] = useState("");
     const [topics, setTopics] = useState([]);
+    const [subtopics, setSubtopics] = useState([]);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -38,6 +40,20 @@ function AddPublication({ user, onClose }) {
         };
 
         fetchTopics();
+    }, []);
+
+    useEffect(() => {
+        const fetchSubtopics = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/subtopics");
+                const data = await res.json();
+                setSubtopics(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Failed to fetch subtopics:", err);
+            }
+        };
+
+        fetchSubtopics();
     }, []);
 
     useEffect(() => {
@@ -99,6 +115,18 @@ function AddPublication({ user, onClose }) {
         handleSelectedFile(droppedFile);
     };
 
+    const handleTopicChange = (e) => {
+        const newTopicId = e.target.value;
+        setTopicId(newTopicId);
+        setSubtopicId("");
+    };
+
+    const filteredSubtopics = topicId
+        ? subtopics.filter(
+            (subtopic) => String(subtopic.topic_id) === String(topicId)
+        )
+        : [];
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -138,6 +166,7 @@ function AddPublication({ user, onClose }) {
                             file_name: fileName || file.name,
                             user_id: userId,
                             topic_id: topicId,
+                            subtopic_id: subtopicId || null,
                         }),
                     });
 
@@ -191,7 +220,7 @@ function AddPublication({ user, onClose }) {
 
                     <label>
                         Central Topic
-                        <select value={topicId} onChange={(e) => setTopicId(e.target.value)}>
+                        <select value={topicId} onChange={handleTopicChange}>
                             <option value="">Select topic</option>
                             {topics.map((t) => (
                                 <option key={t.id} value={t.id}>
@@ -200,6 +229,23 @@ function AddPublication({ user, onClose }) {
                             ))}
                         </select>
                     </label>
+
+                    {topicId && (
+                        <label>
+                            Subtopic
+                            <select
+                                value={subtopicId}
+                                onChange={(e) => setSubtopicId(e.target.value)}
+                            >
+                                <option value="">Select subtopic</option>
+                                {filteredSubtopics.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    )}
 
                     <label>
                         File Type
