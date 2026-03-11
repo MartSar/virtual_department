@@ -27,6 +27,8 @@ function AuthorDashboard({ user }) {
 
     const [selectedPublication, setSelectedPublication] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loadingPublications, setLoadingPublications] = useState(true);
+
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -43,6 +45,8 @@ function AuthorDashboard({ user }) {
 
     const fetchPublications = async () => {
         try {
+            setLoadingPublications(true);
+
             const res = await fetch('http://localhost:3000/publications');
             const pubs = await res.json();
 
@@ -69,6 +73,8 @@ function AuthorDashboard({ user }) {
             setPublications(pubsWithLocations);
         } catch (err) {
             console.error(err);
+        } finally {
+            setLoadingPublications(false);
         }
     };
 
@@ -130,7 +136,11 @@ function AuthorDashboard({ user }) {
                 <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
                 <h2>Publications</h2>
-                {filteredPublications.length === 0 ? (
+                {loadingPublications ? (
+                    <div className="loader-wrapper">
+                        <div className="spinner"></div>
+                    </div>
+                ) : filteredPublications.length === 0 ? (
                     <p>No publications found.</p>
                 ) : (
                     <ul className="publications-list">
@@ -141,9 +151,6 @@ function AuthorDashboard({ user }) {
                                 onClick={() => openPublication(pub)}
                             >
                                 <strong>{pub.title}</strong>
-                                {/*{pub.topic_name && (*/}
-                                {/*    <span className="publication-topic"> — {pub.topic_name}</span>*/}
-                                {/*)}*/}
                             </li>
                         ))}
                     </ul>

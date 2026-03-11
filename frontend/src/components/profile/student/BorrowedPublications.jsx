@@ -86,14 +86,23 @@ const BorrowedPublications = ({ userId }) => {
         return "Read";
     };
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+    if (error) {
+        return (
+            <section className="borrowed-publications">
+                <h2>Borrowed Publications</h2>
+                <p style={{ color: "red" }}>Error: {error}</p>
+            </section>
+        );
+    }
 
     return (
         <section className="borrowed-publications">
             <h2>Borrowed Publications</h2>
-
-            {borrowings.length === 0 ? (
+            {loading ? (
+                <div className="section-loader">
+                    <div className="section-spinner"></div>
+                </div>
+            ) : borrowings.length === 0 ? (
                 <p>You have no borrowed publications</p>
             ) : (
                 <table>
