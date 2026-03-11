@@ -61,6 +61,32 @@ const AuthoredPublications = ({ userId }) => {
         }
     };
 
+    const getPublicationTypeLabel = (fileType, fileName = "") => {
+        const type = (fileType || "").toLowerCase();
+        const name = (fileName || "").toLowerCase();
+
+        if (type.includes("pdf") || name.endsWith(".pdf")) {
+            return "PDF";
+        }
+
+        if (
+            type.includes("word") ||
+            type.includes("officedocument") ||
+            type.includes("docx") ||
+            type.includes("doc") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".doc")
+        ) {
+            return "Word";
+        }
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "MP4";
+        }
+
+        return "Unknown";
+    };
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
@@ -76,7 +102,7 @@ const AuthoredPublications = ({ userId }) => {
                     <tr>
                         <th>Title</th>
                         <th>Topic</th>
-                        <th>File Type</th>
+                        <th>Type</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -85,7 +111,7 @@ const AuthoredPublications = ({ userId }) => {
                         <tr key={pub.id}>
                             <td>{pub.title}</td>
                             <td>{pub.topic_name || "-"}</td>
-                            <td>{pub.file_type || "-"}</td>
+                            <td>{getPublicationTypeLabel(pub.file_type, pub.file_name)}</td>
                             <td>
                                 <AddCoAuthor
                                     publicationId={pub.id}

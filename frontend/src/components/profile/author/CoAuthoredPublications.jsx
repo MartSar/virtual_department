@@ -35,6 +35,32 @@ const CoAuthoredPublications = ({ userId }) => {
         fetchPublications();
     }, [userId]);
 
+    const getPublicationTypeLabel = (fileType, fileName = "") => {
+        const type = (fileType || "").toLowerCase();
+        const name = (fileName || "").toLowerCase();
+
+        if (type.includes("pdf") || name.endsWith(".pdf")) {
+            return "PDF";
+        }
+
+        if (
+            type.includes("word") ||
+            type.includes("officedocument") ||
+            type.includes("docx") ||
+            type.includes("doc") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".doc")
+        ) {
+            return "Word";
+        }
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "MP4";
+        }
+
+        return "Unknown";
+    };
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
@@ -49,7 +75,7 @@ const CoAuthoredPublications = ({ userId }) => {
                     <thead>
                     <tr>
                         <th>Title</th>
-                        <th>File Type</th>
+                        <th>Type</th>
                         <th>Description</th>
                     </tr>
                     </thead>
@@ -57,7 +83,7 @@ const CoAuthoredPublications = ({ userId }) => {
                     {publications.map((pub) => (
                         <tr key={pub.id}>
                             <td>{pub.title}</td>
-                            <td>{pub.file_type || "-"}</td>
+                            <td>{getPublicationTypeLabel(pub.file_type, pub.file_name)}</td>
                             <td>{pub.description || "-"}</td>
                         </tr>
                     ))}

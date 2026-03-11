@@ -99,7 +99,7 @@ const BorrowedPublications = ({ userId }) => {
                 <table>
                     <thead>
                     <tr>
-                        <th>Publication</th>
+                        <th>Title</th>
                         <th>Type</th>
                         <th>Access From</th>
                         <th>Access Until</th>
