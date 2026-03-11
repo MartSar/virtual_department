@@ -34,11 +34,12 @@
     font-size: 20px;
     cursor: pointer;
     color: #555;
-    transition: color 0.2s;
+    transition: 0.5s ease;
 }
 
 .modal-close-btn:hover {
-    color: #2196F3;
+    color: #fd2828;
+    font-size: 23px;
 }
 
 /* Sections */
