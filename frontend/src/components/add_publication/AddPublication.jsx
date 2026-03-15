@@ -28,6 +28,32 @@ function AddPublication({ user, onClose }) {
         "video/mp4",
     ];
 
+    const getPublicationTypeLabel = (fileType, fileName = "") => {
+        const type = (fileType || "").toLowerCase();
+        const name = (fileName || "").toLowerCase();
+
+        if (type.includes("pdf") || name.endsWith(".pdf")) {
+            return "PDF";
+        }
+
+        if (
+            type.includes("word") ||
+            type.includes("officedocument") ||
+            type.includes("docx") ||
+            type.includes("doc") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".doc")
+        ) {
+            return "Word";
+        }
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "MP4";
+        }
+
+        return "Unknown";
+    };
+
     useEffect(() => {
         const fetchTopics = async () => {
             try {
@@ -94,7 +120,7 @@ function AddPublication({ user, onClose }) {
 
         setError(null);
         setFile(selectedFile);
-        setFileType(selectedFile.type);
+        setFileType(getPublicationTypeLabel(selectedFile.type));
     };
 
     const handleFileChange = (e) => {
