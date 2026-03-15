@@ -252,7 +252,7 @@ function AddPublication({ user, onClose }) {
                         <input
                             type="text"
                             value={fileType}
-                            placeholder="application/pdf, application/vnd..., video/mp4"
+                            placeholder="pdf, word, video/mp4"
                             readOnly
                         />
                     </label>
