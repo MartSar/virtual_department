@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from '../../config'
 import "../../styles/PublicationModal.css";
 
 const borrowOptions = [7, 30, 90, 365];
@@ -35,7 +36,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
         const fetchTopic = async () => {
             try {
                 const res = await fetch(
-                    `http://localhost:3000/central_topics/${publication.topic_id}`
+                    `${API_URL}/central_topics/${publication.topic_id}`
                 );
                 if (!res.ok) throw new Error();
                 const data = await res.json();
@@ -60,7 +61,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
             const fetchSubtopic = async () => {
                 try {
                     const res = await fetch(
-                        `http://localhost:3000/subtopics/${publication.subtopic_id}`
+                        `${API_URL}/subtopics/${publication.subtopic_id}`
                     );
                     if (!res.ok) throw new Error();
                     const data = await res.json();
@@ -96,7 +97,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
             setLoadingAuthors(true);
             try {
                 const res = await fetch(
-                    `http://localhost:3000/publications/${publication.id}/authors-location`
+                    `${API_URL}/publications/${publication.id}/authors-location`
                 );
                 if (!res.ok) throw new Error();
                 const data = await res.json();
@@ -193,7 +194,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
 
         try {
             const res = await fetch(
-                "http://localhost:3000/api/borrowings/create",
+                `${API_URL}/api/borrowings/create`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

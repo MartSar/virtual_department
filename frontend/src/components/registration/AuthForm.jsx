@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormFields from "../inner_components/FormFields";
 import { handleSignIn } from "../../handlers";
+import {API_URL} from "../../config";
 
 function AuthForm() {
     const [role, setRole] = useState('student');
@@ -23,7 +24,7 @@ function AuthForm() {
 
     // load universities
     useEffect(() => {
-        fetch('http://localhost:3000/universities')
+        fetch(`${API_URL}/universities`)
             .then(res => res.json())
             .then(data => setUniversities(data))
             .catch(err => console.error(err));
@@ -31,7 +32,7 @@ function AuthForm() {
 
     // load faculties
     useEffect(() => {
-        fetch('http://localhost:3000/faculties')
+        fetch(`${API_URL}/faculties`)
             .then(res => res.json())
             .then(data => setFaculties(data))
             .catch(err => console.error(err));

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../../../config";
 import "../../../styles/UserPublications.css";
 
 const CoAuthoredPublications = ({ userId }) => {
@@ -13,7 +14,7 @@ const CoAuthoredPublications = ({ userId }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:3000/users/${userId}/publications/co-author`
+                `${API_URL}/users/${userId}/publications/co-author`
             );
             const data = await res.json().catch(() => ({}));
 

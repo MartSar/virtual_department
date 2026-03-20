@@ -14,7 +14,7 @@ function App() {
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
-                <Route path="/reader/:id" element={<UniversalReader apiBaseUrl="http://localhost:3000" />} />
+                <Route path="/reader/:id" element={<UniversalReader />}  />
             </Routes>
         </Router>
     );

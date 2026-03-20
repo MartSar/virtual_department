@@ -1,3 +1,5 @@
+import {API_URL} from "./config";
+
 export const handleSignIn = async ({
                                        role,
                                        name,
@@ -16,7 +18,7 @@ export const handleSignIn = async ({
             password
         };
 
-        const res = await fetch('http://localhost:3000/login', {
+        const res = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -55,7 +57,7 @@ export const handleRegister = async ({
                                          navigate
                                      }) => {
     try {
-        const res = await fetch('http://localhost:3000/register', {
+        const res = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

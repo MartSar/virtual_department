@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AddCoAuthor from "./AddCoAuthor";
+import { API_URL } from "../../../config";
 import "../../../styles/UserPublications.css";
 
 const AuthoredPublications = ({ userId }) => {
@@ -18,7 +19,7 @@ const AuthoredPublications = ({ userId }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:3000/users/${userId}/publications/primary`
+                `${API_URL}/users/${userId}/publications/primary`
             );
             const data = await res.json().catch(() => ({}));
 
@@ -49,7 +50,7 @@ const AuthoredPublications = ({ userId }) => {
         if (!window.confirm("Are you sure you want to delete this publication?")) return;
 
         try {
-            const res = await fetch(`http://localhost:3000/api/publications/${id}`, {
+            const res = await fetch(`${API_URL}/api/publications/${id}`, {
                 method: "DELETE",
             });
             const data = await res.json().catch(() => ({}));

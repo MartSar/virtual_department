@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {API_URL} from "../../config";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -8,7 +9,7 @@ import "../../styles/UniversalReader.css";
 pdfjs.GlobalWorkerOptions.workerSrc =
     `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export default function UniversalReader({ apiBaseUrl = "http://localhost:3000" }) {
+export default function UniversalReader({ apiBaseUrl = API_URL }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();

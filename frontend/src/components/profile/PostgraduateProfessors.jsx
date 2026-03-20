@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from "../../config";
 import "../../styles/UserPublications.css";
 
 const PostgraduateProfessors = ({ userId }) => {
@@ -9,7 +10,7 @@ const PostgraduateProfessors = ({ userId }) => {
             if (!userId) return;
 
             try {
-                const res = await fetch(`http://localhost:3000/postgraduates/${userId}/professors`);
+                const res = await fetch(`${API_URL}/postgraduates/${userId}/professors`);
                 if (res.status === 404) {
                     setProfessors([]);
                     return;

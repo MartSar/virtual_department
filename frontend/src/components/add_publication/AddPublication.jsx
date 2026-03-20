@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from '../../config'
 import "../../styles/AddPublication.css";
 
 function AddPublication({ user, onClose }) {
@@ -57,7 +58,7 @@ function AddPublication({ user, onClose }) {
     useEffect(() => {
         const fetchTopics = async () => {
             try {
-                const res = await fetch("http://localhost:3000/central_topics");
+                const res = await fetch(`${API_URL}/central_topics`);
                 const data = await res.json();
                 setTopics(Array.isArray(data) ? data : []);
             } catch (err) {
@@ -71,7 +72,7 @@ function AddPublication({ user, onClose }) {
     useEffect(() => {
         const fetchSubtopics = async () => {
             try {
-                const res = await fetch("http://localhost:3000/subtopics");
+                const res = await fetch(`${API_URL}/subtopics`);
                 const data = await res.json();
                 setSubtopics(Array.isArray(data) ? data : []);
             } catch (err) {
@@ -181,7 +182,7 @@ function AddPublication({ user, onClose }) {
 
                     const contentBase64 = result.split(",")[1];
 
-                    const res = await fetch("http://localhost:3000/api/publications/create", {
+                    const res = await fetch(`${API_URL}/api/publications/create`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({

@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom";
 import React, { useEffect, useState } from "react";
-import "../../../styles/Modal.css"; // стили отдельно
+import "../../../styles/Modal.css";
+import { API_URL } from "../../../config";
 
 const Modal = ({ children, onClose }) => {
     return ReactDOM.createPortal(
@@ -25,7 +26,7 @@ const AddCoAuthor = ({ publicationId, onUpdate }) => {
     useEffect(() => {
         const fetchAuthors = async () => {
             try {
-                const res = await fetch("http://localhost:3000/authors");
+                const res = await fetch(`${API_URL}/authors`);
                 if (!res.ok) throw new Error("Failed to fetch authors");
                 const data = await res.json();
                 setAllAuthors(data);
@@ -36,14 +37,13 @@ const AddCoAuthor = ({ publicationId, onUpdate }) => {
         fetchAuthors();
     }, []);
 
-    // Получаем текущих авторов публикации при открытии модалки
     useEffect(() => {
         if (!showModal) return;
 
         const fetchCurrentAuthors = async () => {
             try {
                 const res = await fetch(
-                    `http://localhost:3000/publications/${publicationId}/authors`
+                    `${API_URL}/publications/${publicationId}/authors`
                 );
                 if (!res.ok) throw new Error("Failed to fetch current authors");
                 const data = await res.json();
@@ -63,7 +63,7 @@ const AddCoAuthor = ({ publicationId, onUpdate }) => {
 
         try {
             const res = await fetch(
-                `http://localhost:3000/publications/${publicationId}/authors`,
+                `${API_URL}/publications/${publicationId}/authors`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

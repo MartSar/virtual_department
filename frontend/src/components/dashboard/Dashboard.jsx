@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "../../components/navbar/Navbar";
 import AuthorDashboard from './AuthorDashboard';
+import { API_URL } from '../../config'
 
 function Dashboard() {
     const location = useLocation();
@@ -11,10 +12,8 @@ function Dashboard() {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        // 1) пробуем взять user_id из location.state
         const stateUserId = location.state?.user_id ?? location.state?.id;
 
-        // 2) если нет — берём из localStorage
         let saved = null;
         try {
             saved = JSON.parse(localStorage.getItem("loggedUser"));
@@ -29,7 +28,7 @@ function Dashboard() {
             return;
         }
 
-        fetch(`http://localhost:3000/users/${userId}`)
+        fetch(`${API_URL}/users/${userId}`)
             .then(res => {
                 if (!res.ok) throw new Error("Failed to load user");
                 return res.json();

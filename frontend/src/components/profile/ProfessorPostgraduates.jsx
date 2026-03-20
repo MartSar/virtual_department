@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import {API_URL} from "../../config";
 import "../../styles/UserPublications.css";
 
 const ProfessorPostgraduates = ({ userId }) => {
@@ -13,7 +14,7 @@ const ProfessorPostgraduates = ({ userId }) => {
     useEffect(() => {
         const fetchAllPostgraduates = async () => {
             try {
-                const res = await fetch(`http://localhost:3000/postgraduates`);
+                const res = await fetch(`${API_URL}/postgraduates`);
                 const data = await res.json();
                 setAllPostgraduates(Array.isArray(data) ? data : []);
             } catch (err) {
@@ -29,7 +30,7 @@ const ProfessorPostgraduates = ({ userId }) => {
     const fetchAssignedPostgraduates = async () => {
         if (!userId) return;
         try {
-            const res = await fetch(`http://localhost:3000/professors/${userId}/postgraduates`);
+            const res = await fetch(`${API_URL}/professors/${userId}/postgraduates`);
             const data = await res.json();
             setPostgraduates(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -48,7 +49,7 @@ const ProfessorPostgraduates = ({ userId }) => {
         if (!selectedPgId || !userId) return;
 
         try {
-            const res = await fetch(`http://localhost:3000/professors/${userId}/postgraduates`, {
+            const res = await fetch(`${API_URL}/professors/${userId}/postgraduates`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ postgraduate_id: Number(selectedPgId) }),

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import FiltersPanel from "../inner_components/FiltersPanel";
 import SearchBar from "../inner_components/SearchBar";
 import PublicationModal from "./PublicationModal";
+import { API_URL } from '../../config'
 
 function AuthorDashboard({ user }) {
     const [publications, setPublications] = useState([]);
@@ -33,7 +34,7 @@ function AuthorDashboard({ user }) {
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const res = await fetch('http://localhost:3000/filters');
+                const res = await fetch(`${API_URL}/filters`);
                 const data = await res.json();
                 setFilterOptions(data);
             } catch (err) {
@@ -47,12 +48,12 @@ function AuthorDashboard({ user }) {
         try {
             setLoadingPublications(true);
 
-            const res = await fetch('http://localhost:3000/publications');
+            const res = await fetch(`${API_URL}/publications`);
             const pubs = await res.json();
 
             const pubsWithLocations = await Promise.all(
                 pubs.map(async pub => {
-                    const res2 = await fetch(`http://localhost:3000/publications/${pub.id}/authors-location`);
+                    const res2 = await fetch(`${API_URL}/publications/${pub.id}/authors-location`);
                     const data = await res2.json();
 
                     const facultyIds = Array.from(new Set(data.authors.map(a => a.faculty?.faculty_id).filter(Boolean)));

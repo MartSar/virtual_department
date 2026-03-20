@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
+import {API_URL} from "../../config";
 import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
@@ -26,13 +27,13 @@ function UserProfile() {
 
         const fetchProfileData = async () => {
             try {
-                const userRes = await fetch(`http://localhost:3000/users/${userId}`);
+                const userRes = await fetch(`${API_URL}/users/${userId}`);
                 if (!userRes.ok) throw new Error("User not found");
                 const userData = await userRes.json();
                 setProfileUser(userData);
 
                 // если location реально нужно
-                const locRes = await fetch(`http://localhost:3000/users/${userId}/location`);
+                const locRes = await fetch(`${API_URL}/users/${userId}/location`);
                 setLocation(locRes.ok ? await locRes.json() : null);
             } catch (err) {
                 console.error("Failed to fetch profile data:", err);

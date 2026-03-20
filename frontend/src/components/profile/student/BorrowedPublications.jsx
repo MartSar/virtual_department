@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../../styles/UserPublications.css";
+import { API_URL } from "../../../config";
 
 const BorrowedPublications = ({ userId }) => {
     const [borrowings, setBorrowings] = useState([]);
@@ -20,7 +21,7 @@ const BorrowedPublications = ({ userId }) => {
         setError(null);
 
         try {
-            const res = await fetch(`http://localhost:3000/users/${userId}/borrowings`);
+            const res = await fetch(`${API_URL}/users/${userId}/borrowings`);
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
