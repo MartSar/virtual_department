@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -7,12 +9,17 @@ const app = express();
 // const multer = require('multer');
 // const storage = multer.memoryStorage();
 // const upload = multer({ storage });
-const port = 3000;
+
+const port = process.env.PORT || 3000;
+const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 
 // --------------------------
 // Middleware
 // --------------------------
-app.use(cors());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || true,
+    credentials: true,
+}));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
@@ -42,7 +49,7 @@ function isPdfLike(fileType, fileName = "") {
 }
 
 async function convertToPdfWithLibreOffice(inputPath, outDir, sofficePath) {
-    // LibreOffice сам создаст PDF с тем же base-name
+    // LibreOffice will create PDF with the same base-name
     await execa(
         sofficePath,
         [
@@ -64,11 +71,11 @@ async function convertToPdfWithLibreOffice(inputPath, outDir, sofficePath) {
 // PostgreSQL Pool
 // --------------------------
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'virtual_department_v1',
-    password: 'M2005v2003',
-    port: 5432,
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT) || 5432,
 });
 
 // --------------------------
@@ -1587,5 +1594,5 @@ app.get('/central_topics/:id/subtopics', async (req, res) => {
 // Server start
 // --------------------------
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running at ${baseUrl}`);
 });
