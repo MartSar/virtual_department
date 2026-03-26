@@ -63,7 +63,7 @@ async function convertToPdfWithLibreOffice(inputPath, outDir, sofficePath) {
             outDir,
             inputPath,
         ],
-        { timeout: 120000 } // 2 минуты на конвертацию
+        { timeout: 120000 }
     );
 }
 
@@ -158,7 +158,7 @@ app.post('/register', async (req, res) => {
 
     } catch (err) {
         if (client) await client.query('ROLLBACK');
-        console.error('❌ Registration error:', err);
+        console.error('Registration error:', err);
         return res.status(500).json({ error: 'Registration failed' });
     } finally {
         if (client) client.release();
@@ -250,7 +250,6 @@ app.post("/api/borrowings/create", async (req, res) => {
     }
 
     try {
-        // 1) Проверка что borrower — студент
         const userRes = await pool.query(
             `SELECT role FROM users WHERE id = $1 LIMIT 1`,
             [borrower_id]
@@ -295,8 +294,6 @@ app.post("/api/borrowings/create", async (req, res) => {
         return res.status(500).json({ error: "Failed to borrow publication" });
     }
 });
-
-
 
 // --------------------------
 // GET borrowings for user (borrower_id -> users.id)
@@ -356,7 +353,7 @@ app.get('/filters', async (req, res) => {
             faculties: facultiesRes.rows,
         });
     } catch (err) {
-        console.error('❌ Filters error:', err);
+        console.error('Filters error:', err);
         res.status(500).json({ error: 'Failed to load filters' });
     }
 });
@@ -470,8 +467,6 @@ app.get('/professors/:userId/postgraduates', async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch assigned postgraduates' });
     }
 });
-
-
 // --------------------------
 // GET professors of a postgraduate (users-based)
 // --------------------------
@@ -534,9 +529,6 @@ app.get('/postgraduates/:id/professors', async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch professors' });
     }
 });
-
-
-
 // --------------------------
 // POST assign a postgraduate to professor
 // --------------------------
@@ -576,9 +568,6 @@ app.post('/professors/:userId/postgraduates', async (req, res) => {
         return res.status(500).json({ error: 'Failed to assign postgraduate' });
     }
 });
-
-
-
 // --------------------------
 // GET professor of a postgraduate (users-based)
 // --------------------------
@@ -694,7 +683,6 @@ app.post('/publications/:id/authors', async (req, res) => {
 });
 
 // // GET /authors/:authorId/publications-with-primary
-// // Возвращает публикации автора с полем is_primary_author для текущего автора
 // app.get("/authors/:authorId/publications-with-primary", async (req, res) => {
 //     const { authorId } = req.params;
 //
@@ -765,7 +753,6 @@ app.get("/central_topics/:id", async (req, res) => {
     }
 });
 
-
 // GET /subtopics/:id — get subtopics name by id
 app.get("/subtopics/:id", async (req, res) => {
     const { id } = req.params;
@@ -786,8 +773,6 @@ app.get("/subtopics/:id", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch subtopic" });
     }
 });
-
-
 // --------------------------
 // Get Borrowings of current student
 // --------------------------
@@ -874,8 +859,6 @@ app.post("/api/publications/create", async (req, res) => {
         return res.status(500).json({ error: "Failed to create publication" });
     }
 });
-
-
 // --------------------------
 // Get all authors for publication
 // --------------------------
@@ -1203,7 +1186,6 @@ app.get('/users/:id/location', async (req, res) => {
 
         const loc = result.rows[0];
 
-        // если у пользователя нет faculty_id или цепочка не настроена
         if (!loc.faculty_id) {
             return res.status(404).json({ error: 'User location not found (faculty not set)' });
         }
@@ -1220,8 +1202,6 @@ app.get('/users/:id/location', async (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch user location' });
     }
 });
-
-
 
 // get Author id by postgraduate or professor (postgraduate/professor -> user -> authors)
 // ----------------------------------------
@@ -1289,15 +1269,12 @@ app.get('/users/:userId/publications/primary', async (req, res) => {
     }
 });
 
-
-
 // Author Location
 app.get('/authors/:id/location', async (req, res) => {
     const { id } = req.params;
     try {
         const client = await pool.connect();
 
-        // Получаем факультет, университет, город, страну для автора
         const result = await client.query(`
             SELECT f.name AS faculty_name,
                    u.name AS university_name,
