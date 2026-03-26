@@ -24,8 +24,8 @@ export default function FormFields({
                 Role:
                 <select value={role} onChange={(e) => setRole(e.target.value)}>
                     <option value="student">Student</option>
-                    <option value="professor">Professor</option>
                     <option value="postgraduate">Postgraduate</option>
+                    <option value="professor">Professor</option>
                 </select>
             </label>
 
