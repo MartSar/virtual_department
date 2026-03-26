@@ -2,16 +2,16 @@
     height: 60px;
     background-color: #1e1e2f;
     color: white;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: 0 25px;
-    position: relative;
+    position: fixed;
+    top: 0;
+    width: 97%;
+    z-index: 1000;
 }
 
-/* Контейнеры слева и справа */
 .navbar-left,
 .navbar-right {
     display: flex;
@@ -19,7 +19,6 @@
     gap: 15px;
 }
 
-/* Центр с приветствием */
 .navbar-center {
     position: absolute;
     left: 50%;
@@ -31,12 +30,11 @@
     transition: transform 0.3s ease;
 }
 
-/* Лёгкое движение при hover на кнопки */
 .navbar-left button:hover ~ .navbar-center,
 .navbar-right button:hover ~ .navbar-center {
     transform: translateX(-50%) translateY(-2px);
 }
-/* Общие стили для кнопок */
+
 .navbar-profile,
 .navbar-dashboard,
 .navbar-logout,
@@ -49,18 +47,17 @@
     transition: all 0.25s ease;
 }
 
-/* Hover эффекты с дерганием через scale */
 .navbar-profile:hover {
     transform: scale(1.2);
 }
 
 .navbar-dashboard:hover {
-    color: lightblue;
+    color: #4ec6f4;
     transform: scale(1.1);
 }
 
 .navbar-logout:hover {
-    color: #fd2828;
+    color: #fd4828;
     transform: scale(1.1);
 }
 
@@ -69,9 +66,12 @@
     transform: scale(1.1);
 }
 
-/* Аватар пользователя */
 .navbar-avatar {
     width: 38px;
     height: 38px;
     cursor: pointer;
+}
+
+.main-content {
+    margin-top: 60px;
 }

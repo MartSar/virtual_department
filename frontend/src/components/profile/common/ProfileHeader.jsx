@@ -1,9 +1,21 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Avatar from "../../inner_components/avatar/Avatar";
+import { FaUserGraduate, FaUserTie, FaUser, FaGraduationCap } from "react-icons/fa";
 
 function ProfileHeader({ user }) {
     const navigate = useNavigate();
+
+    const getRoleIcon = (role) => {
+        switch (role) {
+            case "student":
+                return <FaUserGraduate size={24} color="#1e1e2f" />;
+            case "postgraduate":
+                return <FaGraduationCap size={24} color="#1e1e2f" />;
+            case "professor":
+                return <FaUserTie size={24} color="#1e1e2f" />;
+        }
+    };
 
     return (
         <div className="profile-header">
@@ -12,12 +24,11 @@ function ProfileHeader({ user }) {
                     name={user.name}
                     lastname={user.lastname}
                     size={60}
-                    onclick={() => {
-                        console.log("Hey")
-                    }}
+                    onclick={() => console.log("Hey")}
                 />
-                <h2>
-                    {user.role} {user.name} {user.lastname}
+                <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {getRoleIcon(user.role)}
+                    {user.name} {user.lastname}
                 </h2>
             </div>
         </div>

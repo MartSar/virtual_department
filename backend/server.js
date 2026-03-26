@@ -639,20 +639,6 @@ app.get('/postgraduates/:id/professor', async (req, res) => {
 //     }
 // });
 
-app.get('/authors', async (req, res) => {
-    try {
-        const result = await pool.query(`
-            SELECT a.id, a.author_type, u.name, u.lastname
-            FROM authors a
-            JOIN users u ON a.user_id = u.id
-        `);
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch authors' });
-    }
-});
-
 app.post('/publications/:id/authors', async (req, res) => {
     const { id } = req.params; // publication_id
     const { author_id } = req.body;

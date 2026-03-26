@@ -7,6 +7,7 @@
     background-color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    margin-top: 60px;
 }
 
 /* ---------- Header ---------- */
@@ -98,20 +99,23 @@
 }
 
 .read-btn {
-    padding: 4px 8px;
-    background-color: #4CAF50;
+    background-color: #16cc64;
     color: white;
     border: none;
+    padding: 5px 12px;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 5px;
 }
 
 .read-btn:hover {
-    background-color: #45a049;
+    background-color: #0a9345;
+    transform: scale(1.05);
 }
 
 .read-btn:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }
-

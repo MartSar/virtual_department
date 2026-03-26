@@ -52,29 +52,31 @@ function UserProfile() {
             <Navbar user={loggedUser} />
 
             <div className="user-profile">
-                <ProfileHeader
-                    user={profileUser}
-                    onAvatarChange={(avatar) =>
-                        setProfileUser((prev) => ({ ...prev, avatar }))
-                    }
-                />
+                <div className=".main-content">
+                    <ProfileHeader
+                        user={profileUser}
+                        onAvatarChange={(avatar) =>
+                            setProfileUser((prev) => ({ ...prev, avatar }))
+                        }
+                    />
 
-                <ProfileInfo user={profileUser} location={location} />
+                    <ProfileInfo user={profileUser} location={location} />
 
-                {profileUser.role === "student" && (
-                    <BorrowedPublications userId={profileUser.id} />
-                )}
+                    {profileUser.role === "student" && (
+                        <BorrowedPublications userId={profileUser.id} />
+                    )}
 
-                {profileUser.role === "professor" && (
-                    <ProfessorPostgraduates userId={profileUser.id} />
-                )}
+                    {profileUser.role === "professor" && (
+                        <ProfessorPostgraduates userId={profileUser.id} />
+                    )}
 
-                {profileUser.role === "postgraduate" && (
-                    <PostgraduateProfessors userId={profileUser.id} />
-                )}
+                    {profileUser.role === "postgraduate" && (
+                        <PostgraduateProfessors userId={profileUser.id} />
+                    )}
 
-                <AuthoredPublications userId={profileUser.id} />
-                <CoAuthoredPublications userId={profileUser.id} />
+                    <AuthoredPublications userId={profileUser.id} />
+                    <CoAuthoredPublications userId={profileUser.id} />
+                </div>
             </div>
         </>
     );

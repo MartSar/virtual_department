@@ -46,8 +46,10 @@ function Dashboard() {
 
     return (
         <div className="dashboard-wrapper">
-            <Navbar user={user} />
-            <AuthorDashboard user={user} />
+            <Navbar user={user}/>
+            <div className="main-content">
+                <AuthorDashboard user={user}/>
+            </div>
         </div>
     );
 }

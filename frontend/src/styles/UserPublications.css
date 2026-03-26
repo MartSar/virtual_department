@@ -121,7 +121,7 @@
 }
 
 .add-co-author-btn {
-    background-color: #16cc64;
+    background-color: #2196F3;
     color: white;
     border: none;
     padding: 5px 12px;
@@ -133,7 +133,7 @@
 }
 
 .add-co-author-btn:hover {
-    background-color: #0a9345;
+    background-color: #1976D2;
     transform: scale(1.05);
 }
 

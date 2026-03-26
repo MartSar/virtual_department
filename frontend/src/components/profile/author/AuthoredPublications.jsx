@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AddCoAuthor from "./AddCoAuthor";
 import { API_URL } from "../../../config";
 import "../../../styles/UserPublications.css";
@@ -8,6 +9,7 @@ const AuthoredPublications = ({ userId }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const navigate = useNavigate();
     // -----------------------------
     // Fetch publications
     // -----------------------------
@@ -60,6 +62,21 @@ const AuthoredPublications = ({ userId }) => {
         } catch (err) {
             alert("Error: " + err.message);
         }
+    };
+
+    const handleOpen = (publicationId) => {
+        navigate(`/reader/${publicationId}?user_id=${userId}`);
+    };
+
+    const getActionLabel = (fileType, fileName = "") => {
+        const type = (fileType || "").toLowerCase();
+        const name = (fileName || "").toLowerCase();
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "Watch";
+        }
+
+        return "Read";
     };
 
     const getPublicationTypeLabel = (fileType, fileName = "") => {
@@ -123,6 +140,13 @@ const AuthoredPublications = ({ userId }) => {
                             <td>{pub.topic_name || "-"}</td>
                             <td>{getPublicationTypeLabel(pub.file_type, pub.file_name)}</td>
                             <td>
+                                <button
+                                    className="read-btn"
+                                    onClick={() => handleOpen(pub.publication_id, pub.is_active)}
+                                    title={!pub.is_active ? "Borrowing expired" : ""}
+                                >
+                                    {getActionLabel(pub.file_type, pub.file_name)}
+                                </button>
                                 <AddCoAuthor
                                     publicationId={pub.id}
                                     onUpdate={fetchPublications}
