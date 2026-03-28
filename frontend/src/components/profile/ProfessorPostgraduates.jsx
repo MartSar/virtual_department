@@ -8,9 +8,6 @@ const ProfessorPostgraduates = ({ userId }) => {
     const [showModal, setShowModal] = useState(false);
     const [selectedPgId, setSelectedPgId] = useState("");
 
-    // -------------------
-    // Все аспиранты (users.role='postgraduate')
-    // -------------------
     useEffect(() => {
         const fetchAllPostgraduates = async () => {
             try {
@@ -24,9 +21,6 @@ const ProfessorPostgraduates = ({ userId }) => {
         fetchAllPostgraduates();
     }, []);
 
-    // -------------------
-    // Назначенные аспиранты профессора (professor = userId)
-    // -------------------
     const fetchAssignedPostgraduates = async () => {
         if (!userId) return;
         try {

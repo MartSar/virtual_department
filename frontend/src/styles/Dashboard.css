@@ -26,7 +26,7 @@
 
 .publication-item {
     display: flex;
-    justify-content: space-between; /* название слева, кнопки справа */
+    justify-content: space-between;
     align-items: center;
     background-color: #fff;
     padding: 15px 20px;
@@ -39,7 +39,7 @@
     font-weight: bold;
     color: #333;
     text-align: left;
-    flex: 1; /* растягиваем название, чтобы кнопки были справа */
+    flex: 1;
 }
 
 .publication-item button {

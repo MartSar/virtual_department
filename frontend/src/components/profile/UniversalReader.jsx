@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {API_URL} from "../../config";
+import { API_URL } from "../../config";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -24,10 +24,24 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
         return value ? String(value) : null;
     }, [searchParams]);
 
+    const authorId = useMemo(() => {
+        const value = searchParams.get("author_id");
+        return value ? String(value) : null;
+    }, [searchParams]);
+
     const fileUrl = useMemo(() => {
-        if (!userId) return null;
-        return `${apiBaseUrl}/api/publications/read/${id}?user_id=${encodeURIComponent(userId)}`;
-    }, [apiBaseUrl, id, userId]);
+        if (!id) return null;
+
+        if (userId) {
+            return `${apiBaseUrl}/api/publications/read/${id}?user_id=${encodeURIComponent(userId)}`;
+        }
+
+        if (authorId) {
+            return `${apiBaseUrl}/api/publications/authored/${id}?author_id=${encodeURIComponent(authorId)}`;
+        }
+
+        return null;
+    }, [apiBaseUrl, id, userId, authorId]);
 
     useEffect(() => {
         const handler = (e) => e.preventDefault();
@@ -77,8 +91,6 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
         if (
             type.includes("word") ||
             type.includes("officedocument") ||
-            type.includes("docx") ||
-            type.includes("doc") ||
             name.endsWith(".docx") ||
             name.endsWith(".doc")
         ) {
@@ -92,7 +104,7 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
 
     const fileKind = getFileKind();
 
-    if (!userId) {
+    if (!userId && !authorId) {
         return (
             <div className="reader-container">
                 <div className="reader-header">
@@ -103,7 +115,9 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
                     <div className="reader-header-spacer" />
                 </div>
 
-                <p className="reader-error">Missing user_id in URL</p>
+                <p className="reader-error">
+                    Missing access params (user_id or author_id)
+                </p>
             </div>
         );
     }
@@ -159,7 +173,6 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
                                 onContextMenu={(e) => e.preventDefault()}
                             >
                                 <source src={fileUrl} type="video/mp4" />
-                                Your browser does not support the video tag.
                             </video>
                         </div>
                     )}

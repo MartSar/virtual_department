@@ -22,7 +22,6 @@ const AddCoAuthor = ({ publicationId, onUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Получаем всех авторов
     useEffect(() => {
         const fetchAuthors = async () => {
             try {
@@ -84,7 +83,6 @@ const AddCoAuthor = ({ publicationId, onUpdate }) => {
         }
     };
 
-    // Фильтруем авторов, которых уже есть
     const availableAuthors = allAuthors.filter(
         (a) => !currentAuthors.some((c) => c.id === a.id)
     );

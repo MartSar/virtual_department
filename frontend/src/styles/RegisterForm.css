@@ -131,12 +131,12 @@ select:focus {
 /* Password field with eye icon */
 .password-wrapper {
     display: flex;
-    align-items: center;  /* Выровняет кнопку и input по вертикали */
-    gap: 6px;             /* Небольшое расстояние между ними */
+    align-items: center;
+    gap: 6px;
 }
 
 .password-wrapper input {
-    flex: 1;              /* Чтобы поле занимало всё оставшееся место */
+    flex: 1;
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid #ccc;
@@ -149,7 +149,6 @@ select:focus {
     border-color: #1e88e5;
 }
 
-/* Кнопка */
 .show-password-btn {
     background: #1e88e5;
     color: white;
@@ -162,8 +161,8 @@ select:focus {
     align-items: center;
     justify-content: center;
     transition: 0.25s ease;
-    line-height: 1; /* важно для выравнивания */
-    height: 100%;   /* чтобы совпадала по высоте с инпутом */
+    line-height: 1;
+    height: 100%;
 }
 
 .show-password-btn:hover {

@@ -149,11 +149,10 @@
 }
 
 .delete-btn:hover {
-    background-color: #ff4c4c;
+    background-color: #bd0404;
     transform: scale(1.05);
 }
 
-/* --- Контейнер кнопок в модалке --- */
 .professor-postgraduates-btns {
     display: flex;
     justify-content: flex-end;
@@ -161,7 +160,6 @@
     margin-top: 15px;
 }
 
-/* --- Кнопка Cancel --- */
 .professor-postgraduates-cancel-btn {
     background-color: #e0e0e0;
     color: #333;
@@ -177,7 +175,6 @@
     background-color: #d5d5d5;
 }
 
-/* --- Кнопка Assign --- */
 .assign-btn {
     background-color: #4caf50;
     color: #fff;
@@ -198,7 +195,6 @@
     cursor: not-allowed;
 }
 
-/* --- Селектор для модалки назначения аспиранта --- */
 .professor-postgraduates-select {
     width: 100%;
     padding: 8px 12px;

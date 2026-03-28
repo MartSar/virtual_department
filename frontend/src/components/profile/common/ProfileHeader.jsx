@@ -10,9 +10,7 @@ function ProfileHeader({ user }) {
         switch (role) {
             case "student":
                 return <FaUserGraduate size={24} color="#1e1e2f" />;
-            case "postgraduate":
-                return <FaGraduationCap size={24} color="#1e1e2f" />;
-            case "professor":
+            case "postgraduate" || "professor":
                 return <FaUserTie size={24} color="#1e1e2f" />;
         }
     };

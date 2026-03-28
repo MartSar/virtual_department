@@ -277,7 +277,6 @@ app.post("/api/borrowings/create", async (req, res) => {
             return res.status(409).json({ error: "You already have active access to this publication" });
         }
 
-        // 3) Создаём borrowing
         const startDate = new Date();
         const endDate = new Date();
         endDate.setDate(startDate.getDate() + Number(duration_days));
@@ -709,7 +708,7 @@ app.post('/publications/:id/authors', async (req, res) => {
 //             return res.status(404).send('No avatar');
 //         }
 //
-//         res.setHeader('Content-Type', 'image/png'); // можно менять по типу файла
+//         res.setHeader('Content-Type', 'image/png');
 //         res.send(result.rows[0].avatar);
 //     } catch (err) {
 //         console.error('Fetch avatar error:', err);
@@ -1059,6 +1058,52 @@ app.get("/authors/:authorId/publications/primary", async (req, res) => {
     } catch (err) {
         console.error("PRIMARY AUTHOR PUBLICATIONS ERROR:", err);
         res.status(500).json({ error: "Failed to fetch primary authored publications" });
+    }
+});
+
+app.get("/api/publications/read-author/:id", async (req, res) => {
+    const { id } = req.params;
+    const userId = req.query.user_id;
+
+    if (!userId) {
+        return res.status(400).json({ error: "user_id is required" });
+    }
+
+    try {
+        const authorCheck = await pool.query(
+            `SELECT 1
+             FROM publication_authors
+             WHERE publication_id = $1
+               AND user_id = $2
+             LIMIT 1`,
+            [id, userId]
+        );
+
+        if (authorCheck.rowCount === 0) {
+            return res.status(403).json({ error: "Not your publication" });
+        }
+
+        const pubRes = await pool.query(
+            `SELECT file_name, file_type, content
+             FROM publications
+             WHERE id = $1`,
+            [id]
+        );
+
+        if (pubRes.rowCount === 0) {
+            return res.status(404).json({ error: "Publication not found" });
+        }
+
+        const pub = pubRes.rows[0];
+
+        res.setHeader("Content-Type", pub.file_type);
+        res.setHeader("Content-Disposition", `inline; filename="${pub.file_name}"`);
+
+        return res.send(pub.content);
+
+    } catch (err) {
+        console.error("READ AUTHOR ERROR:", err);
+        return res.status(500).json({ error: "Failed to open publication" });
     }
 });
 

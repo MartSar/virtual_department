@@ -126,13 +126,12 @@
 /* ---------------- Duration Buttons Row ---------------- */
 .duration-buttons-row {
     display: flex;
-    justify-content: center; /* центрирование по горизонтали */
-    gap: 10px; /* расстояние между кнопками */
+    justify-content: center;
+    gap: 10px;
     margin-bottom: 15px;
-    flex-wrap: wrap; /* перенос на маленьких экранах */
+    flex-wrap: wrap;
 }
 
-/* Кнопки выбора длительности */
 .duration-btn {
     border: 2px solid #007BFF;
     background-color: transparent;
@@ -157,7 +156,7 @@
 /* ---------------- Confirm Row ---------------- */
 .confirm-row {
     display: flex;
-    justify-content: flex-end; /* кнопка справа */
+    justify-content: flex-end;
     margin-bottom: 10px;
 }
 

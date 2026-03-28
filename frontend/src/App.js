@@ -15,6 +15,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
                 <Route path="/reader/:id" element={<UniversalReader />}  />
+                <Route path="/reader-author/:id" element={<UniversalReader />} />
             </Routes>
         </Router>
     );

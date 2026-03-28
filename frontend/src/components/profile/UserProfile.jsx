@@ -32,7 +32,6 @@ function UserProfile() {
                 const userData = await userRes.json();
                 setProfileUser(userData);
 
-                // если location реально нужно
                 const locRes = await fetch(`${API_URL}/users/${userId}/location`);
                 setLocation(locRes.ok ? await locRes.json() : null);
             } catch (err) {
@@ -62,6 +61,8 @@ function UserProfile() {
 
                     <ProfileInfo user={profileUser} location={location} />
 
+                    <AuthoredPublications userId={profileUser.id} />
+
                     {profileUser.role === "student" && (
                         <BorrowedPublications userId={profileUser.id} />
                     )}
@@ -74,7 +75,6 @@ function UserProfile() {
                         <PostgraduateProfessors userId={profileUser.id} />
                     )}
 
-                    <AuthoredPublications userId={profileUser.id} />
                     <CoAuthoredPublications userId={profileUser.id} />
                 </div>
             </div>

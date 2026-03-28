@@ -90,7 +90,6 @@
     color: #333;
 }
 
-/* Название выбранного файла */
 .file-drop-area span {
     display: block;
     margin-top: 5px;
@@ -99,7 +98,6 @@
     word-break: break-all;
 }
 
-/* Кнопка выбора файла */
 .select-file-btn {
     margin-top: 10px;
     padding: 8px 16px;
@@ -211,9 +209,6 @@
     cursor: pointer;
 }
 
-/* AddPublication.css */
-
-/* Селектор центральной темы */
 .add-publication-form select {
     width: 100%;
     padding: 0.5rem 1rem;
@@ -223,29 +218,25 @@
     border: 1px solid #ccc;
     border-radius: 6px;
     background-color: white;
-    appearance: none; /* убираем стандартную стрелку */
+    appearance: none;
     cursor: pointer;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* При наведении */
 .add-publication-form select:hover {
     border-color: #007bff;
 }
 
-/* При фокусе */
 .add-publication-form select:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-/* Стрелка справа */
 .add-publication-form select::-ms-expand {
     display: none;
 }
 
-/* Для остальных браузеров можно добавить псевдо-элемент через wrapper, если захочешь красивую стрелку */
 .select-wrapper {
     position: relative;
 }

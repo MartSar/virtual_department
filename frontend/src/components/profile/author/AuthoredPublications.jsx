@@ -65,7 +65,7 @@ const AuthoredPublications = ({ userId }) => {
     };
 
     const handleOpen = (publicationId) => {
-        navigate(`/reader/${publicationId}?user_id=${userId}`);
+        navigate(`/reader-author/${publicationId}?user_id=${userId}`);
     };
 
     const getActionLabel = (fileType, fileName = "") => {
@@ -142,8 +142,7 @@ const AuthoredPublications = ({ userId }) => {
                             <td>
                                 <button
                                     className="read-btn"
-                                    onClick={() => handleOpen(pub.publication_id, pub.is_active)}
-                                    title={!pub.is_active ? "Borrowing expired" : ""}
+                                    onClick={() => handleOpen(pub.id)}
                                 >
                                     {getActionLabel(pub.file_type, pub.file_name)}
                                 </button>
