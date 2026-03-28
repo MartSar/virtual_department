@@ -21,6 +21,8 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
     const [meta, setMeta] = useState(null);
     const [metaLoading, setMetaLoading] = useState(true);
     const [numPages, setNumPages] = useState(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [scale, setScale] = useState(1.2);
     const [error, setError] = useState("");
 
     const userId = useMemo(() => searchParams.get("user_id") || null, [searchParams]);
@@ -79,6 +81,16 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
 
     const fileKind = getFileKind();
 
+    const changePage = (num) => {
+        if (num < 1) num = 1;
+        if (num > numPages) num = numPages;
+        setPageNumber(num);
+    };
+
+    const handleZoom = (factor) => {
+        setScale(prev => Math.max(0.5, Math.min(prev + factor, 3)));
+    };
+
     if (!userId && !authorId) {
         return (
             <div className="reader-container">
@@ -95,7 +107,6 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
     return (
         <>
             <Navbar user={user} />
-
             <div className="reader-container">
                 <div className="reader-header">
                     <button className="reader-back-btn" onClick={handleBack}>Back</button>
@@ -111,40 +122,51 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
 
                 {error && <div className="reader-error">{error}</div>}
 
-                {!metaLoading && !error && fileUrl && (
-                    <div className="reader-content">
-                        {(fileKind === "pdf" || fileKind === "word") && (
-                            <Document
-                                file={fileUrl}
-                                onLoadSuccess={({ numPages }) => { setNumPages(numPages); setError(""); }}
-                                onLoadError={(e) => { setError(e?.message || "Failed to load document"); setNumPages(null); }}
-                                loading={
-                                    <div className="section-loader" style={{ marginTop: "2rem" }}>
-                                        <div className="section-spinner"></div>
-                                    </div>
-                                }
-                                error={<div className="reader-error">Failed to render document</div>}
-                            >
-                                {numPages && Array.from({ length: numPages }, (_, i) => (
-                                    <div key={i} className="reader-page-wrapper">
-                                        <Page pageNumber={i + 1} scale={1.2} />
-                                    </div>
-                                ))}
-                            </Document>
-                        )}
+                {!metaLoading && !error && fileUrl && (fileKind === "pdf" || fileKind === "word") && (
+                    <>
+                        <Document
+                            file={fileUrl}
+                            onLoadSuccess={({ numPages }) => { setNumPages(numPages); setError(""); }}
+                            onLoadError={(e) => { setError(e?.message || "Failed to load document"); setNumPages(null); }}
+                            loading={
+                                <div className="section-loader" style={{ marginTop: "2rem" }}>
+                                    <div className="section-spinner"></div>
+                                </div>
+                            }
+                            error={<div className="reader-error">Failed to render document</div>}
+                        >
+                            <Page pageNumber={pageNumber} scale={scale} />
+                        </Document>
 
-                        {fileKind === "video" && (
-                            <div className="reader-video-wrapper">
-                                <video className="reader-video" controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()}>
-                                    <source src={fileUrl} type="video/mp4" />
-                                </video>
-                            </div>
-                        )}
+                        {/* Controls */}
+                        <div className="reader-pdf-controls">
+                            <button onClick={() => changePage(pageNumber - 1)} disabled={pageNumber <= 1}>Prev</button>
+                            <span>Page {pageNumber} of {numPages || 1}</span>
+                            <button onClick={() => changePage(pageNumber + 1)} disabled={pageNumber >= numPages}>Next</button>
+                            <input
+                                type="range"
+                                min={1}
+                                max={numPages || 1}
+                                value={pageNumber}
+                                onChange={(e) => changePage(Number(e.target.value))}
+                                className="reader-page-slider"
+                            />
+                            <button onClick={() => handleZoom(0.2)}>Zoom +</button>
+                            <button onClick={() => handleZoom(-0.2)}>Zoom -</button>
+                        </div>
+                    </>
+                )}
 
-                        {fileKind === "unknown" && (
-                            <div className="reader-error">This file type is not supported for preview.</div>
-                        )}
+                {fileKind === "video" && (
+                    <div className="reader-video-wrapper">
+                        <video className="reader-video" controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()}>
+                            <source src={fileUrl} type="video/mp4" />
+                        </video>
                     </div>
+                )}
+
+                {fileKind === "unknown" && (
+                    <div className="reader-error">This file type is not supported for preview.</div>
                 )}
             </div>
         </>
