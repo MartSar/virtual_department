@@ -4,7 +4,7 @@ import AddCoAuthor from "./AddCoAuthor";
 import { API_URL } from "../../../config";
 import "../../../styles/UserPublications.css";
 
-const AuthoredPublications = ({ userId }) => {
+const AuthoredPublications = ({ user, userId }) => {
     const [publications, setPublications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -65,7 +65,7 @@ const AuthoredPublications = ({ userId }) => {
     };
 
     const handleOpen = (publicationId) => {
-        navigate(`/reader-author/${publicationId}?user_id=${userId}`);
+        navigate(`/reader-author/${publicationId}?user_id=${user.id}`, { state: { user } });
     };
 
     const getActionLabel = (fileType, fileName = "") => {

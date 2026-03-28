@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { API_URL } from "../../../config";
 import "../../../styles/UserPublications.css";
 
-const CoAuthoredPublications = ({ userId }) => {
+const CoAuthoredPublications = ({ user, userId }) => {
     const [publications, setPublications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);

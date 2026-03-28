@@ -61,10 +61,10 @@ function UserProfile() {
 
                     <ProfileInfo user={profileUser} location={location} />
 
-                    <AuthoredPublications userId={profileUser.id} />
+                    <AuthoredPublications user={loggedUser} userId={profileUser.id} />
 
                     {profileUser.role === "student" && (
-                        <BorrowedPublications userId={profileUser.id} />
+                        <BorrowedPublications user={loggedUser} userId={profileUser.id} />
                     )}
 
                     {profileUser.role === "professor" && (
@@ -75,7 +75,7 @@ function UserProfile() {
                         <PostgraduateProfessors userId={profileUser.id} />
                     )}
 
-                    <CoAuthoredPublications userId={profileUser.id} />
+                    <CoAuthoredPublications user={loggedUser} userId={profileUser.id} />
                 </div>
             </div>
         </>

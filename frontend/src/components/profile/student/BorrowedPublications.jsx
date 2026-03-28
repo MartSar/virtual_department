@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../../../styles/UserPublications.css";
 import { API_URL } from "../../../config";
 
-const BorrowedPublications = ({ userId }) => {
+const BorrowedPublications = ({ user }) => {
     const [borrowings, setBorrowings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -11,7 +11,7 @@ const BorrowedPublications = ({ userId }) => {
     const navigate = useNavigate();
 
     const fetchBorrowings = async () => {
-        if (!userId) {
+        if (!user?.id) {
             setBorrowings([]);
             setLoading(false);
             return;
@@ -21,7 +21,7 @@ const BorrowedPublications = ({ userId }) => {
         setError(null);
 
         try {
-            const res = await fetch(`${API_URL}/users/${userId}/borrowings`);
+            const res = await fetch(`${API_URL}/users/${user.id}/borrowings`);
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
@@ -43,48 +43,27 @@ const BorrowedPublications = ({ userId }) => {
 
     useEffect(() => {
         fetchBorrowings();
-    }, [userId]);
+    }, [user]);
 
     const handleOpen = (publicationId, isActive) => {
         if (!isActive) return;
-        navigate(`/reader/${publicationId}?user_id=${userId}`);
+        navigate(`/reader/${publicationId}?user_id=${user.id}`, { state: { user } });
     };
 
     const getPublicationTypeLabel = (fileType, fileName = "") => {
         const type = (fileType || "").toLowerCase();
         const name = (fileName || "").toLowerCase();
 
-        if (type.includes("pdf") || name.endsWith(".pdf")) {
-            return "PDF";
-        }
-
-        if (
-            type.includes("word") ||
-            type.includes("officedocument") ||
-            type.includes("docx") ||
-            type.includes("doc") ||
-            name.endsWith(".docx") ||
-            name.endsWith(".doc")
-        ) {
-            return "Word";
-        }
-
-        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
-            return "MP4";
-        }
-
+        if (type.includes("pdf") || name.endsWith(".pdf")) return "PDF";
+        if (type.includes("word") || type.includes("officedocument") || name.endsWith(".docx") || name.endsWith(".doc")) return "Word";
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) return "MP4";
         return "Unknown";
     };
 
     const getActionLabel = (fileType, fileName = "") => {
         const type = (fileType || "").toLowerCase();
         const name = (fileName || "").toLowerCase();
-
-        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
-            return "Watch";
-        }
-
-        return "Read";
+        return type.includes("video/mp4") || name.endsWith(".mp4") ? "Watch" : "Read";
     };
 
     if (error) {
