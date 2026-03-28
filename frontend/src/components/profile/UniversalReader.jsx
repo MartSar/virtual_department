@@ -106,11 +106,14 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
 
     return (
         <>
-            <Navbar user={user} />
+            <Navbar
+                user={user}
+                titleOverride={meta?.title || `Publication #${id}`}
+                showBackButton={true}
+                onBack={handleBack}
+            />
             <div className="reader-container">
                 <div className="reader-header">
-                    <button className="reader-back-btn" onClick={handleBack}>Back</button>
-                    <div className="reader-title">{meta?.title || `Publication #${id}`}</div>
                     <div className="reader-header-spacer" />
                 </div>
 

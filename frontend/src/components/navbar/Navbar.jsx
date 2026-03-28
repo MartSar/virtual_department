@@ -4,7 +4,7 @@ import "../../styles/Navbar.css";
 import Avatar from "../inner_components/avatar/Avatar";
 import AddPublication from "../add_publication/AddPublication";
 
-function Navbar({ user }) {
+function Navbar({ user, titleOverride, showBackButton, onBack }) {
     const navigate = useNavigate();
     const [showAddModal, setShowAddModal] = useState(false);
 
@@ -44,9 +44,17 @@ function Navbar({ user }) {
                 </button>
             </div>
 
-            <div className="navbar-center">Welcome {login}!</div>
+            <div className="navbar-center">
+                {titleOverride ? titleOverride : `Welcome ${login}!`}
+            </div>
 
-            <div className="navbar-right">
+            <div className="navbar-right" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {showBackButton && (
+                    <button className="navbar-back-btn" onClick={onBack}>
+                        Back
+                    </button>
+                )}
+
                 <button className="navbar-logout" onClick={logout}>
                     Sign Out
                 </button>

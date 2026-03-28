@@ -72,6 +72,20 @@
     cursor: pointer;
 }
 
+.navbar-back-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.25s ease;
+}
+
+.navbar-back-btn:hover {
+    color: #4ec6f4;
+    transform: scale(1.1);
+}
+
 .main-content {
     margin-top: 60px;
 }
