@@ -43,7 +43,7 @@ function UserProfile() {
     }, [userId]);
 
     if (!profileUser || !loggedUser) {
-        return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
+        return <div className="spinner-circle"></div>;
     }
 
     return (

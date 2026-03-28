@@ -140,7 +140,9 @@ function Dashboard() {
 
     // -------------------- Render --------------------
     if (!user) {
-        return <h2 style={{ textAlign: 'center' }}>Loading...</h2>;
+        return (
+            <div className="spinner-circle"></div>
+        );
     }
 
     return (
