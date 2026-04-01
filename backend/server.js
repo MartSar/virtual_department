@@ -263,13 +263,31 @@ app.post("/api/borrowings/create", async (req, res) => {
             return res.status(403).json({ error: "Only students can borrow publications" });
         }
 
+        // --------------------------
+        // Prevent borrowing own publication
+        // --------------------------
+        const authorCheck = await pool.query(
+            `SELECT 1
+             FROM publication_authors
+             WHERE publication_id = $1
+               AND user_id = $2
+             LIMIT 1`,
+            [publication_id, borrower_id]
+        );
+
+        if (authorCheck.rowCount > 0) {
+            return res.status(400).json({
+                error: "You cannot borrow your own publication"
+            });
+        }
+
         const activeRes = await pool.query(
             `SELECT 1
-       FROM borrowings
-       WHERE borrower_id = $1
-         AND publication_id = $2
-         AND end_date >= NOW()
-       LIMIT 1`,
+               FROM borrowings
+               WHERE borrower_id = $1
+                 AND publication_id = $2
+                 AND end_date >= NOW()
+               LIMIT 1`,
             [borrower_id, publication_id]
         );
 

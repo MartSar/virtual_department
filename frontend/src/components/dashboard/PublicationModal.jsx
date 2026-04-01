@@ -21,8 +21,12 @@ const PublicationModal = ({ publication, onClose, user }) => {
     const [topicName, setTopicName] = useState("—");
     const [subtopicName, setSubtopicName] = useState("");
 
+    const [alreadyBorrowed, setAlreadyBorrowed] = useState(false);
+    const [checkingBorrow, setCheckingBorrow] = useState(true);
+
     const userId = user?.id ?? user?.user_id;
     const canBorrow = user?.role === "student";
+    const isOwnPublication = publication.author_ids?.includes(userId);
 
     // -----------------------------
     // Get Topic
@@ -169,6 +173,38 @@ const PublicationModal = ({ publication, onClose, user }) => {
         fetchFullData();
     }, [publication?.id]);
 
+    useEffect(() => {
+        if (!userId || !publication?.id) return;
+
+        const checkBorrowed = async () => {
+            try {
+                setCheckingBorrow(true);
+
+                const res = await fetch(
+                    `${API_URL}/users/${userId}/borrowings`
+                );
+
+                const data = await res.json().catch(() => []);
+
+                if (!res.ok) return;
+
+                const activeBorrow = data.find(
+                    (b) =>
+                        b.publication_id === publication.id &&
+                        b.is_active
+                );
+
+                setAlreadyBorrowed(!!activeBorrow);
+            } catch (err) {
+                console.error("Borrow check failed:", err);
+            } finally {
+                setCheckingBorrow(false);
+            }
+        };
+
+        checkBorrowed();
+    }, [userId, publication?.id]);
+
     // -----------------------------
     // Borrow handlers
     // -----------------------------
@@ -224,6 +260,13 @@ const PublicationModal = ({ publication, onClose, user }) => {
 
     const uniqueNames = (arr) =>
         Array.from(new Set(arr.map((x) => x.name).filter(Boolean))).join(", ");
+
+    const borrowStatus = (() => {
+        if (!canBorrow) return "not-allowed";
+        if (isOwnPublication) return "own";
+        if (alreadyBorrowed) return "borrowed";
+        return "available";
+    })();
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -281,43 +324,58 @@ const PublicationModal = ({ publication, onClose, user }) => {
 
                 {canBorrow && (
                     <div className="modal-actions">
-                        {!showDuration && !success && (
-                            <button
-                                className="borrow-btn big-center"
-                                onClick={handleBorrowClick}
-                                disabled={loading}
-                            >
-                                Borrow
-                            </button>
-                        )}
 
-                        {showDuration && !success && (
+                        {checkingBorrow ? (
+                            <div className="section-loader">
+                                <div className="section-spinner"></div>
+                            </div>
+                        ) : borrowStatus === "own" ? (
+                            <div className="borrow-info own">
+                                Your publication
+                            </div>
+                        ) : borrowStatus === "borrowed" ? (
+                            <div className="borrow-info borrowed">
+                                Already borrowed
+                            </div>
+                        ) : (
                             <>
-                                <div className="duration-buttons-row">
-                                    {borrowOptions.map((days) => (
-                                        <button
-                                            key={days}
-                                            className={`duration-btn ${
-                                                selectedDays === days ? "selected" : ""
-                                            }`}
-                                            onClick={() => setSelectedDays(days)}
-                                            type="button"
-                                        >
-                                            {days} days
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <div className="confirm-row-right">
+                                {!showDuration && !success && (
                                     <button
-                                        className="confirm-btn"
-                                        onClick={handleConfirm}
-                                        disabled={!selectedDays || loading}
-                                        type="button"
+                                        className="borrow-btn big-center"
+                                        onClick={handleBorrowClick}
+                                        disabled={loading}
                                     >
-                                        {loading ? "Processing..." : "Confirm"}
+                                        Borrow
                                     </button>
-                                </div>
+                                )}
+
+                                {showDuration && !success && (
+                                    <>
+                                        <div className="duration-buttons-row">
+                                            {borrowOptions.map((days) => (
+                                                <button
+                                                    key={days}
+                                                    className={`duration-btn ${
+                                                        selectedDays === days ? "selected" : ""
+                                                    }`}
+                                                    onClick={() => setSelectedDays(days)}
+                                                >
+                                                    {days} days
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="confirm-row-right">
+                                            <button
+                                                className="confirm-btn"
+                                                onClick={handleConfirm}
+                                                disabled={!selectedDays || loading}
+                                            >
+                                                {loading ? "Processing..." : "Confirm"}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </>
                         )}
                     </div>
