@@ -47,12 +47,9 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
             try {
                 setMetaLoading(true);
                 setError("");
-
                 const res = await fetch(`${apiBaseUrl}/api/publications/${id}/meta`);
                 const data = await res.json().catch(() => ({}));
-
                 if (!res.ok) throw new Error(data.error || "Failed to fetch file metadata");
-
                 setMeta(data);
             } catch (err) {
                 console.error(err);
@@ -61,7 +58,6 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
                 setMetaLoading(false);
             }
         };
-
         fetchMeta();
     }, [apiBaseUrl, id]);
 
@@ -142,11 +138,11 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
                             <Page pageNumber={pageNumber} scale={scale} />
                         </Document>
 
-                        {/* Controls */}
                         <div className="reader-pdf-controls">
-                            <button onClick={() => changePage(pageNumber - 1)} disabled={pageNumber <= 1}>Prev</button>
+                            <button onClick={() => changePage(pageNumber - 1)} disabled={pageNumber <= 1}>← Prev</button>
+                            <button onClick={() => changePage(pageNumber + 1)} disabled={pageNumber >= numPages}>Next →</button>
+                            <div className="ctrl-divider" />
                             <span>Page {pageNumber} of {numPages || 1}</span>
-                            <button onClick={() => changePage(pageNumber + 1)} disabled={pageNumber >= numPages}>Next</button>
                             <input
                                 type="range"
                                 min={1}
@@ -155,8 +151,9 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
                                 onChange={(e) => changePage(Number(e.target.value))}
                                 className="reader-page-slider"
                             />
-                            <button onClick={() => handleZoom(0.2)}>Zoom +</button>
-                            <button onClick={() => handleZoom(-0.2)}>Zoom -</button>
+                            <div className="ctrl-divider" />
+                            <button onClick={() => handleZoom(-0.2)}>A−</button>
+                            <button onClick={() => handleZoom(0.2)}>A+</button>
                         </div>
                     </>
                 )}
