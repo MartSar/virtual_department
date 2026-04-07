@@ -48,6 +48,17 @@ function isPdfLike(fileType, fileName = "") {
     return t.includes("pdf") || n.endsWith(".pdf");
 }
 
+function isPptxLike(fileType, fileName = "") {
+    const t = (fileType || "").toLowerCase();
+    const n = (fileName || "").toLowerCase();
+    return (
+        t.includes("presentationml") ||
+        t.includes("presentation") ||
+        n.endsWith(".pptx") ||
+        n.endsWith(".ppt")
+    );
+}
+
 async function convertToPdfWithLibreOffice(inputPath, outDir, sofficePath) {
     // LibreOffice will create PDF with the same base-name
     await execa(
@@ -828,10 +839,14 @@ app.post("/api/publications/create", async (req, res) => {
             file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
             lowerFileName.endsWith(".docx");
         const isMp4 = file_type === "video/mp4" || lowerFileName.endsWith(".mp4");
+        const isPptx =
+            file_type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+            lowerFileName.endsWith(".pptx") ||
+            lowerFileName.endsWith(".ppt");
 
-        if (!isPdf && !isDocx && !isMp4) {
+        if (!isPdf && !isDocx && !isMp4 && !isPptx) {
             return res.status(400).json({
-                error: "Only PDF, DOCX, and MP4 files are allowed"
+                error: "Only PDF, DOCX, PPTX, and MP4 files are allowed"
             });
         }
 
@@ -1452,17 +1467,27 @@ app.get("/api/publications/read/:id", async (req, res) => {
 
     try {
         // 1) Check access
-        const accessRes = await pool.query(
-            `SELECT 1
-             FROM borrowings
-             WHERE borrower_id = $1
-               AND publication_id = $2
-               AND end_date >= NOW()
+        const [accessRes, authorRes] = await Promise.all([
+            pool.query(
+                `SELECT 1
+                 FROM borrowings
+                 WHERE borrower_id = $1
+                   AND publication_id = $2
+                   AND end_date >= NOW()
                  LIMIT 1`,
-            [userId, id]
-        );
+                [userId, id]
+            ),
+            pool.query(
+                `SELECT 1
+                 FROM publication_authors
+                 WHERE user_id = $1
+                   AND publication_id = $2
+                 LIMIT 1`,
+                [userId, id]
+            ),
+        ]);
 
-        if (accessRes.rowCount === 0) {
+        if (accessRes.rowCount === 0 && authorRes.rowCount === 0) {
             return res.status(403).json({ error: "No active access" });
         }
 
@@ -1520,7 +1545,36 @@ app.get("/api/publications/read/:id", async (req, res) => {
             }
         }
 
-        // 5) MP4 video -> stream with Range support
+        // ADD after the isDocxLike block (around line 1521), before the MP4 check:
+        // 5) PPTX -> convert to PDF via LibreOffice then stream inline
+        if (isPptxLike(fileType, fileName)) {
+            const sofficePath =
+                process.env.LIBREOFFICE_PATH ||
+                "C:\\Program Files\\LibreOffice\\program\\soffice.exe";
+
+            const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vd-lo-"));
+
+            try {
+                const base = crypto.randomBytes(12).toString("hex");
+                const inputExt = fileName.toLowerCase().endsWith(".ppt") ? ".ppt" : ".pptx";
+                const inputPath = path.join(tmpDir, `${base}${inputExt}`);
+
+                await fs.writeFile(inputPath, contentBuffer);
+                await convertToPdfWithLibreOffice(inputPath, tmpDir, sofficePath);
+
+                const outputPdfPath = path.join(tmpDir, `${base}.pdf`);
+                const pdfBuffer = await fs.readFile(outputPdfPath);
+
+                res.setHeader("Content-Type", "application/pdf");
+                res.setHeader("Content-Disposition", `inline; filename="${base}.pdf"`);
+                res.setHeader("X-Content-Type-Options", "nosniff");
+                return res.send(pdfBuffer);
+            } finally {
+                await fs.rm(tmpDir, { recursive: true, force: true });
+            }
+        }
+
+        // 6) MP4 video -> stream with Range support
         if (fileType.includes("video/mp4") || fileName.toLowerCase().endsWith(".mp4")) {
             const range = req.headers.range;
             const videoSize = contentBuffer.length;

@@ -76,6 +76,7 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
         if (type.includes("pdf") || name.endsWith(".pdf")) return "pdf";
         if (type.includes("word") || type.includes("officedocument") || name.endsWith(".docx") || name.endsWith(".doc")) return "word";
         if (type.includes("video/mp4") || name.endsWith(".mp4")) return "video";
+        if (name.endsWith(".pptx") || type.includes("presentation")) return "pptx";
         return "unknown";
     };
 
@@ -166,6 +167,14 @@ export default function UniversalReader({ apiBaseUrl = API_URL }) {
                             <source src={fileUrl} type="video/mp4" />
                         </video>
                     </div>
+                )}
+
+                {fileKind === "pptx" && (
+                    <iframe
+                        src={`https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+                        className="reader-iframe"
+                        title="pptx-viewer"
+                    />
                 )}
 
                 {fileKind === "unknown" && (

@@ -26,6 +26,7 @@ function AddPublication({ user, onClose }) {
     const allowedTypes = [
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         "video/mp4",
     ];
 
@@ -33,21 +34,31 @@ function AddPublication({ user, onClose }) {
         const type = (fileType || "").toLowerCase();
         const name = (fileName || "").toLowerCase();
 
+        // PDF
         if (type.includes("pdf") || name.endsWith(".pdf")) {
             return "PDF";
         }
 
+        // PPTX
         if (
-            type.includes("word") ||
-            type.includes("officedocument") ||
-            type.includes("docx") ||
-            type.includes("doc") ||
+            type.includes("presentationml") ||
+            type.includes("presentation") ||
+            name.endsWith(".pptx") ||
+            name.endsWith(".ppt")
+        ) {
+            return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        }
+
+        // Word
+        if (
+            type.includes("wordprocessingml") ||
             name.endsWith(".docx") ||
             name.endsWith(".doc")
         ) {
             return "Word";
         }
 
+        // Video
         if (type.includes("video/mp4") || name.endsWith(".mp4")) {
             return "MP4";
         }
@@ -97,8 +108,17 @@ function AddPublication({ user, onClose }) {
     const validateFile = (selectedFile) => {
         if (!selectedFile) return "No file selected";
 
-        if (!allowedTypes.includes(selectedFile.type)) {
-            return "Only PDF, DOCX, and MP4 files are allowed";
+        const name = selectedFile.name.toLowerCase();
+
+        const isValid =
+            allowedTypes.includes(selectedFile.type) ||
+            name.endsWith(".pdf") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".pptx") ||
+            name.endsWith(".mp4");
+
+        if (!isValid) {
+            return "Only PDF, Docx, Pptx, and MP4 files are allowed";
         }
 
         if (selectedFile.size > MAX_FILE_SIZE) {
@@ -279,7 +299,7 @@ function AddPublication({ user, onClose }) {
                         <input
                             type="text"
                             value={fileType}
-                            placeholder="pdf, word, video/mp4"
+                            placeholder="pdf, word, video/mp4, pptx"
                             readOnly
                         />
                     </label>
@@ -306,7 +326,11 @@ function AddPublication({ user, onClose }) {
                         <input
                             type="file"
                             hidden
-                            accept=".pdf,.docx,.mp4,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,video/mp4"
+                            accept=".pdf,.docx,.pptx,.mp4,
+                                    application/pdf,
+                                    application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                                    application/vnd.openxmlformats-officedocument.presentationml.presentation,
+                                    video/mp4"
                             onChange={handleFileChange}
                         />
                     </label>
