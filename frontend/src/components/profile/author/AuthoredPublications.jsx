@@ -88,8 +88,19 @@ const AuthoredPublications = ({ user, userId }) => {
         }
 
         if (
+            type === "pptx" ||
+            type.includes("presentationml") ||
+            type.includes("presentation") ||
+            name.endsWith(".pptx") ||
+            name.endsWith(".ppt")
+        ) {
+            return "PPTX";
+        }
+
+        if (
+            type === "word" ||
+            type.includes("wordprocessingml") ||
             type.includes("word") ||
-            type.includes("officedocument") ||
             type.includes("docx") ||
             type.includes("doc") ||
             name.endsWith(".docx") ||

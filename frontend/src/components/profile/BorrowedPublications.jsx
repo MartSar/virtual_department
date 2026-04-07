@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../../styles/UserPublications.css";
-import { API_URL } from "../../../config";
+import "../../styles/UserPublications.css";
+import { API_URL } from "../../config";
 
 const BorrowedPublications = ({ user }) => {
     const [borrowings, setBorrowings] = useState([]);
@@ -54,9 +54,36 @@ const BorrowedPublications = ({ user }) => {
         const type = (fileType || "").toLowerCase();
         const name = (fileName || "").toLowerCase();
 
-        if (type.includes("pdf") || name.endsWith(".pdf")) return "PDF";
-        if (type.includes("word") || type.includes("officedocument") || name.endsWith(".docx") || name.endsWith(".doc")) return "Word";
-        if (type.includes("video/mp4") || name.endsWith(".mp4")) return "MP4";
+        if (type.includes("pdf") || name.endsWith(".pdf")) {
+            return "PDF";
+        }
+
+        if (
+            type === "pptx" ||
+            type.includes("presentationml") ||
+            type.includes("presentation") ||
+            name.endsWith(".pptx") ||
+            name.endsWith(".ppt")
+        ) {
+            return "PPTX";
+        }
+
+        if (
+            type === "word" ||
+            type.includes("wordprocessingml") ||
+            type.includes("word") ||
+            type.includes("docx") ||
+            type.includes("doc") ||
+            name.endsWith(".docx") ||
+            name.endsWith(".doc")
+        ) {
+            return "Word";
+        }
+
+        if (type.includes("video/mp4") || name.endsWith(".mp4")) {
+            return "MP4";
+        }
+
         return "Unknown";
     };
 

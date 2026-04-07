@@ -4,7 +4,7 @@ import {API_URL} from "../../config";
 import Navbar from "../../components/navbar/Navbar";
 import ProfileHeader from "./common/ProfileHeader";
 import ProfileInfo from "./common/ProfileInfo";
-import BorrowedPublications from "./student/BorrowedPublications";
+import BorrowedPublications from "./BorrowedPublications";
 import ProfessorPostgraduates from "./ProfessorPostgraduates";
 import PostgraduateProfessors from "./PostgraduateProfessors";
 import AuthoredPublications from "./author/AuthoredPublications";
