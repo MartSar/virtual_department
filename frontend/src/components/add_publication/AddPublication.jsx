@@ -7,7 +7,6 @@ function AddPublication({ user, onClose }) {
     const [fileType, setFileType] = useState("");
     const [file, setFile] = useState(null);
     const [description, setDescription] = useState("");
-    const [fileName, setFileName] = useState("");
     const [authorName] = useState(`${user.name} ${user.lastname}`);
 
     const [topicId, setTopicId] = useState("");
@@ -94,17 +93,6 @@ function AddPublication({ user, onClose }) {
         fetchSubtopics();
     }, []);
 
-    useEffect(() => {
-        if (!title || !file) return;
-
-        const originalName = file.name || "";
-        const extension = originalName.includes(".")
-            ? originalName.split(".").pop().toLowerCase()
-            : "";
-
-        setFileName(`${title.toLowerCase().replace(/\s+/g, "_")}.${extension}`);
-    }, [title, file]);
-
     const validateFile = (selectedFile) => {
         if (!selectedFile) return "No file selected";
 
@@ -135,7 +123,6 @@ function AddPublication({ user, onClose }) {
             setError(validationError);
             setFile(null);
             setFileType("");
-            setFileName("");
             return;
         }
 
@@ -210,7 +197,7 @@ function AddPublication({ user, onClose }) {
                             file_type: fileType,
                             content: contentBase64,
                             description,
-                            file_name: fileName || file.name,
+                            file_name: file.name,
                             user_id: userId,
                             topic_id: topicId,
                             subtopic_id: subtopicId || null,
@@ -301,15 +288,6 @@ function AddPublication({ user, onClose }) {
                             value={fileType}
                             placeholder="pdf, word, video/mp4, pptx"
                             readOnly
-                        />
-                    </label>
-
-                    <label>
-                        File Name
-                        <input
-                            type="text"
-                            value={fileName}
-                            onChange={(e) => setFileName(e.target.value)}
                         />
                     </label>
 
