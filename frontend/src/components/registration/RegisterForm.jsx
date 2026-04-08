@@ -46,6 +46,11 @@ function RegisterForm() {
 
     return (
         <div className="auth-container">
+            <img
+                src="/icon/virtual_department_logo_transparent.svg"
+                alt="Virtual Department Logo"
+                style={{ width: '400px', marginBottom: '8px' }}
+            />
             <h1>Virtual Department</h1>
             <h2>Registration</h2>
 
