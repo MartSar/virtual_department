@@ -7,6 +7,7 @@ export const handleSignIn = async ({
                                        login,
                                        password,
                                        setMessage,
+                                       setMessageType,
                                        navigate
                                    }) => {
     try {
@@ -37,10 +38,12 @@ export const handleSignIn = async ({
                 }
             });
         } else {
+            setMessageType('error');
             setMessage(data.error || 'Sign In Error');
         }
     } catch (err) {
         console.error('Login error:', err);
+        setMessageType('error');
         setMessage('Server Error. Try Later.');
     }
 };
@@ -54,6 +57,7 @@ export const handleRegister = async ({
                                          password,
                                          faculty_id,
                                          setMessage,
+                                         setMessageType,
                                          navigate
                                      }) => {
     try {
@@ -73,13 +77,16 @@ export const handleRegister = async ({
         const data = await res.json();
 
         if (data.success) {
+            setMessageType('success');
             setMessage('Registration was successful!');
             setTimeout(() => navigate('/'), 1500);
         } else {
+            setMessageType('error');
             setMessage(data.error);
         }
     } catch (err) {
         console.error(err);
+        setMessageType('error');
         setMessage('Server Error');
     }
 };

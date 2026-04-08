@@ -14,6 +14,7 @@ function RegisterForm() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState('');
 
     const [universities, setUniversities] = useState([]);
 
@@ -85,6 +86,7 @@ function RegisterForm() {
                             password,
                             faculty_id,
                             setMessage,
+                            setMessageType,
                             navigate
                         })
                     }
@@ -93,7 +95,7 @@ function RegisterForm() {
                 </button>
             </div>
 
-            {message && <p className="auth-message">{message}</p>}
+            {message && <p className={`auth-message ${messageType}`}>{message}</p>}
         </div>
     );
 }

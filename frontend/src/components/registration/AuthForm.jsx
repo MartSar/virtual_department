@@ -14,6 +14,7 @@ function AuthForm() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState('');
 
     const [universities, setUniversities] = useState([]);
 
@@ -84,6 +85,7 @@ function AuthForm() {
                             universities,
                             faculty_id,
                             setMessage,
+                            setMessageType,
                             navigate
                         })
                     }
@@ -92,7 +94,7 @@ function AuthForm() {
                 </button>
             </div>
 
-            {message && <p className="auth-message">{message}</p>}
+            {message && <p className={`auth-message ${messageType}`}>{message}</p>}
         </div>
     );
 }
