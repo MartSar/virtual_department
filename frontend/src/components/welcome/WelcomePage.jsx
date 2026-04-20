@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import InviteModal from "./InviteModal";
+import WelcomeNavbar from './WelcomeNavbar'
 import "../../styles/WelcomePage.css";
 
 function WelcomePage() {
@@ -9,24 +9,7 @@ function WelcomePage() {
 
     return (
         <div className="welcome-wrapper">
-            <header className="welcome-topbar">
-                <div className="welcome-logo">Virtual Department</div>
-                <div className="welcome-topbar-btns">
-                    <button
-                        className="welcome-topbar-signin"
-                        onClick={() => navigate("/auth")}
-                    >
-                        Sign In
-                    </button>
-                    <button
-                        className="welcome-topbar-signup"
-                        onClick={() => navigate("/register")}
-                    >
-                        Sign Up
-                    </button>
-                </div>
-            </header>
-
+            <WelcomeNavbar />
             <section className="welcome-hero">
                 <h1>Welcome to Virtual Department</h1>
                 <p className="welcome-subtitle">
@@ -40,12 +23,6 @@ function WelcomePage() {
                         onClick={() => navigate("/register")}
                     >
                         Get Started
-                    </button>
-                    <button
-                        className="welcome-btn welcome-btn-invite"
-                        onClick={() => setShowInvite(true)}
-                    >
-                        Invite a Colleague
                     </button>
                 </div>
             </section>
@@ -158,8 +135,6 @@ function WelcomePage() {
                     </button>
                 </div>
             </footer>
-
-            {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
         </div>
     );
 }

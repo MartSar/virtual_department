@@ -25,7 +25,7 @@ function Navbar({ user, titleOverride, showBackButton, onBack }) {
 
     const logout = () => {
         localStorage.removeItem("loggedUser");
-        navigate("/");
+        navigate("/auth");
     };
 
     return (

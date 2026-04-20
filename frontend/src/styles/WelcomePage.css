@@ -1,14 +1,3 @@
-/* =========================================================
-   Welcome / About page
-   Uses the same palette as the rest of the app:
-   - dark bar:       #1e1e2f
-   - primary blue:   #2196F3 / #1976D2
-   - green:          #4CAF50 / #45a049
-   - purple:         #673AB7 / #5E35B1
-   - red accent:     #e53935
-   - card bg:        #f9f9f9 / #ffffff
-   ========================================================= */
-
 .welcome-wrapper {
     font-family: 'Arial', sans-serif;
     color: #333;
@@ -43,7 +32,8 @@
 }
 
 .welcome-topbar-signin,
-.welcome-topbar-signup {
+.welcome-topbar-signup,
+.welcome-topbar-about {
     background: none;
     border: none;
     color: white;
@@ -60,6 +50,11 @@
 
 .welcome-topbar-signup:hover {
     color: #0cf16c;
+    transform: scale(1.1);
+}
+
+.welcome-topbar-about:hover {
+    color: #7acc16;
     transform: scale(1.1);
 }
 

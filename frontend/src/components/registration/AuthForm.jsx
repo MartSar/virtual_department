@@ -2,8 +2,9 @@ import '../../styles/AuthForm.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormFields from "../inner_components/FormFields";
+import WelcomeNavbar from "../welcome/WelcomeNavbar";
 import { handleSignIn } from "../../handlers";
-import {API_URL} from "../../config";
+import { API_URL } from "../../config";
 
 function AuthForm() {
     const [role, setRole] = useState('student');
@@ -45,56 +46,60 @@ function AuthForm() {
     }, [role]);
 
     return (
-        <div className="auth-container">
-            <h1>Virtual Department</h1>
-            <h2>Sign In</h2>
+        <div className="welcome-wrapper">
+            <WelcomeNavbar />
 
-            <FormFields
-                role={role} setRole={setRole}
-                name={name} setName={setName}
-                lastname={lastname} setLastname={setLastname}
-                login={login} setLogin={setLogin}
+            <div className="auth-container">
+                <h1>Virtual Department</h1>
+                <h2>Sign In</h2>
 
-                password={password} setPassword={setPassword}
-                showPassword={showPassword} setShowPassword={setShowPassword}
+                <FormFields
+                    role={role} setRole={setRole}
+                    name={name} setName={setName}
+                    lastname={lastname} setLastname={setLastname}
+                    login={login} setLogin={setLogin}
 
-                universities={universities}
+                    password={password} setPassword={setPassword}
+                    showPassword={showPassword} setShowPassword={setShowPassword}
 
-                faculties={faculties}
-                faculty_id={faculty_id}
-                setFaculty_id={setFaculty_id}
-            />
+                    universities={universities}
 
-            <div className="auth-btns-container">
-                <button
-                    className="sign-up-btn"
-                    onClick={() => navigate('/register')}
-                >
-                    Sign Up
-                </button>
+                    faculties={faculties}
+                    faculty_id={faculty_id}
+                    setFaculty_id={setFaculty_id}
+                />
 
-                <button
-                    className="sign-in-btn"
-                    onClick={() =>
-                        handleSignIn({
-                            role,
-                            name,
-                            lastname,
-                            login,
-                            password,
-                            universities,
-                            faculty_id,
-                            setMessage,
-                            setMessageType,
-                            navigate
-                        })
-                    }
-                >
-                    Sign In
-                </button>
+                <div className="auth-btns-container">
+                    <button
+                        className="sign-up-btn"
+                        onClick={() => navigate('/register')}
+                    >
+                        Sign Up
+                    </button>
+
+                    <button
+                        className="sign-in-btn"
+                        onClick={() =>
+                            handleSignIn({
+                                role,
+                                name,
+                                lastname,
+                                login,
+                                password,
+                                universities,
+                                faculty_id,
+                                setMessage,
+                                setMessageType,
+                                navigate
+                            })
+                        }
+                    >
+                        Sign In
+                    </button>
+                </div>
+
+                {message && <p className={`auth-message ${messageType}`}>{message}</p>}
             </div>
-
-            {message && <p className={`auth-message ${messageType}`}>{message}</p>}
         </div>
     );
 }

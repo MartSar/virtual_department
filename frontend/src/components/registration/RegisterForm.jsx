@@ -2,8 +2,9 @@ import '../../styles/RegisterForm.css';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormFields from "../inner_components/FormFields";
+import WelcomeNavbar from "../welcome/WelcomeNavbar";
 import { handleRegister } from "../../handlers";
-import {API_URL} from "../../config";
+import { API_URL } from "../../config";
 
 function RegisterForm() {
     const [role, setRole] = useState('student');
@@ -45,56 +46,60 @@ function RegisterForm() {
     }, [role]);
 
     return (
-        <div className="auth-container">
-            <h1>Virtual Department</h1>
-            <h2>Registration</h2>
-            <FormFields
-                role={role} setRole={setRole}
-                name={name} setName={setName}
-                lastname={lastname} setLastname={setLastname}
-                login={login} setLogin={setLogin}
+        <div className="welcome-wrapper">
+            <WelcomeNavbar />
 
-                password={password} setPassword={setPassword}
-                showPassword={showPassword} setShowPassword={setShowPassword}
+            <div className="auth-container">
+                <h1>Virtual Department</h1>
+                <h2>Registration</h2>
+                <FormFields
+                    role={role} setRole={setRole}
+                    name={name} setName={setName}
+                    lastname={lastname} setLastname={setLastname}
+                    login={login} setLogin={setLogin}
 
-                universities={universities}
+                    password={password} setPassword={setPassword}
+                    showPassword={showPassword} setShowPassword={setShowPassword}
 
-                faculties={faculties}
-                faculty_id={faculty_id}
-                setFaculty_id={setFaculty_id}
+                    universities={universities}
 
-                requiredFieldType={"registration"}
-            />
+                    faculties={faculties}
+                    faculty_id={faculty_id}
+                    setFaculty_id={setFaculty_id}
 
-            <div className="register-btns-container">
-                <button
-                    className="back-to-sign-in-btn"
-                    onClick={() => navigate('/auth')}
-                >
-                    Back to Sign In
-                </button>
+                    requiredFieldType={"registration"}
+                />
 
-                <button
-                    className="set-acc-btn"
-                    onClick={() =>
-                        handleRegister({
-                            role,
-                            name,
-                            lastname,
-                            login,
-                            password,
-                            faculty_id,
-                            setMessage,
-                            setMessageType,
-                            navigate
-                        })
-                    }
-                >
-                    Set an Account
-                </button>
+                <div className="register-btns-container">
+                    <button
+                        className="back-to-sign-in-btn"
+                        onClick={() => navigate('/auth')}
+                    >
+                        Back to Sign In
+                    </button>
+
+                    <button
+                        className="set-acc-btn"
+                        onClick={() =>
+                            handleRegister({
+                                role,
+                                name,
+                                lastname,
+                                login,
+                                password,
+                                faculty_id,
+                                setMessage,
+                                setMessageType,
+                                navigate
+                            })
+                        }
+                    >
+                        Set an Account
+                    </button>
+                </div>
+
+                {message && <p className={`auth-message ${messageType}`}>{message}</p>}
             </div>
-
-            {message && <p className={`auth-message ${messageType}`}>{message}</p>}
         </div>
     );
 }
