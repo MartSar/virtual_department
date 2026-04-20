@@ -69,7 +69,7 @@ function RegisterForm() {
             <div className="register-btns-container">
                 <button
                     className="back-to-sign-in-btn"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/auth')}
                 >
                     Back to Sign In
                 </button>

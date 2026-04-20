@@ -5,13 +5,16 @@ import RegisterForm from "./components/registration/RegisterForm";
 import Dashboard from './components/dashboard/Dashboard';
 import UserProfile from "./components/profile/UserProfile";
 import UniversalReader from "./components/profile/UniversalReader";
+import WelcomePage from "./components/welcome/WelcomePage";
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<AuthForm />} />
+                <Route path="/" element={<WelcomePage />} />
+                <Route path="/auth" element={<AuthForm />} />
                 <Route path="/register" element={<RegisterForm />} />
+                <Route path="/about" element={<WelcomePage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
                 <Route path="/reader/:id" element={<UniversalReader />}  />

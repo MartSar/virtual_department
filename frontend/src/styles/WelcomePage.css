@@ -1,0 +1,455 @@
+/* =========================================================
+   Welcome / About page
+   Uses the same palette as the rest of the app:
+   - dark bar:       #1e1e2f
+   - primary blue:   #2196F3 / #1976D2
+   - green:          #4CAF50 / #45a049
+   - purple:         #673AB7 / #5E35B1
+   - red accent:     #e53935
+   - card bg:        #f9f9f9 / #ffffff
+   ========================================================= */
+
+.welcome-wrapper {
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    background-color: #f3f4f6;
+    min-height: 100vh;
+}
+
+/* -------------------- Top bar -------------------- */
+.welcome-topbar {
+    height: 60px;
+    background-color: #1e1e2f;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.welcome-logo {
+    font-weight: bold;
+    font-size: 18px;
+    letter-spacing: 0.3px;
+}
+
+.welcome-topbar-btns {
+    display: flex;
+    gap: 15px;
+}
+
+.welcome-topbar-signin,
+.welcome-topbar-signup {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+    transition: all 0.25s ease;
+}
+
+.welcome-topbar-signin:hover {
+    color: #4ec6f4;
+    transform: scale(1.1);
+}
+
+.welcome-topbar-signup:hover {
+    color: #0cf16c;
+    transform: scale(1.1);
+}
+
+/* -------------------- Hero -------------------- */
+.welcome-hero {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 70px 30px 50px;
+    text-align: center;
+}
+
+.welcome-hero h1 {
+    font-size: 42px;
+    margin: 0 0 15px;
+    color: #1e1e2f;
+    letter-spacing: 0.3px;
+}
+
+.welcome-subtitle {
+    font-size: 18px;
+    line-height: 1.55;
+    color: #555;
+    max-width: 640px;
+    margin: 0 auto 35px;
+}
+
+.welcome-hero-btns {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* -------------------- Buttons -------------------- */
+.welcome-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: bold;
+    font-size: 15px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.welcome-btn-primary {
+    background-color: #2196F3;
+}
+
+.welcome-btn-primary:hover {
+    background-color: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.35);
+}
+
+.welcome-btn-invite {
+    background-color: #4CAF50;
+}
+
+.welcome-btn-invite:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.35);
+}
+
+.welcome-btn.large {
+    padding: 14px 28px;
+    font-size: 16px;
+}
+
+/* -------------------- Sections -------------------- */
+.welcome-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 30px;
+}
+
+.welcome-section-alt {
+    background-color: #ffffff;
+    max-width: none;
+    padding: 60px 30px;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.welcome-section-alt .welcome-roles {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.welcome-section-title {
+    text-align: center;
+    font-size: 28px;
+    margin: 0 0 35px;
+    color: #1e1e2f;
+}
+
+/* -------------------- Feature cards -------------------- */
+.welcome-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.welcome-card {
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 25px 22px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    transition: all 0.25s ease;
+}
+
+.welcome-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-card-icon {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.welcome-card h3 {
+    margin: 0 0 10px;
+    color: #1e1e2f;
+    font-size: 18px;
+}
+
+.welcome-card p {
+    margin: 0;
+    color: #555;
+    font-size: 14.5px;
+    line-height: 1.5;
+}
+
+/* -------------------- Role cards -------------------- */
+.welcome-roles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.welcome-role {
+    border-radius: 12px;
+    padding: 25px 22px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+    border-top: 4px solid #ccc;
+    transition: all 0.25s ease;
+}
+
+.welcome-role:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-role h3 {
+    margin: 0 0 10px;
+    color: #1e1e2f;
+    font-size: 19px;
+}
+
+.welcome-role p {
+    margin: 0;
+    color: #555;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+.welcome-role-student {
+    border-top-color: #2196F3;
+}
+
+.welcome-role-professor {
+    border-top-color: #673AB7;
+}
+
+.welcome-role-postgraduate {
+    border-top-color: #4CAF50;
+}
+
+/* -------------------- Invite banner -------------------- */
+.welcome-invite-banner {
+    max-width: 1000px;
+    margin: 20px auto 60px;
+    padding: 35px 40px;
+    background-color: #1e1e2f;
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.welcome-invite-banner h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+}
+
+.welcome-invite-banner p {
+    margin: 0;
+    color: #cfcfe0;
+    font-size: 15px;
+}
+
+/* -------------------- Footer -------------------- */
+.welcome-footer {
+    text-align: center;
+    padding: 25px;
+    color: #666;
+    font-size: 14px;
+    border-top: 1px solid #e5e7eb;
+    background-color: #ffffff;
+}
+
+.welcome-footer p {
+    margin: 0 0 10px;
+}
+
+.welcome-footer-btns {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.welcome-footer-link {
+    background: none;
+    border: none;
+    color: #2196F3;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.welcome-footer-link:hover {
+    color: #1976D2;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   Invite modal
+   (reuses .modal-overlay / .modal-content from Modal.css)
+   ========================================================= */
+
+.invite-modal {
+    width: 440px;
+    font-family: 'Arial', sans-serif;
+}
+
+.invite-modal-text {
+    color: #555;
+    font-size: 14.5px;
+    margin: 0 0 18px;
+}
+
+.invite-link-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.invite-link-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fafafa;
+    font-size: 14px;
+    color: #333;
+    outline: none;
+}
+
+.invite-copy-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.invite-copy-btn:hover {
+    background-color: #1976D2;
+    transform: translateY(-1px);
+}
+
+.invite-divider {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin: 10px 0 15px;
+    position: relative;
+}
+
+.invite-divider::before,
+.invite-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background-color: #e5e7eb;
+}
+
+.invite-divider::before {
+    left: 0;
+}
+
+.invite-divider::after {
+    right: 0;
+}
+
+.invite-email-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.invite-email-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.invite-email-input:focus {
+    border-color: #2196F3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+}
+
+.invite-send-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.invite-send-btn:hover:not(:disabled) {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+.invite-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.invite-modal-btns {
+    justify-content: flex-end;
+}
+
+/* -------------------- Responsive -------------------- */
+@media (max-width: 600px) {
+    .welcome-hero h1 {
+        font-size: 32px;
+    }
+
+    .welcome-subtitle {
+        font-size: 16px;
+    }
+
+    .welcome-section-title {
+        font-size: 24px;
+    }
+
+    .welcome-invite-banner {
+        flex-direction: column;
+        text-align: center;
+        padding: 30px 25px;
+    }
+
+    .welcome-topbar {
+        padding: 0 15px;
+    }
+
+    .welcome-logo {
+        font-size: 16px;
+    }
+}
