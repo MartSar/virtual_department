@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_URL } from '../../config'
 import "../../styles/PublicationModal.css";
 
 const borrowOptions = [7, 30, 90, 365];
 
 const PublicationModal = ({ publication, onClose, user }) => {
+    const navigate = useNavigate();
+
     const [loading, setLoading] = useState(false);
     const [loadingAuthors, setLoadingAuthors] = useState(true);
     const [error, setError] = useState(null);
@@ -24,6 +27,7 @@ const PublicationModal = ({ publication, onClose, user }) => {
     const [alreadyBorrowed, setAlreadyBorrowed] = useState(false);
     const [checkingBorrow, setCheckingBorrow] = useState(true);
 
+    const isGuest = !user;
     const userId = user?.id ?? user?.user_id;
     const canBorrow = user?.role === "student";
     const isOwnPublication = publication.author_ids?.includes(userId);
@@ -56,27 +60,27 @@ const PublicationModal = ({ publication, onClose, user }) => {
     // -----------------------------
     // Get Subtopic
     // -----------------------------
-        useEffect(() => {
-            if (!publication?.subtopic_id) {
+    useEffect(() => {
+        if (!publication?.subtopic_id) {
+            setSubtopicName("—");
+            return;
+        }
+
+        const fetchSubtopic = async () => {
+            try {
+                const res = await fetch(
+                    `${API_URL}/subtopics/${publication.subtopic_id}`
+                );
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                setSubtopicName(data?.name || "—");
+            } catch {
                 setSubtopicName("—");
-                return;
             }
+        };
 
-            const fetchSubtopic = async () => {
-                try {
-                    const res = await fetch(
-                        `${API_URL}/subtopics/${publication.subtopic_id}`
-                    );
-                    if (!res.ok) throw new Error();
-                    const data = await res.json();
-                    setSubtopicName(data?.name || "—");
-                } catch {
-                    setSubtopicName("—");
-                }
-            };
-
-            fetchSubtopic();
-        }, [publication?.subtopic_id]);
+        fetchSubtopic();
+    }, [publication?.subtopic_id]);
 
 
     // -----------------------------
@@ -174,7 +178,11 @@ const PublicationModal = ({ publication, onClose, user }) => {
     }, [publication?.id]);
 
     useEffect(() => {
-        if (!userId || !publication?.id) return;
+        // Не проверяем заимствования для гостя
+        if (!userId || !publication?.id) {
+            setCheckingBorrow(false);
+            return;
+        }
 
         const checkBorrowed = async () => {
             try {
@@ -322,7 +330,22 @@ const PublicationModal = ({ publication, onClose, user }) => {
                 {error && <p className="modal-error">{error}</p>}
                 {success && <p className="modal-hint">Successfully borrowed!</p>}
 
-                {canBorrow && (
+                {/* -------------------- Guest prompt -------------------- */}
+                {isGuest && (
+                    <div className="guest-prompt">
+                        <p className="guest-prompt-text">
+                            Sign in to borrow this publication.
+                        </p>
+                        <button
+                            className="guest-prompt-btn"
+                            onClick={() => navigate("/auth")}
+                        >
+                            Sign In
+                        </button>
+                    </div>
+                )}
+
+                {!isGuest && canBorrow && (
                     <div className="modal-actions">
 
                         {checkingBorrow ? (

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import WelcomeNavbar from './WelcomeNavbar'
+import WelcomeNavbar from "./WelcomeNavbar";
 import "../../styles/WelcomePage.css";
 
 function WelcomePage() {
@@ -10,6 +10,7 @@ function WelcomePage() {
     return (
         <div className="welcome-wrapper">
             <WelcomeNavbar />
+
             <section className="welcome-hero">
                 <h1>Welcome to Virtual Department</h1>
                 <p className="welcome-subtitle">
@@ -20,7 +21,7 @@ function WelcomePage() {
                 <div className="welcome-hero-btns">
                     <button
                         className="welcome-btn welcome-btn-primary"
-                        onClick={() => navigate("/register")}
+                        onClick={() => navigate("/dashboard")}
                     >
                         Get Started
                     </button>
@@ -123,7 +124,7 @@ function WelcomePage() {
                 <div className="welcome-footer-btns">
                     <button
                         className="welcome-footer-link"
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate("/auth")}
                     >
                         Sign In
                     </button>

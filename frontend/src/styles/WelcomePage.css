@@ -3,6 +3,7 @@
     color: #333;
     background-color: #f3f4f6;
     min-height: 100vh;
+    padding-top: 60px;
 }
 
 /* -------------------- Top bar -------------------- */
@@ -14,8 +15,11 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 25px;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     z-index: 100;
     box-sizing: border-box;
 }

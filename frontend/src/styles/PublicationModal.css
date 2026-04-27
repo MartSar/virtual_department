@@ -222,3 +222,45 @@
     color: #e74c3c;
 }
 
+/* =========================================================
+   Guest prompt — shown when an unauthorized user opens
+   a publication and tries to borrow it.
+   ========================================================= */
+
+.guest-prompt {
+    margin-top: 20px;
+    padding: 18px 20px;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.guest-prompt-text {
+    margin: 0;
+    color: #333;
+    font-size: 14.5px;
+    font-weight: 500;
+}
+
+.guest-prompt-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.guest-prompt-btn:hover {
+    background-color: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(33, 150, 243, 0.35);
+}
