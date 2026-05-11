@@ -1,29 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import WelcomeNavbar from "./WelcomeNavbar";
+import RadialPublicationsChart from "./RadialPublicationsChart";
 import "../../styles/WelcomePage.css";
 
 function WelcomePage() {
     const navigate = useNavigate();
     const [showInvite, setShowInvite] = useState(false);
+    const chartRef = useRef(null);
 
     return (
         <div className="welcome-wrapper">
             <WelcomeNavbar />
 
-            <section className="welcome-hero">
-                <h1>Welcome to Virtual Department</h1>
-                <p className="welcome-subtitle">
-                    A digital space where students, professors and postgraduates
-                    share, discover and co-author academic publications.
+            {/* -------------------- Radial Chart -------------------- */}
+            <section className="welcome-section" ref={chartRef}>
+                <h2 className="welcome-section-title">Publications by Topic</h2>
+                <p style={{ textAlign: "center", color: "#666", marginBottom: 32, fontSize: 15 }}>
+                    Hover over a segment to see the publication. Each ring represents a topic area.
                 </p>
-
-                <div className="welcome-hero-btns">
+                <RadialPublicationsChart />
+                <div style={{ textAlign: "center", marginTop: 32 }}>
                     <button
                         className="welcome-btn welcome-btn-primary"
                         onClick={() => navigate("/dashboard")}
                     >
-                        Get Started
+                        Browse All Publications
                     </button>
                 </div>
             </section>

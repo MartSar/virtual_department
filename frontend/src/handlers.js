@@ -79,7 +79,7 @@ export const handleRegister = async ({
         if (data.success) {
             setMessageType('success');
             setMessage('Registration was successful!');
-            setTimeout(() => navigate('/'), 1500);
+            setTimeout(() => navigate('/auth'), 1500);
         } else {
             setMessageType('error');
             setMessage(data.error);
